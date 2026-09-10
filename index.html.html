@@ -3171,3 +3171,647 @@
 </html>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enrolled Agent CE Catalog & Practice Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F4EC; --ink:#20262A; --ink-soft:#565B54;
+    --ledger:#2F5D50; --ledger-light:#E7EFEA; --gold:#B8944F;
+    --rule:#D9D2C2; --wrong:#A0413A; --right:#2F5D50; --maxw:820px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; line-height:1.6; font-size:17px;}
+  
+  /* Spread out & bigger headings */
+  h1,h2,h3{font-family:'Source Serif 4',serif; font-weight:700; color:var(--ink); line-height:1.3; margin:0 0 .6em;}
+  h1{font-size:3rem; letter-spacing:-0.02em;}
+  h2{font-size:2.1rem; letter-spacing:-0.01em;}
+  h3{font-size:1.4rem;}
+  
+  a{color:var(--ledger);}
+
+  /* Login / Portal Overlay Container */
+  #view-login {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; padding:28px; background:var(--paper); text-align:center;
+  }
+  .login-card {
+    background:#fff; border:1px solid var(--rule); border-radius:8px; padding:48px 40px;
+    max-width:440px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,0.04);
+  }
+  .login-card h1 { font-size:2.2rem; margin-bottom:12px; }
+  .login-card p { color:var(--ink-soft); margin-bottom:28px; font-size:1rem; }
+  .login-btn {
+    width:100%; background:var(--ledger); color:#fff; border:none; padding:15px;
+    font-size:1rem; font-weight:600; border-radius:4px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .login-btn:hover { background:#264d42; }
+
+  /* App Navigation / Tabs */
+  .app-nav{background:var(--ink); padding:16px 28px; display:flex; gap:20px; align-items:center; position:sticky; top:0; z-index:100; flex-wrap:wrap;}
+  .app-nav button{background:none; border:none; color:var(--paper); font-family:'IBM Plex Mono',monospace; font-size:12.5px; cursor:pointer; opacity:0.7; padding:6px 0; letter-spacing:.05em;}
+  .app-nav button.active{opacity:1; border-bottom:2px solid var(--gold);}
+  .logout-nav-btn { margin-left:auto; color:var(--gold) !important; opacity:0.9 !important; }
+
+  .app-view{display:none; padding:40px 0 100px;}
+  .app-view.active{display:block;}
+
+  /* Portal View styles */
+  .portal-container{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+  .portal-welcome { background:var(--ledger-light); border:1px solid var(--ledger); border-radius:6px; padding:32px; margin-bottom:28px; }
+
+  #view-catalog header{padding:48px 28px 36px; max-width:1100px; margin:0 auto;}
+  #view-catalog .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink-soft); letter-spacing:.06em;}
+  #view-catalog header h1{margin-top:14px; max-width:18ch;}
+  #view-catalog header p{max-width:65ch; color:var(--ink-soft); font-size:1.15rem; margin-top:20px;}
+  
+  .filters{max-width:1100px; margin:0 auto; padding:0 28px 12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .filter-group-label{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); letter-spacing:.06em; margin-right:4px;}
+  .filter-btn{font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:.03em; background:#fff; border:1px solid var(--rule); color:var(--ink-soft); padding:10px 18px; border-radius:20px; cursor:pointer;}
+  .filter-btn.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  
+  .search-row{max-width:1100px; margin:0 auto; padding:0 28px 22px;}
+  #search-input{
+    width:100%; box-sizing:border-box;
+    font-family:'Inter',sans-serif; font-size:1.05rem; color:var(--ink);
+    background:#fff; border:1px solid var(--rule); border-radius:6px;
+    padding:15px 18px; outline:none;
+  }
+  #search-input:focus{border-color:var(--ledger);}
+  #search-input::placeholder{color:var(--ink-soft);}
+  
+  .results-label{max-width:1100px; margin:0 auto; padding:16px 28px 0; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+  .no-results{max-width:1100px; margin:40px auto; padding:0 28px; color:var(--ink-soft); font-size:1rem; display:none;}
+  
+  .progress-bar{max-width:1100px; margin:24px auto 0; padding:0 28px;}
+  .progress-track{height:8px; background:var(--rule); border-radius:4px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--ledger); width:0%; transition:width .3s ease;}
+  .progress-label{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); margin-top:10px;}
+  
+  .grid{max-width:1100px; margin:32px auto 80px; padding:0 28px; display:grid; grid-template-columns:repeat(2, 1fr); gap:20px;}
+  .card{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:26px; display:flex; flex-direction:column; position:relative; text-decoration:none; color:inherit; transition:border-color .15s ease, transform .15s ease;}
+  .card:hover{border-color:var(--ledger); transform:translateY(-2px);}
+  .card .cat{display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--gold); letter-spacing:.04em; margin-bottom:14px;}
+  .card .cat .letter{width:26px; height:26px; border-radius:50%; background:var(--ink); color:var(--paper); display:flex; align-items:center; justify-content:center; font-family:'Source Serif 4',serif; font-weight:700; font-size:13px;}
+  .card h2{font-size:1.35rem; margin-bottom:10px; line-height:1.3;}
+  .card p{color:var(--ink-soft); font-size:0.98rem; margin:0 0 20px; flex-grow:1;}
+  .card .meta-row{display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); border-top:1px solid #F0ECE2; padding-top:14px; gap:8px;}
+  .card .go{color:var(--ledger); font-weight:600; flex-shrink:0;}
+  .badge-done{position:absolute; top:20px; right:20px; background:var(--ledger-light); color:var(--ledger); font-family:'IBM Plex Mono',monospace; font-size:11px; padding:5px 10px; border-radius:12px; display:none;}
+  .card.completed .badge-done{display:inline-block;}
+
+  /* Status Tab & EA Status Page specific styles */
+  .status-container{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+  .status-card{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:32px; margin-bottom:24px;}
+  .status-metric{font-family:'IBM Plex Mono',monospace; font-size:2.2rem; font-weight:700; color:var(--ledger); margin:10px 0;}
+  .status-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-top:20px;}
+  .field-group{margin-bottom:18px;}
+  .field-group label{display:block; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); margin-bottom:6px; letter-spacing:.04em;}
+  .field-group input, .field-group select{width:100%; padding:12px 14px; font-family:'Inter',sans-serif; font-size:1rem; border:1px solid var(--rule); border-radius:4px; background:#fff;}
+
+  /* FAQs Page styles */
+  .faq-container{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+  .faq-item{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:24px; margin-bottom:16px;}
+  .faq-item h3{font-size:1.2rem; margin-bottom:8px; color:var(--ledger);}
+  .faq-item p{margin:0; color:var(--ink-soft); font-size:1rem;}
+
+  /* Course view */
+  #view-course{display:none;}
+  .hero{max-width:var(--maxw); margin:0 auto; padding:48px 28px 32px;}
+  .back-link{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink-soft); text-decoration:none; margin-bottom:24px; cursor:pointer; background:none; border:none; padding:0;}
+  .hero .meta{display:flex; gap:18px; font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink-soft); margin-bottom:26px; flex-wrap:wrap;}
+  .hero .meta span{border-left:2px solid var(--gold); padding-left:10px;}
+  .hero h1{max-width:18ch;}
+  .hero p.dek{font-size:1.2rem; color:var(--ink-soft); max-width:60ch; margin-top:18px;}
+  .hero-rule{height:1px; background:repeating-linear-gradient(90deg,var(--rule) 0 6px, transparent 6px 10px); margin-top:40px;}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px 120px;}
+  h2.sec{font-size:1.8rem; margin-top:2.6em; padding-top:.5em; border-top:1px solid var(--rule);}
+  h3.sub{font-size:1.2rem; margin-top:1.8em; color:var(--ink);}
+  #course-module p{color:var(--ink); max-width:70ch; font-size:1.05rem;}
+  #course-module ul.list{padding-left:22px;}
+  #course-module ul.list li{margin-bottom:12px; max-width:65ch;}
+  
+  #exam{margin-top:80px; padding-top:48px; border-top:3px solid var(--ink);}
+  #exam .exam-head{margin-bottom:36px;}
+  #exam .exam-head h2{font-size:2rem;}
+  #exam .exam-head p{color:var(--ink-soft); font-size:1.05rem;}
+  .q{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:24px; margin-bottom:16px;}
+  .q p.stem{font-weight:600; margin:0 0 14px; font-size:1.05rem;}
+  .opt{display:flex; align-items:flex-start; gap:12px; padding:10px 0; cursor:pointer; border-top:1px solid #F0ECE2;}
+  .opt:first-of-type{border-top:none;}
+  .opt input{margin-top:6px;}
+  .opt label{cursor:pointer; color:var(--ink); font-size:1rem;}
+  
+  #submit-btn{font-family:'Inter',sans-serif; font-weight:600; font-size:1rem; background:var(--ledger); color:#fff; border:none; padding:16px 34px; border-radius:4px; cursor:pointer; margin-top:12px;}
+  #submit-btn:hover{background:#264d42;}
+  
+  #result{margin-top:28px; padding:24px; border-radius:6px; font-family:'Source Serif 4',serif; display:none;}
+  #result.pass{background:var(--ledger-light); border:1px solid var(--ledger);}
+  #result.fail{background:#F6E9E7; border:1px solid var(--wrong);}
+  #result .score{font-size:1.9rem; font-weight:700; margin:0 0 8px;}
+
+  /* Certificate Box */
+  .cert-box{background:#fff; border:2px solid var(--gold); padding:32px; border-radius:6px; margin-top:24px; display:none;}
+  .cert-box h3{color:var(--ledger); text-align:center; font-size:1.8rem; margin-bottom:10px;}
+  .cert-box p{text-align:center; color:var(--ink-soft);}
+  .download-cert-btn{display:block; width:100%; text-align:center; background:var(--gold); color:#fff; font-weight:600; padding:14px; border-radius:4px; text-decoration:none; margin-top:20px; font-family:'IBM Plex Mono',monospace;}
+
+  @media(max-width:768px){ .grid{grid-template-columns:1fr;} .status-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN (Default Home Page if not logged in) -->
+  <div id="view-login">
+    <div class="login-card">
+      <div class="eyebrow" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); margin-bottom:8px;">SECURE PORTAL LOGIN</div>
+      <h1>EA CE &amp; Practice Hub</h1>
+      <p>Log in to access your continuing education catalog, track CPE credits, and manage practitioner profile settings.</p>
+      <button class="login-btn" onclick="performLogin()">Log In to Portal</button>
+    </div>
+  </div>
+
+  <!-- APPLICATION CONTAINER (Visible only when logged in) -->
+  <div id="app-container" style="display:none;">
+    <!-- Main Navigation Tabs -->
+    <nav class="app-nav">
+      <button class="active" onclick="switchTab('portal', this)">PORTAL</button>
+      <button onclick="switchTab('catalog', this)">CE CATALOG</button>
+      <button onclick="switchTab('status', this)">CPE CREDIT &amp; EA STATUS</button>
+      <button onclick="switchTab('practitioner', this)">PRACTITIONER</button>
+      <button onclick="switchTab('faq', this)">FAQS</button>
+      <button class="logout-nav-btn" onclick="performLogout()">LOG OUT</button>
+    </nav>
+
+    <!-- VIEW: PORTAL (Top Page when logged in) -->
+    <div id="view-portal" class="app-view active">
+      <div class="portal-container">
+        <header style="padding: 20px 0 32px;">
+          <div class="eyebrow">PRACTITIONER HOME</div>
+          <h1>Welcome to your EA Portal</h1>
+          <p style="color:var(--ink-soft); font-size:1.1rem;">Manage your continuing education progress, review compliance targets, and access quick tools from your central dashboard.</p>
+        </header>
+
+        <div class="portal-welcome">
+          <h2>Quick Overview</h2>
+          <p style="color:var(--ink-soft); margin-bottom:16px;">You are currently logged in as an active Enrolled Agent. Use the navigation bar above or shortcut links below to navigate your portal.</p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button class="check-btn" onclick="switchTab('catalog', document.querySelectorAll('.app-nav button')[1])">Browse CE Catalog &rarr;</button>
+            <button class="check-btn" style="background:var(--ledger);" onclick="switchTab('practitioner', document.querySelectorAll('.app-nav button')[3])">Manage Practitioner Profile &rarr;</button>
+          </div>
+        </div>
+
+        <div class="status-grid">
+          <div class="status-card" style="margin-bottom:0;">
+            <h3>Catalog Status</h3>
+            <p style="color:var(--ink-soft); font-size:0.95rem;">Access self-study courses across federal tax law, ethics, retirement plans, and IRS updates.</p>
+            <a href="#" onclick="switchTab('catalog', document.querySelectorAll('.app-nav button')[1]); return false;" style="font-weight:600; font-size:0.9rem; display:inline-block; margin-top:12px;">Open Catalog &rarr;</a>
+          </div>
+          <div class="status-card" style="margin-bottom:0;">
+            <h3>Compliance Summary</h3>
+            <p style="color:var(--ink-soft); font-size:0.95rem;">Monitor remaining annual CPE requirements and auto-synced practitioner profile details.</p>
+            <a href="#" onclick="switchTab('status', document.querySelectorAll('.app-nav button')[2]); return false;" style="font-weight:600; font-size:0.9rem; display:inline-block; margin-top:12px;">Check Status &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: CATALOG -->
+    <div id="view-catalog" class="app-view">
+      <header>
+        <div class="eyebrow">ENROLLED AGENT &middot; CONTINUING EDUCATION</div>
+        <h1>Choose your CE courses</h1>
+        <p>22 self-study courses across every IRS enrolled agent CE category. Each course includes review questions throughout the material plus a graded final exam, sized to IRS CE program requirements for its credit hours.</p>
+      </header>
+
+      <div class="search-row">
+        <input type="text" id="search-input" placeholder="Search courses by title or topic..." autocomplete="off">
+      </div>
+
+      <div class="filters" id="filters">
+        <span class="filter-group-label">CATEGORY</span>
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="U">U &mdash; Update</button>
+        <button class="filter-btn" data-filter="E">E &mdash; Ethics</button>
+        <button class="filter-btn" data-filter="T">T &mdash; Tax Law</button>
+        <button class="filter-btn" data-filter="Q">Q &mdash; Retirement Plans</button>
+        <button class="filter-btn" data-filter="P">P &mdash; SEE Prep</button>
+        <button class="filter-btn" data-filter="A">A &mdash; AFTR</button>
+      </div>
+      <div class="filters" id="hour-filters">
+        <span class="filter-group-label">CE HOURS</span>
+        <button class="filter-btn active" data-hours-filter="all">All</button>
+        <button class="filter-btn" data-hours-filter="1">1 hr</button>
+        <button class="filter-btn" data-hours-filter="2">2 hrs</button>
+        <button class="filter-btn" data-hours-filter="4">4 hrs</button>
+        <button class="filter-btn" data-hours-filter="6">6 hrs</button>
+      </div>
+
+      <div class="results-label" id="results-label"></div>
+
+      <div class="progress-bar">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-label" id="progress-label">0 of 12 courses completed</div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+      <div class="no-results" id="no-results">No courses match your filters. Try clearing the search or selecting "All".</div>
+    </div>
+
+    <!-- VIEW: CPE CREDIT & EA STATUS -->
+    <div id="view-status" class="app-view">
+      <div class="status-container">
+        <header style="padding: 20px 0 32px;">
+          <div class="eyebrow">PRACTITIONER DASHBOARD</div>
+          <h1>Enrolled Agent Status &amp; CPE Credits</h1>
+          <p style="color:var(--ink-soft); font-size:1.1rem;">Track your IRS continuing professional education requirements and auto-synced Form 8554 practitioner profile details.</p>
+        </header>
+
+        <div class="status-card">
+          <h2>Annual CPE Status</h2>
+          <div class="status-metric" id="cpe-remaining-display">24 CE Hours Remaining</div>
+          <p style="color:var(--ink-soft);">You need 72 hours per 3-year enrollment cycle, with a minimum of 16 hours per year (including 2 hours of ethics). Annual CPE remaining for the year left is tracked below based on completed coursework.</p>
+          <div style="margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:0.9rem;">
+            <div>Total Earned This Cycle: <strong id="total-earned-display">0.0</strong> CE Hrs</div>
+            <div>Ethics Earned: <strong id="ethics-earned-display">0.0</strong> / 2.0 Hrs</div>
+          </div>
+        </div>
+
+        <div class="status-card">
+          <h2>Form 8554 Auto-Sync Status</h2>
+          <p style="color:var(--ink-soft); margin-bottom:20px;">Your practitioner details entered under the Practitioner tab automatically sync your renewal records and completed CPE credits.</p>
+          <div style="padding:20px; background:var(--ledger-light); border-radius:4px; border:1px solid var(--ledger);">
+            <h3 style="font-size:1.1rem; color:var(--ledger); margin-bottom:8px;">Form 8554 Auto-Sync Preview</h3>
+            <p style="font-size:0.9rem; margin:0; font-family:'IBM Plex Mono',monospace;" id="form-8554-preview">
+              Syncing Practitioner: Jane A. Doe (PTIN: P00123456) | Cycle: 2026 | Synced CPE Credits: 0.0 hrs attached.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: PRACTITIONER TAB (Dedicated Profile & Practice Settings) -->
+    <div id="view-practitioner" class="app-view">
+      <div class="status-container">
+        <header style="padding: 20px 0 32px;">
+          <div class="eyebrow">PRACTICE MANAGEMENT</div>
+          <h1>Practitioner Profile &amp; Settings</h1>
+          <p style="color:var(--ink-soft); font-size:1.1rem;">Manage your official Enrolled Agent credentials, PTIN records, primary practice location, and professional designations.</p>
+        </header>
+
+        <div class="status-card">
+          <h2>Credentials &amp; Identification</h2>
+          <p style="color:var(--ink-soft); margin-bottom:20px;">Update core identifiers used across course certificates, Form 8554 sync logs, and internal practice records.</p>
+          
+          <div class="status-grid">
+            <div class="field-group">
+              <label>Full Legal Name</label>
+              <input type="text" id="prac-name" value="Jane A. Doe" oninput="syncForm8554()">
+            </div>
+            <div class="field-group">
+              <label>EA Enrollment / PTIN Number</label>
+              <input type="text" id="prac-ptin" value="P00123456" oninput="syncForm8554()">
+            </div>
+            <div class="field-group">
+              <label>Renewal Cycle Year</label>
+              <input type="text" id="prac-cycle" value="2026" oninput="syncForm8554()">
+            </div>
+            <div class="field-group">
+              <label>Professional Designation</label>
+              <select id="prac-designation" onchange="syncForm8554()">
+                <option value="Enrolled Agent (EA)">Enrolled Agent (EA)</option>
+                <option value="CPA & Enrolled Agent">CPA &amp; Enrolled Agent</option>
+                <option value="AFSP Record of Completion">AFSP Record of Completion</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-card">
+          <h2>Practice Details &amp; Contact Info</h2>
+          <p style="color:var(--ink-soft); margin-bottom:20px;">Configure your firm details for client-facing documentation and continuing education reporting compliance.</p>
+
+          <div class="status-grid">
+            <div class="field-group">
+              <label>Firm / Practice Name</label>
+              <input type="text" id="prac-firm" value="Doe Tax & Advisory Services">
+            </div>
+            <div class="field-group">
+              <label>Primary Practice State</label>
+              <input type="text" id="prac-state" value="Florida (FL)">
+            </div>
+            <div class="field-group">
+              <label>Professional Contact Email</label>
+              <input type="text" id="prac-email" value="jane.doe@exampletax.com">
+            </div>
+            <div class="field-group">
+              <label>Member Portal Link</label>
+              <div style="padding:12px 0;"><a href="#membership-portal" onclick="alert('Navigating to official EA Society member portal...')">Manage National EA Society Membership &rarr;</a></div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;">
+            <button class="check-btn" onclick="savePractitionerSettings()">Save Practitioner Profile</button>
+            <span id="save-confirmation" style="font-family:'IBM Plex Mono',monospace; font-size:0.85srem; color:var(--ledger); margin-left:14px; display:none;">✓ Profile saved successfully</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: FAQS -->
+    <div id="view-faq" class="app-view">
+      <div class="faq-container">
+        <header style="padding: 20px 0 32px;">
+          <div class="eyebrow">HELP &amp; GUIDANCE</div>
+          <h1>Frequently Asked Questions</h1>
+          <p style="color:var(--ink-soft); font-size:1.1rem;">Everything you need to know about IRS Enrolled Agent continuing education requirements, reporting, and platform features.</p>
+        </header>
+
+        <div class="faq-item">
+          <h3>What are the continuing education (CE) requirements for an Enrolled Agent?</h3>
+          <p>Enrolled agents must complete 72 hours of qualifying continuing education every 3-year enrollment cycle. A minimum of 16 hours must be completed each enrollment year, and at least 2 of those annual hours must cover ethics or professional conduct (Circular 230).</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>How are certificates of completion generated?</h3>
+          <p>Once you successfully pass a course's final examination with a passing grade of 70% or higher, your course completion certificate is automatically generated inside the course view tab, complete with your credit hours, completion date, and sponsor details ready for download.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>How does Form 8554 auto-sync work?</h3>
+          <p>Form 8554 (Application for Renewal of Enrollment to Practice Before the Internal Revenue Service) details are automatically updated whenever you modify your practitioner profile information under the Practitioner tab or complete new CE courses, ensuring seamless recordkeeping.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>What records must I retain for IRS audit purposes?</h3>
+          <p>Enrolled agents are required to retain certificates of completion, course outlines, and graded examination results for a minimum of four (4) years following the date of renewal.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: COURSE DETAIL -->
+    <div id="view-course" class="app-view">
+      <div class="hero">
+        <button class="back-link" onclick="goToCatalog()">&larr; All courses</button>
+        <div class="meta" id="course-meta"></div>
+        <h1 id="course-title"></h1>
+        <p class="dek" id="course-dek"></p>
+        <div class="hero-rule"></div>
+      </div>
+
+      <div class="wrap">
+        <div id="course-module"></div>
+
+        <section id="exam">
+          <div class="exam-head">
+            <h2>Final Examination</h2>
+            <p id="exam-intro"></p>
+          </div>
+          <form id="exam-form"></form>
+          <button id="submit-btn" type="button" onclick="gradeExam()">Submit exam</button>
+          <div id="result"></div>
+
+          <!-- Course Completion Certificate Box -->
+          <div id="cert-container" class="cert-box">
+            <h3>Certificate of Course Completion</h3>
+            <p>This certifies that <span id="cert-name" style="font-weight:600;">Jane A. Doe</span> has successfully completed the CE course and passed the final examination.</p>
+            <div style="margin: 20px 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:0.9rem;" id="cert-details"></div>
+            <a href="#" id="download-cert-btn" class="download-cert-btn" onclick="downloadCertificate(event)">Download Certificate of Completion (.PDF)</a>
+          </div>
+        </section>
+      </div>
+
+      <footer>Retain your certificate of completion for at least four years.</footer>
+    </div>
+  </div>
+
+<script>
+// Data structure for courses with attached new CPE content
+const COURSES = [
+  {
+    slug: "ethics",
+    category: "E",
+    title: "Practicing Under Circular 230",
+    dek: "Duties, restrictions, and disciplinary standards under Treasury Circular 230 — and the practice habits most likely to trigger an OPR inquiry.",
+    hours: 1.0,
+    metaSpans: ["1.0 CE HR", "CATEGORY E — ETHICS", "QAS SELF-STUDY"],
+    moduleBody: `<h2 class="sec">1.1 Scope and Purpose of Circular 230</h2>\n<p>Treasury Department Circular 230 (31 C.F.R. Part 10) governs practice before the IRS...</p>`,
+    examQuestions: [
+      { q: "Under §10.29, what must generally occur before a practitioner may continue representing two clients with a conflict of interest?", opts: ["Verbal disclosure","OPR pre-approval","Informed written consent from each affected client, generally confirmed within 30 days","Outside counsel opinion"], correct: 2, rationale: "Section 10.29 requires informed written consent." }
+    ]
+  },
+  {
+    slug: "tax-update",
+    category: "U",
+    title: "2026 Federal Tax Law Update (with New CPE Course Attached)",
+    dek: "Comprehensive review of provisions, new tax credits, and newly integrated ethics and practice guidelines.",
+    hours: 2.0,
+    metaSpans: ["2.0 CE HRS", "CATEGORY U — FEDERAL TAX UPDATE", "ATTACHED NEW CPE CONTENT"],
+    moduleBody: `<h2 class="sec">1.1 Overview of Attached New CPE Material</h2>\n<p>This newly attached module integrates recent legislative updates, IRS revenue procedures, and enhanced due-diligence standards for tax practitioners.</p>`,
+    examQuestions: [
+      { q: "What is the standard deduction structure under current IRS guidelines for married filing jointly?", opts: ["Standard baseline figures adjusted for inflation", "Fixed permanent statutory limits", "Exclusively itemized thresholds", "Discretionary local caps"], correct: 0, rationale: "Standard deductions adjust yearly for inflation per IRS guidelines." }
+    ]
+  }
+];
+
+let currentCourse = null;
+let completedCourses = JSON.parse(localStorage.getItem('ea_completed_courses')) || [];
+let isLoggedIn = localStorage.getItem('ea_is_logged_in') === 'true';
+
+// Initialization Check for Authentication State
+function initAuth() {
+  if (isLoggedIn) {
+    document.getElementById('view-login').style.display = 'none';
+    document.getElementById('app-container').style.display = 'block';
+    renderCatalog();
+  } else {
+    document.getElementById('view-login').style.display = 'flex';
+    document.getElementById('app-container').style.display = 'none';
+  }
+}
+
+function performLogin() {
+  localStorage.setItem('ea_is_logged_in', 'true');
+  isLoggedIn = true;
+  initAuth();
+  switchTab('portal', document.querySelector('.app-nav button'));
+}
+
+function performLogout() {
+  localStorage.setItem('ea_is_logged_in', 'false');
+  isLoggedIn = false;
+  initAuth();
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.app-nav button').forEach(b => {
+    if(!b.classList.contains('logout-nav-btn')) b.classList.remove('active');
+  });
+  
+  if(tabId === 'portal') {
+    document.getElementById('view-portal').classList.add('active');
+  } else if(tabId === 'catalog') {
+    document.getElementById('view-catalog').classList.add('active');
+  } else if(tabId === 'status') {
+    document.getElementById('view-status').classList.add('active');
+    updateStatusDashboard();
+  } else if(tabId === 'practitioner') {
+    document.getElementById('view-practitioner').classList.add('active');
+  } else if(tabId === 'faq') {
+    document.getElementById('view-faq').classList.add('active');
+  }
+  if(btn && !btn.classList.contains('logout-nav-btn')) {
+    btn.classList.add('active');
+  }
+  window.scrollTo(0, 0);
+}
+
+function renderCatalog() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = COURSES.map(c => `
+    <a class="card ${completedCourses.includes(c.slug) ? 'completed' : ''}" href="#/course/${c.slug}" onclick="loadCourse('${c.slug}'); return false;">
+      <span class="badge-done">✓ COMPLETED</span>
+      <div class="cat"><span class="letter">${c.category}</span> CATEGORY ${c.category}</div>
+      <h2>${c.title}</h2>
+      <p>${c.dek}</p>
+      <div class="meta-row"><span>${c.metaSpans[0]}</span><span class="go">Start course &rarr;</span></div>
+    </a>
+  `).join('');
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = COURSES.length;
+  const done = completedCourses.length;
+  document.getElementById('progress-fill').style.width = `${(done/total)*100}%`;
+  document.getElementById('progress-label').textContent = `${done} of ${total} courses completed`;
+}
+
+function loadCourse(slug) {
+  currentCourse = COURSES.find(c => c.slug === slug);
+  if(!currentCourse) return;
+
+  document.querySelectorAll('.app-view').forEach(v => v.style.display = 'none');
+  document.getElementById('view-course').style.display = 'block';
+
+  document.getElementById('course-title').textContent = currentCourse.title;
+  document.getElementById('course-dek').textContent = currentCourse.dek;
+  document.getElementById('course-meta').innerHTML = currentCourse.metaSpans.map(s => `<span>${s}</span>`).join('');
+  document.getElementById('course-module').innerHTML = currentCourse.moduleBody;
+
+  const examForm = document.getElementById('exam-form');
+  examForm.innerHTML = currentCourse.examQuestions.map((q, idx) => `
+    <div class="q">
+      <p class="stem">${idx+1}. ${q.q}</p>
+      ${q.opts.map((opt, oIdx) => `
+        <div class="opt">
+          <input type="radio" name="q-${idx}" id="q-${idx}-${oIdx}" value="${oIdx}">
+          <label for="q-${idx}-${oIdx}">${opt}</label>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('cert-container').style.display = 'none';
+  window.scrollTo(0,0);
+}
+
+function goToCatalog() {
+  document.getElementById('view-course').style.display = 'none';
+  document.getElementById('view-catalog').style.display = 'block';
+  renderCatalog();
+}
+
+function gradeExam() {
+  let score = 0;
+  const questions = currentCourse.examQuestions;
+  questions.forEach((q, idx) => {
+    const selected = document.querySelector(`input[name="q-${idx}"]:checked`);
+    if(selected && parseInt(selected.value) === q.correct) score++;
+  });
+
+  const pct = (score / questions.length) * 100;
+  const resDiv = document.getElementById('result');
+  resDiv.style.display = 'block';
+  
+  if(pct >= 70) {
+    resDiv.className = 'pass';
+    resDiv.innerHTML = `<div class="score">Passed (${pct.toFixed(0)}%)</div><p>Congratulations! You have successfully passed the final examination.</p>`;
+    
+    if(!completedCourses.includes(currentCourse.slug)) {
+      completedCourses.push(currentCourse.slug);
+      localStorage.setItem('ea_completed_courses', JSON.stringify(completedCourses));
+    }
+    
+    document.getElementById('cert-container').style.display = 'block';
+    document.getElementById('cert-name').textContent = document.getElementById('prac-name').value || "Jane A. Doe";
+    document.getElementById('cert-details').textContent = `Course: ${currentCourse.title} | Credits: ${currentCourse.hours} CE Hrs | Date: ${new Date().toLocaleDateString()}`;
+    updateStatusDashboard();
+  } else {
+    resDiv.className = 'fail';
+    resDiv.innerHTML = `<div class="score">Score: ${pct.toFixed(0)}% (70% required to pass)</div><p>Please review the material and try again.</p>`;
+  }
+}
+
+function downloadCertificate(e) {
+  e.preventDefault();
+  alert("Generating and downloading official Course Completion Certificate PDF...");
+}
+
+function updateStatusDashboard() {
+  let totalEarned = 0;
+  let ethicsEarned = 0;
+  completedCourses.forEach(slug => {
+    const c = COURSES.find(x => x.slug === slug);
+    if(c) {
+      totalEarned += c.hours;
+      if(c.category === 'E') ethicsEarned += c.hours;
+    }
+  });
+
+  const annualTarget = 16.0;
+  const remaining = Math.max(0, annualTarget - totalEarned);
+  document.getElementById('cpe-remaining-display').textContent = `${remaining.toFixed(1)} CE Hours Remaining for Year`;
+  document.getElementById('total-earned-display').textContent = totalEarned.toFixed(1);
+  document.getElementById('ethics-earned-display').textContent = ethicsEarned.toFixed(1);
+  syncForm8554();
+}
+
+function syncForm8554() {
+  const name = document.getElementById('prac-name').value;
+  const ptin = document.getElementById('prac-ptin').value;
+  const cycle = document.getElementById('prac-cycle').value;
+  let totalEarned = 0;
+  completedCourses.forEach(slug => {
+    const c = COURSES.find(x => x.slug === slug);
+    if(c) totalEarned += c.hours;
+  });
+
+  document.getElementById('form-8554-preview').textContent = 
+    `Syncing Practitioner: ${name} (PTIN: ${ptin}) | Cycle: ${cycle} | Synced CPE Credits: ${totalEarned.toFixed(1)} hrs attached. Form 8554 auto-updated successfully.`;
+}
+
+function savePractitionerSettings() {
+  syncForm8554();
+  const confirmation = document.getElementById('save-confirmation');
+  confirmation.style.display = 'inline';
+  setTimeout(() => {
+    confirmation.style.display = 'none';
+  }, 3000);
+}
+
+// Initial Authentication Run
+initAuth();
+</script>
+</body>
+</html>
