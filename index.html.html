@@ -3081,6 +3081,93 @@
         result.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 </script>
+<!-- 1. Include the Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- 2. Initialize Supabase globally -->
+    <script>
+        const SUPABASE_URL = 'https://cmhgnezqtoqafjdlmlpu.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bfAwbMAnUJ7ZHx227fnctQ_RhYaFLjZ';
+        
+        // Explicitly attach supabase to the window object so it's globally accessible
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        // --- REGISTRATION FUNCTION ---
+        async function handleRegistrationSubmit(e) {
+            e.preventDefault();
+            const fn = document.getElementById('reg-first-name').value.trim();
+            const ln = document.getElementById('reg-last-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+
+            const { data, error } = await window.supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: { first_name: fn, last_name: ln }
+                }
+            });
+
+            if (error) {
+                alert("Error signing up: " + error.message);
+                return;
+            }
+
+            alert("Success! Check your Supabase dashboard under Authentication > Users.");
+            closeRegisterModal();
+        }
+
+        // --- LOGIN FUNCTION ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('username').value.trim(); 
+            const password = document.getElementById('password').value.trim();
+            const err = document.getElementById('login-error');
+
+            const { data, error } = await window.supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                console.error("Login Error:", error.message);
+                err.style.display = 'block';
+                err.textContent = "Invalid email or password.";
+                return;
+            }
+
+            err.style.display = 'none';
+            
+            const user = data.user;
+            currentUser = {
+                username: user.email,
+                role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+            };
+
+            setupLoggedInState();
+            showAppTab('roster');
+        }
+
+        // --- CHECK INITIAL SESSION ON PAGE LOAD ---
+        async function checkInitialSession() {
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (session) {  
+                const user = session.user;
+                currentUser = {
+                    username: user.email,
+                    role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                    name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+                };
+                setupLoggedInState();
+                showAppTab('roster');
+            }
+        }
+
+        // Run session check when script loads
+        checkInitialSession();
+    </script>
+</body>
+</html>
 </body>
 </html>
