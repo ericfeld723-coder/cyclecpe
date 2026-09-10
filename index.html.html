@@ -44,12 +44,14 @@
 
         /* Navbar with Top-Left How It Works, FAQ, About Us, Pricing, and Contact Links */
         .navbar { background-color: var(--primary); color: #ffffff; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 12px; }
-        .navbar-brand-area { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .navbar-brand-area { display: flex; align-items: center; gap: 40px; flex-wrap: wrap; }
         .navbar h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
         .navbar h1 span { color: var(--accent); }
-        .navbar-top-links { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-        .navbar-top-links a { color: #e2e8f0; font-size: 13px; font-weight: 600; text-decoration: none; transition: color 0.2s; cursor: pointer; }
+        .navbar-top-links { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+        .navbar-top-links a { color: #e2e8f0; font-size: 16px; font-weight: 600; text-decoration: none; transition: color 0.2s; cursor: pointer; padding: 4px 2px; }
         .navbar-top-links a:hover { color: #ffffff; text-decoration: underline; }
+        .navbar-top-links a.navbar-login-link { color: #ffffff; background: var(--accent); padding: 8px 16px; border-radius: 6px; }
+        .navbar-top-links a.navbar-login-link:hover { background: var(--primary-hover); text-decoration: none; }
         .navbar-user { font-size: 13px; color: #cbd5e0; display: flex; align-items: center; gap: 15px; }
 
         .container { max-width: 1100px; margin: 24px auto; padding: 0 20px; }
@@ -215,9 +217,21 @@
         #view-catalog .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink-soft); letter-spacing: .04em; }
         #view-catalog header h1 { font-size: 2.2rem; max-width: 20ch; margin-top: 10px; }
         #view-catalog header p { max-width: 65ch; color: var(--ink-soft); font-size: 1rem; margin-top: 12px; }
-        .catalog-filters { max-width: 1040px; margin: 0 auto; padding: 0 10px 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .catalog-filters { max-width: 1040px; margin: 0 auto; padding: 0 10px 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .catalog-filter-group-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-soft); letter-spacing: .05em; margin-right: 2px; }
         .catalog-filter-btn { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .03em; background: #fff; border: 1px solid var(--rule); color: var(--ink-soft); padding: 8px 14px; border-radius: 20px; cursor: pointer; }
         .catalog-filter-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+        .catalog-search-row { max-width: 1040px; margin: 0 auto; padding: 0 10px 16px; }
+        #catalog-search-input {
+            width: 100%; box-sizing: border-box;
+            font-family: 'Inter', sans-serif; font-size: .96rem; color: var(--ink);
+            background: #fff; border: 1px solid var(--rule); border-radius: 6px;
+            padding: 12px 14px; outline: none;
+        }
+        #catalog-search-input:focus { border-color: var(--ledger); }
+        #catalog-search-input::placeholder { color: var(--ink-soft); }
+        .catalog-results-label { max-width: 1040px; margin: 0 auto; padding: 12px 10px 0; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-soft); }
+        .catalog-no-results { max-width: 1040px; margin: 32px auto; padding: 0 10px; color: var(--ink-soft); font-size: .93rem; display: none; }
         .catalog-progress-bar { max-width: 1040px; margin: 16px auto 0; padding: 0 10px; }
         .catalog-progress-track { height: 6px; background: var(--rule); border-radius: 4px; overflow: hidden; }
         .catalog-progress-fill { height: 100%; background: var(--ledger); width: 0%; transition: width .3s ease; }
@@ -315,6 +329,7 @@
             <a onclick="showPublicPage('about')">ℹ️ About Us</a>
             <a onclick="showPublicPage('pricing')">💲 Pricing</a>
             <a onclick="showPublicPage('contact')">✉️ Contact</a>
+            <a class="navbar-login-link" id="navbar-login-link" onclick="backToLoginOrApp()">🔐 Login / Portal</a>
         </div>
     </div>
     <div class="navbar-user" id="navbar-user-area" style="display: none;">
@@ -672,51 +687,12 @@
 
         <!-- TOP NAVIGATION TABS -->
         <div class="page-nav">
-            <button class="page-nav-btn active" id="btnPortal" onclick="showAppTab('portal')">🏠 PORTAL</button>
+            <button class="page-nav-btn active" id="btnPractitioner" onclick="showAppTab('practitioner')">⚙️ Practitioner Tool</button>
             <button class="page-nav-btn" id="btnRoster" onclick="showAppTab('roster')">👥 Enrolled Agent Status</button>
             <button class="page-nav-btn" id="btnEngine" onclick="showAppTab('engine')">📊 CPE Ledger & Engine Math</button>
             <button class="page-nav-btn" id="btnForm8554" onclick="showAppTab('form8554')">📝 Form 8554 Renewal Portal</button>
-            <button class="page-nav-btn" id="btnPractitioner" onclick="showAppTab('practitioner')">⚙️ Practitioner Tool</button>
             <button class="page-nav-btn" id="btnCatalog" onclick="showAppTab('catalog')">📚 CE Courses Catalog</button>
             <button class="page-nav-btn" id="btnAdmin" onclick="showAppTab('admin')" style="display: none;">🛠️ Admin Panel</button>
-        </div>
-
-        <!-- VIEW: PORTAL (Top Page When Logged In) -->
-        <div id="pagePortal" class="app-tab-view page-view active">
-            <div class="panel">
-                <div class="panel-header">
-                    <h2>Welcome to your EA Portal</h2>
-                </div>
-                <p style="color:var(--text-muted); font-size:1.05rem; margin-bottom:24px;">
-                    Manage your continuing education progress, review compliance targets, update your IRS Form 8554 renewal profile, and access quick tools from your central dashboard.
-                </p>
-
-                <div class="portal-welcome" style="background:var(--ledger-light); border:1px solid var(--ledger); border-radius:6px; padding:24px; margin-bottom:24px;">
-                    <h3 style="color:var(--ledger); margin-top:0;">Quick Overview</h3>
-                    <p style="color:var(--text); margin-bottom:16px;">You are currently logged in as an active Enrolled Agent. Use the navigation tabs above or the quick action buttons below to navigate your portal.</p>
-                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                        <button class="btn btn-primary" onclick="showAppTab('catalog')">Browse CE Catalog &rarr;</button>
-                        <button class="btn btn-success" onclick="showAppTab('practitioner')">Manage Practitioner Profile &amp; Form 8554 &rarr;</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-2">
-                    <div class="metric-card" style="box-shadow:none; background:#f8fafc;">
-                        <div class="title" style="color:var(--primary); font-size:14px; margin-bottom:8px;">📚 CE Catalog Status</div>
-                        <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">
-                            Access self-study courses across federal tax law, ethics, retirement plans, and IRS updates with instant certificate generation upon passing.
-                        </div>
-                        <a onclick="showAppTab('catalog')" class="practitioner-link">Open Catalog &rarr;</a>
-                    </div>
-                    <div class="metric-card" style="box-shadow:none; background:#f8fafc;">
-                        <div class="title" style="color:var(--primary); font-size:14px; margin-bottom:8px;">⚙️ Practitioner & Form 8554 Tool</div>
-                        <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">
-                            Review and update your official Enrolled Agent credentials, PTIN records, background suitability questions, and auto-sync renewal data.
-                        </div>
-                        <a onclick="showAppTab('practitioner')" class="practitioner-link">Open Practitioner Tool &rarr;</a>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- PAGE 1: ENROLLED AGENT STATUS -->
@@ -1187,7 +1163,7 @@
         </div>
 
         <!-- PAGE 4: DEDICATED PRACTITIONER TOOL TAB (FORM 8554 & CREDENTIALS INFO) -->
-        <div id="pagePractitioner" class="app-tab-view page-view">
+        <div id="pagePractitioner" class="app-tab-view page-view active">
             <div class="panel">
                 <div class="panel-header">
                     <h2>Enrolled Agent Practitioner Tool & Form 8554 Hub</h2>
@@ -1235,6 +1211,35 @@
                         <div class="field"><label>ZIP Code</label><input type="text" id="p-zip"></div>
                     </div>
 
+                    <!-- BUSINESS / EMPLOYER IDENTIFICATION -->
+                    <div class="section-subtitle">Business / Employer Identification</div>
+                    <div class="field">
+                        <label>Do you have an Employer Identification Number (EIN)?</label>
+                        <div class="radio-group-inline">
+                            <div class="radio-option">
+                                <input type="radio" id="p-ein-yes" name="p_has_ein" value="Yes">
+                                <label for="p-ein-yes">Yes</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="p-ein-no" name="p_has_ein" value="No" checked>
+                                <label for="p-ein-no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="p-ein-container" style="display: none; margin-top: 12px;">
+                        <div id="p-business-list">
+                            <div class="business-block" data-index="1">
+                                <div style="font-weight: 700; font-size: 12px; color: #4a5568; margin-bottom: 8px;">Business Entity #1</div>
+                                <div class="grid grid-2">
+                                    <div class="field"><label>EIN 1</label><input type="text" name="p_ein_1" placeholder="XX-XXXXXXX" class="ein-input" maxlength="10"></div>
+                                    <div class="field"><label>Business Name 1</label><input type="text" name="p_business_name_1" placeholder="Business Name"></div>
+                                </div>
+                                <div class="field"><label>Business Address</label><input type="text" name="p_business_address_1" placeholder="Street Address"></div>
+                            </div>
+                        </div>
+                        <button type="button" id="p-add-ein-btn" class="btn btn-secondary">+ Add Another Business EIN</button>
+                    </div>
+
                     <!-- SUBSCRIPTION & AUTO-RENEW SETTINGS -->
                     <div class="section-subtitle">Subscription & Membership Management</div>
                     <div class="checkbox-option" style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
@@ -1264,6 +1269,37 @@
                         <input type="checkbox" id="p-see-exception">
                         <label for="p-see-exception"><strong>SEE Exception:</strong> Passed all parts of Special Enrollment Exam during this cycle.</label>
                     </div>
+
+                    <div class="field" style="margin-top: 16px;">
+                        <label>Are you currently under suspension or disbarment?</label>
+                        <div class="radio-group-inline">
+                            <div class="radio-option">
+                                <input type="radio" id="p-suspension-yes" name="p_under_suspension" value="Yes">
+                                <label for="p-suspension-yes">Yes</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="p-suspension-no" name="p_under_suspension" value="No" checked>
+                                <label for="p-suspension-no">No</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PART 3 -->
+                    <div class="section-header">Part 3. Continuing Education (CE) Credit Hours (Auto-Calculated)</div>
+                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">Computed live from your CPE Ledger & Engine Math tab. Visit that tab for the full year-by-year breakdown and compliance status.</p>
+                    <table class="ce-table">
+                        <thead>
+                            <tr>
+                                <th>Cycle Period</th>
+                                <th>Federal Tax Hours</th>
+                                <th>Ethics Hours</th>
+                                <th>Total Earned</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p-ce-summary-body">
+                            <tr><td colspan="4" style="color:var(--text-muted); font-style:italic;">Save your profile to calculate CE hours for this cycle.</td></tr>
+                        </tbody>
+                    </table>
 
                     <!-- PART 4: BACKGROUND & SUITABILITY QUESTIONS -->
                     <div class="section-header">Part 4. Background & Suitability Questions</div>
@@ -1327,6 +1363,16 @@
                         </div>
                     </div>
 
+                    <!-- PART 5 -->
+                    <div class="section-header">Part 5. Declaration & Authorization</div>
+                    <div class="declaration-text">
+                        Under penalties of perjury, I declare that I have examined this application, including accompanying statements, and to the best of my knowledge and belief, it is true, correct, and complete. I authorize CycleCPE to process and submit this Form 8554 EA renewal preparation request on my behalf.
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="field"><label>Electronic Signature (Type Full Name)</label><input type="text" id="p-signature" placeholder="Jane A. Doe"></div>
+                        <div class="field"><label>Date</label><input type="date" id="p-sig-date"></div>
+                    </div>
+
                     <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
                         <button type="submit" class="btn btn-primary">💾 Save Practitioner Profile & Auto-Populate 8554</button>
                     </div>
@@ -1345,7 +1391,12 @@
                         <p>22 self-study courses across every IRS enrolled agent CE category. Each course includes review questions throughout the material plus a graded final exam, sized to IRS CE program requirements for its credit hours.</p>
                     </header>
 
+                    <div class="catalog-search-row">
+                        <input type="text" id="catalog-search-input" placeholder="Search courses by title or topic..." autocomplete="off">
+                    </div>
+
                     <div class="catalog-filters" id="catalog-filters">
+                        <span class="catalog-filter-group-label">CATEGORY</span>
                         <button class="catalog-filter-btn active" data-filter="all">All courses</button>
                         <button class="catalog-filter-btn" data-filter="Federal Tax Update">Federal Tax Update</button>
                         <button class="catalog-filter-btn" data-filter="Ethics">Ethics</button>
@@ -1354,6 +1405,16 @@
                         <button class="catalog-filter-btn" data-filter="Special Enrollment Examination Prep">Special Enrollment Examination Prep</button>
                         <button class="catalog-filter-btn" data-filter="Annual Federal Tax Refresher">Annual Federal Tax Refresher</button>
                     </div>
+                    <div class="catalog-filters" id="catalog-hour-filters">
+                        <span class="catalog-filter-group-label">CE HOURS</span>
+                        <button class="catalog-filter-btn active" data-hours-filter="all">All</button>
+                        <button class="catalog-filter-btn" data-hours-filter="1">1 hr</button>
+                        <button class="catalog-filter-btn" data-hours-filter="2">2 hrs</button>
+                        <button class="catalog-filter-btn" data-hours-filter="4">4 hrs</button>
+                        <button class="catalog-filter-btn" data-hours-filter="6">6 hrs</button>
+                    </div>
+
+                    <div class="catalog-results-label" id="catalog-results-label"></div>
 
                     <div class="catalog-progress-bar">
                         <div class="catalog-progress-track"><div class="catalog-progress-fill" id="progress-fill"></div></div>
@@ -1361,7 +1422,7 @@
                     </div>
 
                     <div class="catalog-grid" id="catalog-grid">
-                        <div class="catalog-card" data-cat="Ethics" data-hours="1" data-course="ethics" onclick="openCourseView('ethics')">
+                        <div class="catalog-card" data-cat="Ethics" data-hours="1" data-course="ethics" data-search="practicing under circular 230 duties, restrictions, and disciplinary standards under treasury circular 230 — and the practice habits most likely to trigger an opr inquiry." onclick="openCourseView('ethics')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Practicing Under Circular 230</h2>
@@ -1369,7 +1430,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="s-corp" onclick="openCourseView('s-corp')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="s-corp" data-search="s corporation taxation: elections, compensation, and basis eligibility, elections, reasonable compensation, and the stock-versus-debt basis rules that decide how much of a shareholder's loss is deductible." onclick="openCourseView('s-corp')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>S Corporation Taxation: Elections, Compensation, and Basis</h2>
@@ -1377,7 +1438,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="estate-gift" onclick="openCourseView('estate-gift')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="estate-gift" data-search="estate & gift tax planning under obbba the permanent $15 million exemption, the annual exclusion, portability, and the planning conversations worth having now that the 2026 sunset was repealed." onclick="openCourseView('estate-gift')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Estate &amp; Gift Tax Planning Under OBBBA</h2>
@@ -1385,7 +1446,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="biz-incentives" onclick="openCourseView('biz-incentives')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="biz-incentives" data-search="business cost recovery & investment incentives r&d expensing restored under new §174a, 2026 luxury-auto depreciation limits, and opportunity zones 2.0." onclick="openCourseView('biz-incentives')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Business Cost Recovery &amp; Investment Incentives</h2>
@@ -1393,7 +1454,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="1" data-course="qrp" onclick="openCourseView('qrp')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="1" data-course="qrp" data-search="qualified retirement plan matters 2026 contribution limits, the new mandatory roth catch-up rule, rmds, and epcrs correction procedures." onclick="openCourseView('qrp')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>Qualified Retirement Plan Matters</h2>
@@ -1401,7 +1462,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="partnership-tax" onclick="openCourseView('partnership-tax')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="partnership-tax" data-search="partnership taxation fundamentals outside basis, §704(b) allocations, guaranteed payments, and the k-1 line items that generate the most preparer questions." onclick="openCourseView('partnership-tax')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Partnership Taxation Fundamentals</h2>
@@ -1409,7 +1470,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="like-kind-exchanges" onclick="openCourseView('like-kind-exchanges')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="1" data-course="like-kind-exchanges" data-search="like-kind exchanges & real estate taxation section 1031 mechanics for real property, the 45/180-day deadlines, depreciation recapture, and passive activity rules for rental real estate." onclick="openCourseView('like-kind-exchanges')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Like-Kind Exchanges &amp; Real Estate Taxation</h2>
@@ -1417,7 +1478,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="1" data-course="digital-assets" onclick="openCourseView('digital-assets')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="1" data-course="digital-assets" data-search="2026 digital assets & information reporting update new form 1099-da broker reporting, wallet-by-wallet basis tracking, and the digital asset question every return now carries." onclick="openCourseView('digital-assets')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Digital Assets &amp; Information Reporting Update</h2>
@@ -1425,7 +1486,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="1" data-course="simple-sep-design" onclick="openCourseView('simple-sep-design')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="1" data-course="simple-sep-design" data-search="simple & sep plan design for small business simple ira's higher-deferral option under secure 2.0, sep-ira's funding flexibility, and the conversion pitfalls when a business outgrows either." onclick="openCourseView('simple-sep-design')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>SIMPLE &amp; SEP Plan Design for Small Business</h2>
@@ -1433,7 +1494,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="2" data-course="tax-update" onclick="openCourseView('tax-update')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="2" data-course="tax-update" data-search="2026 federal tax law update the obbba's permanent provisions, the new temporary deductions, and the rev. proc. 2025-32 numbers enrolled agents need for tax year 2026." onclick="openCourseView('tax-update')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Federal Tax Law Update</h2>
@@ -1441,7 +1502,7 @@
                             <div class="meta-row"><span>2.0 CE HRS · 6 review + 10 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Special Enrollment Examination Prep" data-hours="2" data-course="see-prep" onclick="openCourseView('see-prep')">
+                        <div class="catalog-card" data-cat="Special Enrollment Examination Prep" data-hours="2" data-course="see-prep" data-search="special enrollment examination prep structure, topic weighting, and question formats across all three see parts, for candidates preparing to become enrolled agents." onclick="openCourseView('see-prep')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">P</span> SPECIAL ENROLLMENT EXAMINATION PREP</div>
                             <h2>Special Enrollment Examination Prep</h2>
@@ -1449,7 +1510,7 @@
                             <div class="meta-row"><span>3 EXAM PARTS COVERED · 6 review + 10 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Annual Federal Tax Refresher" data-hours="6" data-course="aftr" onclick="openCourseView('aftr')">
+                        <div class="catalog-card" data-cat="Annual Federal Tax Refresher" data-hours="6" data-course="aftr" data-search="annual federal tax refresher the three required aftr domains for non-credentialed preparers pursuing an annual filing season program record of completion." onclick="openCourseView('aftr')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">A</span> ANNUAL FEDERAL TAX REFRESHER</div>
                             <h2>Annual Federal Tax Refresher</h2>
@@ -1457,7 +1518,7 @@
                             <div class="meta-row"><span>6.0 CE HRS · 18 review + 100 final Qs (timed test)</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="4" data-course="individual-credits-deep-dive" onclick="openCourseView('individual-credits-deep-dive')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="4" data-course="individual-credits-deep-dive" data-search="2026 individual credits & provisions deep dive eitc, education credits, the child and dependent care credit, and the 2026 dollar figures behind each." onclick="openCourseView('individual-credits-deep-dive')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Individual Credits &amp; Provisions Deep Dive</h2>
@@ -1465,7 +1526,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="4" data-course="business-depreciation-update" onclick="openCourseView('business-depreciation-update')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-hours="4" data-course="business-depreciation-update" data-search="business entity & depreciation law update bonus depreciation, section 179, listed property limits, and new §174a research expensing, in depth." onclick="openCourseView('business-depreciation-update')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>Business Entity &amp; Depreciation Law Update</h2>
@@ -1473,7 +1534,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Ethics" data-hours="4" data-course="circular-230-case-studies" onclick="openCourseView('circular-230-case-studies')">
+                        <div class="catalog-card" data-cat="Ethics" data-hours="4" data-course="circular-230-case-studies" data-search="circular 230 in practice: case studies & scenarios real-world fact patterns applying circular 230's diligence, conflict-of-interest, and fee rules to everyday practice decisions." onclick="openCourseView('circular-230-case-studies')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Circular 230 in Practice: Case Studies &amp; Scenarios</h2>
@@ -1481,7 +1542,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Ethics" data-hours="4" data-course="preparer-penalties-enforcement" onclick="openCourseView('preparer-penalties-enforcement')">
+                        <div class="catalog-card" data-cat="Ethics" data-hours="4" data-course="preparer-penalties-enforcement" data-search="preparer penalties & irs enforcement priorities the §6694/§6695 penalty framework, how opr investigations start, and building a defensible practice." onclick="openCourseView('preparer-penalties-enforcement')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Preparer Penalties &amp; IRS Enforcement Priorities</h2>
@@ -1489,7 +1550,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="4" data-course="trust-estate-income-tax" onclick="openCourseView('trust-estate-income-tax')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="4" data-course="trust-estate-income-tax" data-search="trust & estate income taxation (form 1041) form 1041 fundamentals, dni, compressed trust brackets, and grantor trust rules." onclick="openCourseView('trust-estate-income-tax')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Trust &amp; Estate Income Taxation (Form 1041)</h2>
@@ -1497,7 +1558,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="4" data-course="multistate-nexus" onclick="openCourseView('multistate-nexus')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="4" data-course="multistate-nexus" data-search="multistate taxation & nexus fundamentals physical vs. economic nexus, apportionment, resident credits, remote work, and ptet elections." onclick="openCourseView('multistate-nexus')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Multistate Taxation &amp; Nexus Fundamentals</h2>
@@ -1505,7 +1566,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="4" data-course="fbar-fatca-reporting" onclick="openCourseView('fbar-fatca-reporting')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-hours="4" data-course="fbar-fatca-reporting" data-search="international information reporting: fbar & fatca fbar and form 8938 thresholds, penalty structures, and streamlined correction procedures for foreign account noncompliance." onclick="openCourseView('fbar-fatca-reporting')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>International Information Reporting: FBAR &amp; FATCA</h2>
@@ -1513,7 +1574,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="4" data-course="defined-benefit-plans" onclick="openCourseView('defined-benefit-plans')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="4" data-course="defined-benefit-plans" data-search="defined benefit & cash balance plan design how defined benefit and cash balance plans let high-earning, late-career owners shelter far more than a 401(k) allows." onclick="openCourseView('defined-benefit-plans')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>Defined Benefit &amp; Cash Balance Plan Design</h2>
@@ -1521,7 +1582,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="4" data-course="ira-rollovers-conversions" onclick="openCourseView('ira-rollovers-conversions')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-hours="4" data-course="ira-rollovers-conversions" data-search="ira rollovers, conversions, and beneficiary planning the 60-day rollover rule, once-per-year limit, backdoor/mega backdoor roth mechanics, and inherited ira beneficiary rules." onclick="openCourseView('ira-rollovers-conversions')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>IRA Rollovers, Conversions, and Beneficiary Planning</h2>
@@ -1529,7 +1590,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Ethics" data-hours="4" data-course="data-security-safeguards" onclick="openCourseView('data-security-safeguards')">
+                        <div class="catalog-card" data-cat="Ethics" data-hours="4" data-course="data-security-safeguards" data-search="data security & safeguards obligations for tax practices the ftc safeguards rule's wisp requirement, irs publication 4557 guidance, and responding to a data breach." onclick="openCourseView('data-security-safeguards')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Data Security &amp; Safeguards Obligations for Tax Practices</h2>
@@ -1537,6 +1598,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
                     </div>
+                    <div class="catalog-no-results" id="catalog-no-results">No courses match your filters. Try clearing the search or selecting "All".</div>
 
                     <footer>
                         Review question and final exam counts follow the required CE Credit Hours table (3 review / 5 final questions per credit hour). All courses reflect IRS guidance current as of publication, including One Big Beautiful Bill Act (OBBBA) changes incorporated into Revenue Procedure 2025-32. Retain your certificate of completion and graded exam for at least four years.
@@ -2002,7 +2064,7 @@
                 activeEaKey = matchedKey;
                 err.style.display = 'none';
                 setupLoggedInState();
-                showAppTab('portal');
+                showAppTab('practitioner');
             } else {
                 err.style.display = 'block';
             }
@@ -2045,7 +2107,7 @@
         activeEaKey = fullName;
         closeRegisterModal();
         setupLoggedInState();
-        showAppTab('portal');
+        showAppTab('practitioner');
         alert(`Account successfully created for ${fullName}! Select a membership tier to access CE courses.`);
     }
 
@@ -2075,6 +2137,9 @@
         renderRosterTable();
         loadActiveEaDataIntoEngine();
         loadPractitionerToolTab();
+
+        const loginLink = document.getElementById('navbar-login-link');
+        if (loginLink) loginLink.innerHTML = '🏠 My Portal';
     }
 
     function logout() {
@@ -2085,6 +2150,9 @@
         document.getElementById('pageLogin').style.display = 'block';
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
+
+        const loginLink = document.getElementById('navbar-login-link');
+        if (loginLink) loginLink.innerHTML = '🔐 Login / Portal';
     }
 
     function hideAllPublicPages() {
@@ -2112,7 +2180,7 @@
         hideAllPublicPages();
         if (currentUser) {
             document.getElementById('appMain').style.display = 'block';
-            showAppTab('portal');
+            showAppTab('practitioner');
         } else {
             document.getElementById('pageLogin').style.display = 'block';
         }
@@ -2125,13 +2193,13 @@
         document.getElementById('pageLogin').style.display = 'none';
         document.getElementById('appMain').style.display = 'block';
 
-        const tabs = ['portal', 'roster', 'engine', 'form8554', 'practitioner', 'catalog', 'admin'];
+        const tabs = ['roster', 'engine', 'form8554', 'practitioner', 'catalog', 'admin'];
         tabs.forEach(t => {
             const el = document.getElementById('page' + t.charAt(0).toUpperCase() + t.slice(1));
             if (el) el.className = (t === tabId) ? 'app-tab-view page-view active' : 'app-tab-view page-view';
         });
 
-        const tabBtns = ['Portal', 'Roster', 'Engine', 'Form8554', 'Practitioner', 'Catalog', 'Admin'];
+        const tabBtns = ['Roster', 'Engine', 'Form8554', 'Practitioner', 'Catalog', 'Admin'];
         tabBtns.forEach(btnName => {
             const btnEl = document.getElementById('btn' + btnName);
             if (btnEl) {
@@ -2323,6 +2391,26 @@
         document.getElementById('p-status-active').checked = ea.statusActive ?? true;
         document.getElementById('p-status-inactive').checked = ea.statusInactive ?? false;
         document.getElementById('p-see-exception').checked = ea.seeException ?? false;
+        setRadioValue('p_under_suspension', ea.underSuspension || 'No');
+
+        setRadioValue('p_has_ein', ea.hasEin || 'No');
+        document.getElementById('p-ein-container').style.display = (ea.hasEin === 'Yes') ? 'block' : 'none';
+        const pBusinessList = document.getElementById('p-business-list');
+        const businesses = (ea.businesses && ea.businesses.length) ? ea.businesses : [{ ein: '', name: '', address: '' }];
+        pBusinessList.innerHTML = businesses.map((b, i) => {
+            const n = i + 1;
+            return `<div class="business-block" data-index="${n}">
+                <div style="font-weight: 700; font-size: 12px; color: #4a5568; margin-bottom: 8px;">Business Entity #${n}</div>
+                <div class="grid grid-2">
+                    <div class="field"><label>EIN ${n}</label><input type="text" name="p_ein_${n}" placeholder="XX-XXXXXXX" class="ein-input" maxlength="10" value="${b.ein || ''}"></div>
+                    <div class="field"><label>Business Name ${n}</label><input type="text" name="p_business_name_${n}" placeholder="Business Name" value="${(b.name || '').replace(/"/g,'&quot;')}"></div>
+                </div>
+                <div class="field"><label>Business Address</label><input type="text" name="p_business_address_${n}" placeholder="Street Address" value="${(b.address || '').replace(/"/g,'&quot;')}"></div>
+            </div>`;
+        }).join('');
+
+        document.getElementById('p-signature').value = ea.signature || `${ea.firstName || ''} ${ea.lastName || ''}`.trim();
+        document.getElementById('p-sig-date').value = ea.sigDate || new Date().toISOString().split('T')[0];
 
         const s = ea.suitability || {};
         setRadioValue('p_tax_current', s.taxCurrent || 'Yes');
@@ -2335,6 +2423,7 @@
         setRadioValue('p_is_attorney', s.isAttorney || 'No');
 
         toggleStandaloneTaxExplanation();
+        runEngine();
     }
 
     function saveStandalonePractitioner(e) {
@@ -2360,6 +2449,21 @@
         ea.statusActive = document.getElementById('p-status-active').checked;
         ea.statusInactive = document.getElementById('p-status-inactive').checked;
         ea.seeException = document.getElementById('p-see-exception').checked;
+        ea.underSuspension = getRadioValue('p_under_suspension');
+
+        ea.hasEin = getRadioValue('p_has_ein');
+        ea.businesses = Array.from(document.querySelectorAll('#p-business-list .business-block')).map(block => {
+            const einInput = block.querySelector('input[name^="p_ein_"]');
+            const nameInput = block.querySelector('input[name^="p_business_name_"]');
+            const addrInput = block.querySelector('input[name^="p_business_address_"]');
+            return {
+                ein: einInput ? einInput.value.trim() : '',
+                name: nameInput ? nameInput.value.trim() : '',
+                address: addrInput ? addrInput.value.trim() : ''
+            };
+        });
+        ea.signature = document.getElementById('p-signature').value.trim();
+        ea.sigDate = document.getElementById('p-sig-date').value;
 
         ea.suitability = {
             taxCurrent: getRadioValue('p_tax_current'),
@@ -2659,7 +2763,23 @@
         const engineResult = { totalRequiredCE, yearBreakdown, overallCompliant };
         renderEngineUI(totalRequiredCE, yearBreakdown, overallCompliant);
         populateForm8554FromActiveEa(engineResult);
+        renderPractitionerCeSummary(yearBreakdown, cycleEndYear);
         return engineResult;
+    }
+
+    function renderPractitionerCeSummary(yearBreakdown, cycleEndYear) {
+        const body = document.getElementById('p-ce-summary-body');
+        if (!body || !yearBreakdown) return;
+        const years = Object.keys(yearBreakdown).sort();
+        body.innerHTML = years.map((year, i) => {
+            const yb = yearBreakdown[year];
+            return `<tr>
+                <td>Year ${i + 1} (${year})</td>
+                <td>${yb.earnedTax}</td>
+                <td>${yb.earnedEthics}</td>
+                <td>${yb.totalEarned} / ${yb.requiredTotal} ${yb.isCompliant ? '✅' : '⚠️'}</td>
+            </tr>`;
+        }).join('');
     }
 
     function renderEngineUI(totalRequired, breakdown, isOverallCompliant) {
@@ -3199,6 +3319,34 @@
             businessList.appendChild(block);
         });
 
+        const pEinYes = document.getElementById('p-ein-yes');
+        const pEinNo = document.getElementById('p-ein-no');
+        const pEinContainer = document.getElementById('p-ein-container');
+        const pAddEinBtn = document.getElementById('p-add-ein-btn');
+        const pBusinessListEl = document.getElementById('p-business-list');
+        let pBusinessCount = 1;
+
+        if (pEinYes && pEinNo && pEinContainer) {
+            pEinYes.addEventListener('change', () => { pEinContainer.style.display = 'block'; });
+            pEinNo.addEventListener('change', () => { pEinContainer.style.display = 'none'; });
+        }
+        if (pAddEinBtn && pBusinessListEl) {
+            pAddEinBtn.addEventListener('click', function () {
+                pBusinessCount++;
+                const block = document.createElement('div');
+                block.className = 'business-block';
+                block.innerHTML = `
+                    <div style="font-weight: 700; font-size: 12px; color: #4a5568; margin-bottom: 8px;">Business Entity #${pBusinessCount}</div>
+                    <div class="grid grid-2">
+                        <div class="field"><label>EIN ${pBusinessCount}</label><input type="text" name="p_ein_${pBusinessCount}" placeholder="XX-XXXXXXX" class="ein-input" maxlength="10"></div>
+                        <div class="field"><label>Business Name ${pBusinessCount}</label><input type="text" name="p_business_name_${pBusinessCount}" placeholder="Business Name"></div>
+                    </div>
+                    <div class="field"><label>Business Address</label><input type="text" name="p_business_address_${pBusinessCount}" placeholder="Street Address"></div>
+                `;
+                pBusinessListEl.appendChild(block);
+            });
+        }
+
         const qTaxYes = document.getElementById('q-tax-yes');
         const qTaxNo = document.getElementById('q-tax-no');
         const taxWrap = document.getElementById('tax-explanation-wrap');
@@ -3285,16 +3433,56 @@
     COURSES.forEach(c => bySlug[c.slug] = c);
 
     document.addEventListener("DOMContentLoaded", function() {
-        const filters = document.querySelectorAll('.catalog-filter-btn');
+        const filters = document.querySelectorAll('#catalog-filters .catalog-filter-btn');
+        const hourFilters = document.querySelectorAll('#catalog-hour-filters .catalog-filter-btn');
         const cards = document.querySelectorAll('#catalog-grid .catalog-card');
+        const searchInput = document.getElementById('catalog-search-input');
+        const resultsLabel = document.getElementById('catalog-results-label');
+        const noResults = document.getElementById('catalog-no-results');
+        const grid = document.getElementById('catalog-grid');
+
+        let activeCat = 'all';
+        let activeHours = 'all';
+
+        function applyCatalogFilters(){
+            const q = (searchInput.value || '').trim().toLowerCase();
+            let visibleCount = 0;
+            cards.forEach(c => {
+                const matchesCat = activeCat === 'all' || c.dataset.cat === activeCat;
+                const matchesHours = activeHours === 'all' || c.dataset.hours === activeHours;
+                const matchesSearch = q === '' || (c.dataset.search || '').includes(q);
+                const show = matchesCat && matchesHours && matchesSearch;
+                c.style.display = show ? 'flex' : 'none';
+                if (show) visibleCount++;
+            });
+            if (resultsLabel) {
+                resultsLabel.textContent = visibleCount + ' course' + (visibleCount === 1 ? '' : 's') +
+                    (q || activeCat !== 'all' || activeHours !== 'all' ? ' matching your filters' : '');
+            }
+            if (noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+            if (grid) grid.style.display = visibleCount === 0 ? 'none' : 'grid';
+        }
+
         filters.forEach(btn => {
             btn.addEventListener('click', () => {
                 filters.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                const f = btn.dataset.filter;
-                cards.forEach(c => { c.style.display = (f === 'all' || c.dataset.cat === f) ? 'flex' : 'none'; });
+                activeCat = btn.dataset.filter;
+                applyCatalogFilters();
             });
         });
+
+        hourFilters.forEach(btn => {
+            btn.addEventListener('click', () => {
+                hourFilters.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeHours = btn.dataset.hoursFilter;
+                applyCatalogFilters();
+            });
+        });
+
+        if (searchInput) searchInput.addEventListener('input', applyCatalogFilters);
+        applyCatalogFilters();
     });
 
     function refreshCatalogProgress(){
@@ -3525,7 +3713,7 @@
             };
 
             setupLoggedInState();
-            showAppTab('portal');
+            showAppTab('practitioner');
         }
 
         // --- CHECK INITIAL SESSION ON PAGE LOAD ---
@@ -3539,7 +3727,7 @@
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
                 setupLoggedInState();
-                showAppTab('portal');
+                showAppTab('practitioner');
             }
         }
 
