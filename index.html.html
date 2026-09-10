@@ -3084,18 +3084,19 @@
 <!-- Your existing closing HTML elements -->
     </div> <!-- Closes container or appMain -->
 
-    <!-- 1. Include the Supabase JS Library -->
+   <!-- 1. Include the Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- 2. Initialize Supabase & Hook up your functions -->
+    <!-- 2. Initialize Supabase & Hook up real Auth functions -->
     <script>
         const SUPABASE_URL = 'https://cmhgnezqtoqafjdlmlpu.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bfAwbMAnUJ7ZHx227fnctQ_RhYaFLjZ';
         
-        // This creates your global supabase connection tool
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        // This creates your global supabase connection tool safely
+        window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const supabase = window.supabaseClient;
 
-        // Your registration handler function can go right here too
+        // --- REGISTRATION FUNCTION ---
         async function handleRegistrationSubmit(e) {
             e.preventDefault();
             const fn = document.getElementById('reg-first-name').value.trim();
@@ -3119,86 +3120,56 @@
             alert("Success! Check your Supabase dashboard under Authentication > Users.");
             closeRegisterModal();
         }
+
+        // --- LOGIN FUNCTION ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('username').value.trim(); 
+            const password = document.getElementById('password').value.trim();
+            const err = document.getElementById('login-error');
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                console.error("Login Error:", error.message);
+                err.style.display = 'block';
+                err.textContent = "Invalid email or password.";
+                return;
+            }
+
+            err.style.display = 'none';
+            
+            const user = data.user;
+            currentUser = {
+                username: user.email,
+                role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+            };
+
+            setupLoggedInState();
+            showAppTab('roster');
+        }
+
+        // --- CHECK INITIAL SESSION ON PAGE LOAD ---
+        async function checkInitialSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {  
+                const user = session.user;
+                currentUser = {
+                    username: user.email,
+                    role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                    name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+                };
+                setupLoggedInState();
+                showAppTab('roster');
+            }
+        }
+
+        // Run session check when script loads
+        checkInitialSession();
     </script>
 </body>
-</html>
-</body>async function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('username').value.trim(); // Note: we can treat this input field as email
-    const password = document.getElementById('password').value.trim();
-    const err = document.getElementById('login-error');
-
-    // Call Supabase Sign In
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-    });
-
-    if (error) {
-        console.error("Login Error:", error.message);
-        err.style.display = 'block';
-        err.textContent = "Invalid email or password.";
-        return;
-    }
-
-    err.style.display = 'none';
-    
-    // Set up user session and unlock app interface
-    const user = data.user;
-    currentUser = {
-        username: user.email,
-        role: 'USER',
-        name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
-    };
-
-    setupLoggedInState();
-    showAppTab('roster');
-}async function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('username').value.trim(); // Note: we can treat this input field as email
-    const password = document.getElementById('password').value.trim();
-    const err = document.getElementById('login-error');
-
-    // Call Supabase Sign In
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-    });
-
-    if (error) {
-        console.error("Login Error:", error.message);
-        err.style.display = 'block';
-        err.textContent = "Invalid email or password.";
-        return;
-    }
-
-    err.style.display = 'none';
-    
-    // Set up user session and unlock app interface
-    const user = data.user;
-    currentUser = {
-        username: user.email,
-        role: 'USER',
-        name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
-    };
-
-    setupLoggedInState();
-    showAppTab('roster');// Check if user is already logged in when the page loads
-async function checkInitialSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {  
-        const user = session.user;
-        currentUser = {
-            username: user.email,
-            role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER', // Optional admin check
-            name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
-        };
-        setupLoggedInState();
-        showAppTab('roster');
-    }
-}
-
-// Run this when the script loads
-checkInitialSession();
-}
 </html>
