@@ -3084,17 +3084,16 @@
 <!-- Your existing closing HTML elements -->
     </div> <!-- Closes container or appMain -->
 
-   <!-- 1. Include the Supabase JS Library -->
+<!-- 1. Include the Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- 2. Initialize Supabase & Hook up real Auth functions -->
+    <!-- 2. Initialize Supabase globally -->
     <script>
         const SUPABASE_URL = 'https://cmhgnezqtoqafjdlmlpu.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bfAwbMAnUJ7ZHx227fnctQ_RhYaFLjZ';
         
-        // This creates your global supabase connection tool safely
-        window.supabaseClient = window.supabaseClient || window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-        const supabase = window.supabaseClient;
+        // Explicitly attach supabase to the window object so it's globally accessible
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
         // --- REGISTRATION FUNCTION ---
         async function handleRegistrationSubmit(e) {
@@ -3104,7 +3103,7 @@
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value.trim();
 
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await window.supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
@@ -3128,7 +3127,7 @@
             const password = document.getElementById('password').value.trim();
             const err = document.getElementById('login-error');
 
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await window.supabase.auth.signInWithPassword({
                 email: email,
                 password: password,
             });
@@ -3155,7 +3154,7 @@
 
         // --- CHECK INITIAL SESSION ON PAGE LOAD ---
         async function checkInitialSession() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await window.supabase.auth.getSession();
             if (session) {  
                 const user = session.user;
                 currentUser = {
