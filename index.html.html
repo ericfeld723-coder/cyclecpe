@@ -3081,6 +3081,46 @@
         result.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Your existing closing HTML elements -->
+    </div> <!-- Closes container or appMain -->
+
+    <!-- 1. Include the Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 2. Initialize Supabase & Hook up your functions -->
+    <script>
+        const SUPABASE_URL = 'https://cmhgnezqtoqafjdlmlpu.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bfAwbMAnUJ7ZHx227fnctQ_RhYaFLjZ';
+        
+        // This creates your global supabase connection tool
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        // Your registration handler function can go right here too
+        async function handleRegistrationSubmit(e) {
+            e.preventDefault();
+            const fn = document.getElementById('reg-first-name').value.trim();
+            const ln = document.getElementById('reg-last-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: { first_name: fn, last_name: ln }
+                }
+            });
+
+            if (error) {
+                alert("Error signing up: " + error.message);
+                return;
+            }
+
+            alert("Success! Check your Supabase dashboard under Authentication > Users.");
+            closeRegisterModal();
+        }
+    </script>
+</body>
+</html>
 </body>
 </html>
