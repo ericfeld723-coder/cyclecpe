@@ -3122,5 +3122,83 @@
     </script>
 </body>
 </html>
-</body>
+</body>async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('username').value.trim(); // Note: we can treat this input field as email
+    const password = document.getElementById('password').value.trim();
+    const err = document.getElementById('login-error');
+
+    // Call Supabase Sign In
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        console.error("Login Error:", error.message);
+        err.style.display = 'block';
+        err.textContent = "Invalid email or password.";
+        return;
+    }
+
+    err.style.display = 'none';
+    
+    // Set up user session and unlock app interface
+    const user = data.user;
+    currentUser = {
+        username: user.email,
+        role: 'USER',
+        name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+    };
+
+    setupLoggedInState();
+    showAppTab('roster');
+}async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('username').value.trim(); // Note: we can treat this input field as email
+    const password = document.getElementById('password').value.trim();
+    const err = document.getElementById('login-error');
+
+    // Call Supabase Sign In
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        console.error("Login Error:", error.message);
+        err.style.display = 'block';
+        err.textContent = "Invalid email or password.";
+        return;
+    }
+
+    err.style.display = 'none';
+    
+    // Set up user session and unlock app interface
+    const user = data.user;
+    currentUser = {
+        username: user.email,
+        role: 'USER',
+        name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+    };
+
+    setupLoggedInState();
+    showAppTab('roster');// Check if user is already logged in when the page loads
+async function checkInitialSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {  
+        const user = session.user;
+        currentUser = {
+            username: user.email,
+            role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER', // Optional admin check
+            name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+        };
+        setupLoggedInState();
+        showAppTab('roster');
+    }
+}
+
+// Run this when the script loads
+checkInitialSession();
+}
 </html>
