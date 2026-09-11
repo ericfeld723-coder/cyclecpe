@@ -859,26 +859,30 @@
                 <form id="ea-renewal-form">
                     <!-- PART 1 -->
                     <div class="section-header">Part 1. Identification Information</div>
+                    <div class="field-sync-banner" style="background:#eef4ff; border:1px solid #b8d4ff; border-radius:6px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <span style="font-size:0.88rem; color:var(--primary);">🔒 These fields are synced live from your Practitioner Profile and are read-only here.</span>
+                        <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-size:12px; white-space:nowrap;" onclick="showAppTab('practitioner')">✏️ Edit in Profile</button>
+                    </div>
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="last-name">Last Name</label>
-                            <input type="text" id="last-name" name="last_name" placeholder="Doe">
+                            <input type="text" id="last-name" name="last_name" placeholder="Doe" readonly>
                         </div>
                         <div class="field">
                             <label for="first-name">First Name & Middle Initial</label>
-                            <input type="text" id="first-name" name="first_name" placeholder="Jane A.">
+                            <input type="text" id="first-name" name="first_name" placeholder="Jane A." readonly>
                         </div>
                     </div>
 
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="ssn-last4">SSN (Last 4 Digits)</label>
-                            <input type="text" id="ssn-last4" name="ssn_last4" placeholder="1234" maxlength="4" autocomplete="off">
+                            <input type="text" id="ssn-last4" name="ssn_last4" placeholder="1234" maxlength="4" autocomplete="off" readonly>
                             <span id="ssn-feedback" class="field-feedback"></span>
                         </div>
                         <div class="field">
                             <label for="ssn-confirm-last4">Confirm SSN (Last 4 Digits)</label>
-                            <input type="text" id="ssn-confirm-last4" name="ssn_confirm_last4" placeholder="1234" maxlength="4" autocomplete="off">
+                            <input type="text" id="ssn-confirm-last4" name="ssn_confirm_last4" placeholder="1234" maxlength="4" autocomplete="off" readonly>
                             <span id="ssn-confirm-feedback" class="field-feedback"></span>
                         </div>
                     </div>
@@ -891,17 +895,17 @@
                     <div class="grid grid-3">
                         <div class="field">
                             <label for="enrollment-num">EA Enrollment Number</label>
-                            <input type="text" id="enrollment-num" name="enrollment_num" placeholder="00000000-EA" maxlength="11" autocomplete="off">
+                            <input type="text" id="enrollment-num" name="enrollment_num" placeholder="00000000-EA" maxlength="11" autocomplete="off" readonly>
                             <span id="ea-feedback" class="field-feedback"></span>
                         </div>
                         <div class="field">
                             <label for="confirm-enrollment-num">Confirm EA Enrollment Number</label>
-                            <input type="text" id="confirm-enrollment-num" name="confirm_enrollment_num" placeholder="00000000-EA" maxlength="11" autocomplete="off">
+                            <input type="text" id="confirm-enrollment-num" name="confirm_enrollment_num" placeholder="00000000-EA" maxlength="11" autocomplete="off" readonly>
                             <span id="confirm-ea-feedback" class="field-feedback"></span>
                         </div>
                         <div class="field">
                             <label for="caf-num">CAF Number (Optional)</label>
-                            <input type="text" id="caf-num" name="caf_num" placeholder="0000-0000R" maxlength="10" autocomplete="off">
+                            <input type="text" id="caf-num" name="caf_num" placeholder="0000-0000R" maxlength="10" autocomplete="off" readonly>
                             <span id="caf-feedback" class="field-feedback"></span>
                         </div>
                     </div>
@@ -909,52 +913,56 @@
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="form-enrollment-date">Original Enrollment Date</label>
-                            <input type="date" id="form-enrollment-date" name="enrollment_date" onchange="syncPortalEnrollmentDate(this.value)">
+                            <input type="date" id="form-enrollment-date" name="enrollment_date" onchange="syncPortalEnrollmentDate(this.value)" readonly>
                         </div>
                     </div>
 
                     <div class="section-subtitle">Contact Information</div>
                     <div class="field" style="margin-bottom: 16px;">
                         <label for="street">Street Address / P.O. Box</label>
-                        <input type="text" id="street" name="street" placeholder="123 Main Street, Suite 100">
+                        <input type="text" id="street" name="street" placeholder="123 Main Street, Suite 100" readonly>
                     </div>
 
                     <div class="grid grid-3">
                         <div class="field">
                             <label for="city">City</label>
-                            <input type="text" id="city" name="city" placeholder="City">
+                            <input type="text" id="city" name="city" placeholder="City" readonly>
                         </div>
                         <div class="field">
                             <label for="state">State</label>
-                            <input type="text" id="state" name="state" placeholder="FL" maxlength="2">
+                            <input type="text" id="state" name="state" placeholder="FL" maxlength="2" readonly>
                         </div>
                         <div class="field">
                             <label for="zip">ZIP Code</label>
-                            <input type="text" id="zip" name="zip" placeholder="33431">
+                            <input type="text" id="zip" name="zip" placeholder="33431" readonly>
                         </div>
                     </div>
 
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="phone">Primary Phone Number</label>
-                            <input type="text" id="phone" name="phone" placeholder="(555) 000-0000">
+                            <input type="text" id="phone" name="phone" placeholder="(555) 000-0000" readonly>
                         </div>
                         <div class="field">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" placeholder="jane.doe@example.com">
+                            <input type="email" id="email" name="email" placeholder="jane.doe@example.com" readonly>
                         </div>
                     </div>
 
                     <div class="section-subtitle">Business / Employer Identification</div>
+                    <div class="field-sync-banner" style="background:#eef4ff; border:1px solid #b8d4ff; border-radius:6px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <span style="font-size:0.88rem; color:var(--primary);">🔒 EIN and business entity information is managed on your Practitioner Profile.</span>
+                        <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-size:12px; white-space:nowrap;" onclick="showAppTab('practitioner')">✏️ Edit in Profile</button>
+                    </div>
                     <div class="field">
                         <label>Do you have an Employer Identification Number (EIN)?</label>
                         <div class="radio-group-inline">
                             <div class="radio-option">
-                                <input type="radio" id="ein-yes" name="has_ein" value="Yes">
+                                <input type="radio" id="ein-yes" name="has_ein" value="Yes" disabled>
                                 <label for="ein-yes">Yes</label>
                             </div>
                             <div class="radio-option">
-                                <input type="radio" id="ein-no" name="has_ein" value="No" checked>
+                                <input type="radio" id="ein-no" name="has_ein" value="No" checked disabled>
                                 <label for="ein-no">No</label>
                             </div>
                         </div>
@@ -967,24 +975,19 @@
                                 <div class="grid grid-2">
                                     <div class="field">
                                         <label>EIN 1</label>
-                                        <input type="text" name="ein_1" placeholder="XX-XXXXXXX" class="ein-input" maxlength="10">
+                                        <input type="text" name="ein_1" placeholder="XX-XXXXXXX" class="ein-input" maxlength="10" readonly>
                                     </div>
                                     <div class="field">
                                         <label>Business Name 1</label>
-                                        <input type="text" name="business_name_1" placeholder="Business Name">
+                                        <input type="text" name="business_name_1" placeholder="Business Name" readonly>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <label>Business Address</label>
-                                    <input type="text" name="business_address_1" placeholder="Street Address">
-                                </div>
-                                <div class="field">
-                                    <label>Business Address 2</label>
-                                    <input type="text" name="business_address2_1" placeholder="Suite, Unit, Building (Optional)">
+                                    <input type="text" name="business_address_1" placeholder="Street Address" readonly>
                                 </div>
                             </div>
                         </div>
-                        <button type="button" id="add-ein-btn" class="btn btn-secondary">+ Add Another Business EIN</button>
                     </div>
 
                     <!-- PART 2 -->
@@ -1129,12 +1132,12 @@
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="ptin">Preparer Tax Identification Number (PTIN)</label>
-                            <input type="text" id="ptin" name="ptin" placeholder="P00000000" maxlength="9" autocomplete="off">
+                            <input type="text" id="ptin" name="ptin" placeholder="P00000000" maxlength="9" autocomplete="off" readonly>
                             <span id="ptin-feedback" class="field-feedback"></span>
                         </div>
                         <div class="field">
                             <label for="confirm-ptin">Confirm PTIN</label>
-                            <input type="text" id="confirm-ptin" name="confirm_ptin" placeholder="P00000000" maxlength="9" autocomplete="off">
+                            <input type="text" id="confirm-ptin" name="confirm_ptin" placeholder="P00000000" maxlength="9" autocomplete="off" readonly>
                             <span id="confirm-ptin-feedback" class="field-feedback"></span>
                         </div>
                     </div>
@@ -1169,21 +1172,8 @@
                     <h2>Enrolled Agent Practitioner Tool & Form 8554 Hub</h2>
                 </div>
                 <p style="color:var(--text-muted); font-size:1.05rem; margin-bottom:24px;">
-                    Manage your official Enrolled Agent credentials, PTIN records, background suitability questionnaire, Form 8554 auto-sync details, and membership settings in one centralized workspace.
+                    Manage your official Enrolled Agent identification, credentials, and membership plan. Continuing education status, your Form 8554 renewal due date, and remaining CPE hours are tracked on the <a class="practitioner-link" onclick="showAppTab('roster')">Enrolled Agent Status</a> page.
                 </p>
-
-                <div id="p-status-banner" class="grid grid-2" style="margin-bottom:24px;">
-                    <div class="metric-card" style="box-shadow:none; background:var(--ledger-light, #f0f9f4); border:1px solid var(--success);">
-                        <div class="title" style="color:var(--primary);">📅 Next Form 8554 Renewal Due</div>
-                        <div class="value" id="p-next-due-date" style="font-size:20px; color:var(--text);">—</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;" id="p-next-due-window">Save your profile to calculate your renewal window.</div>
-                    </div>
-                    <div class="metric-card" style="box-shadow:none; background:#fffaf0; border:1px solid var(--warning);">
-                        <div class="title" style="color:var(--primary);">⏳ CPE Hours Remaining This Year</div>
-                        <div class="value" id="p-hours-remaining" style="font-size:20px; color:var(--text);">—</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;" id="p-hours-remaining-detail">Save your profile to calculate remaining hours.</div>
-                    </div>
-                </div>
 
                 <form id="standalone-practitioner-form" onsubmit="saveStandalonePractitioner(event)">
                     <!-- PART 1 -->
@@ -1196,17 +1186,33 @@
 
                     <div class="grid grid-2">
                         <div class="field"><label>EA Enrollment Number</label><input type="text" id="p-ea-num" placeholder="00098412-EA"></div>
-                        <div class="field"><label>Confirm EA Enrollment Number</label><input type="text" id="p-confirm-ea-num" placeholder="00098412-EA"></div>
+                        <div class="field">
+                            <label>Confirm EA Enrollment Number</label>
+                            <input type="text" id="p-confirm-ea-num" placeholder="00098412-EA">
+                            <span id="p-ea-num-feedback" class="field-feedback"></span>
+                        </div>
                     </div>
 
                     <div class="grid grid-3">
                         <div class="field"><label>PTIN</label><input type="text" id="p-ptin" placeholder=""></div>
-                        <div class="field"><label>Confirm PTIN</label><input type="text" id="p-confirm-ptin" placeholder=""></div>
+                        <div class="field">
+                            <label>Confirm PTIN</label>
+                            <input type="text" id="p-confirm-ptin" placeholder="">
+                            <span id="p-ptin-feedback" class="field-feedback"></span>
+                        </div>
                         <div class="field"><label>CAF Number</label><input type="text" id="p-caf" placeholder="0300-12345R"></div>
                     </div>
 
-                    <div class="grid grid-3">
+                    <div class="grid grid-2">
                         <div class="field"><label>SSN (Last 4 Digits)</label><input type="text" id="p-ssn" maxlength="4" placeholder="4321"></div>
+                        <div class="field">
+                            <label>Confirm SSN (Last 4 Digits)</label>
+                            <input type="text" id="p-confirm-ssn" maxlength="4" placeholder="4321">
+                            <span id="p-ssn-feedback" class="field-feedback"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
                         <div class="field"><label>Email Address</label><input type="email" id="p-email"></div>
                         <div class="field"><label>Phone Number</label><input type="text" id="p-phone"></div>
                     </div>
@@ -1253,8 +1259,13 @@
                         <button type="button" id="p-add-ein-btn" class="btn btn-secondary">+ Add Another Business EIN</button>
                     </div>
 
-                    <!-- SUBSCRIPTION & AUTO-RENEW SETTINGS -->
+                    <!-- SUBSCRIPTION & MEMBERSHIP SUMMARY -->
                     <div class="section-subtitle">Subscription & Membership Management</div>
+                    <div id="p-plan-summary" style="background:#f8fafc; padding:14px 16px; border-radius:6px; border:1px solid var(--border); margin-bottom:10px;">
+                        <div style="font-size:12px; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Active Plan</div>
+                        <div id="p-plan-name" style="font-size:16px; font-weight:700; color:var(--primary);">No Plan Active</div>
+                        <div id="p-plan-cost" style="font-size:13px; color:var(--text-muted); margin-top:2px;"></div>
+                    </div>
                     <div class="checkbox-option" style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <input type="checkbox" id="p-auto-renew" checked style="display:inline-block; margin-right:8px;">
@@ -1265,125 +1276,7 @@
                         <button type="button" class="btn btn-danger" style="padding:4px 10px; font-size:12px;" onclick="cancelActiveMembershipPlan()">❌ Cancel Active Plan</button>
                     </div>
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px; margin-bottom:12px;">
-                        You can toggle auto-renew or click "Cancel Active Plan" to terminate your recurring membership status for this profile.
-                    </div>
-
-                    <!-- PART 2 -->
-                    <div class="section-header">Part 2. Enrollment Status & Exceptions</div>
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="p-status-active" checked>
-                        <label for="p-status-active"><strong>Active Renewal:</strong> Application to renew active status for current cycle.</label>
-                    </div>
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="p-status-inactive">
-                        <label for="p-status-inactive"><strong>Inactive Retirement Status:</strong> Request placement on inactive retirement status.</label>
-                    </div>
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="p-see-exception">
-                        <label for="p-see-exception"><strong>SEE Exception:</strong> Passed all parts of Special Enrollment Exam during this cycle.</label>
-                    </div>
-
-                    <div class="field" style="margin-top: 16px;">
-                        <label>Are you currently under suspension or disbarment?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option">
-                                <input type="radio" id="p-suspension-yes" name="p_under_suspension" value="Yes">
-                                <label for="p-suspension-yes">Yes</label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" id="p-suspension-no" name="p_under_suspension" value="No" checked>
-                                <label for="p-suspension-no">No</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PART 3 -->
-                    <div class="section-header">Part 3. Continuing Education (CE) Credit Hours (Auto-Calculated)</div>
-                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">Computed live from your CPE Ledger & Engine Math tab. Visit that tab for the full year-by-year breakdown and compliance status.</p>
-                    <table class="ce-table">
-                        <thead>
-                            <tr>
-                                <th>Cycle Period</th>
-                                <th>Federal Tax Hours</th>
-                                <th>Ethics Hours</th>
-                                <th>Total Earned</th>
-                            </tr>
-                        </thead>
-                        <tbody id="p-ce-summary-body">
-                            <tr><td colspan="4" style="color:var(--text-muted); font-style:italic;">Save your profile to calculate CE hours for this cycle.</td></tr>
-                        </tbody>
-                    </table>
-
-                    <!-- PART 4: BACKGROUND & SUITABILITY QUESTIONS -->
-                    <div class="section-header">Part 4. Background & Suitability Questions</div>
-                    
-                    <div class="field">
-                        <label>1. Current with individual and business taxes?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option"><input type="radio" name="p_tax_current" value="Yes" checked onchange="toggleStandaloneTaxExplanation()"> Yes</div>
-                            <div class="radio-option"><input type="radio" name="p_tax_current" value="No" onchange="toggleStandaloneTaxExplanation()"> No</div>
-                        </div>
-                    </div>
-                    <div id="p-tax-exp-wrap" style="display:none; margin-bottom:12px;">
-                        <textarea id="p-tax-exp" rows="2" placeholder="Provide a written explanation regarding non-current tax obligations..."></textarea>
-                    </div>
-
-                    <div class="field">
-                        <label>2. Sanctioned by a federal or state licensing authority?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option"><input type="radio" name="p_sanctioned" value="Yes"> Yes</div>
-                            <div class="radio-option"><input type="radio" name="p_sanctioned" value="No" checked> No</div>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label>3. Denied admission to practice before a court or government agency?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option"><input type="radio" name="p_admission_denied" value="Yes"> Yes</div>
-                            <div class="radio-option"><input type="radio" name="p_admission_denied" value="No" checked> No</div>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label>4. Convicted of a tax crime or felony?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option"><input type="radio" name="p_felony" value="Yes"> Yes</div>
-                            <div class="radio-option"><input type="radio" name="p_felony" value="No" checked> No</div>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label>5. Permanently enjoined from tax preparation or representation?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option"><input type="radio" name="p_enjoined" value="Yes"> Yes</div>
-                            <div class="radio-option"><input type="radio" name="p_enjoined" value="No" checked> No</div>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label>6. Are you a CPA?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option"><input type="radio" name="p_is_cpa" value="Yes"> Yes</div>
-                            <div class="radio-option"><input type="radio" name="p_is_cpa" value="No" checked> No</div>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label>7. Are you an Attorney?</label>
-                        <div class="radio-group-inline">
-                            <div class="radio-option"><input type="radio" name="p_is_attorney" value="Yes"> Yes</div>
-                            <div class="radio-option"><input type="radio" name="p_is_attorney" value="No" checked> No</div>
-                        </div>
-                    </div>
-
-                    <!-- PART 5 -->
-                    <div class="section-header">Part 5. Declaration & Authorization</div>
-                    <div class="declaration-text">
-                        Under penalties of perjury, I declare that I have examined this application, including accompanying statements, and to the best of my knowledge and belief, it is true, correct, and complete. I authorize CycleCPE to process and submit this Form 8554 EA renewal preparation request on my behalf.
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="field"><label>Electronic Signature (Type Full Name)</label><input type="text" id="p-signature" placeholder="Jane A. Doe"></div>
-                        <div class="field"><label>Date</label><input type="date" id="p-sig-date"></div>
+                        You can toggle auto-renew or click "Cancel Active Plan" to terminate your recurring membership status for this profile. Continuing education status, background/suitability questions, and your Form 8554 declaration are completed on the <a class="practitioner-link" onclick="showAppTab('form8554')">Form 8554 Renewal Portal</a> tab.
                     </div>
 
                     <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
@@ -2420,6 +2313,24 @@
         loadPractitionerToolTab();
     }
 
+    function renderPlanSummary(ea) {
+        const nameEl = document.getElementById('p-plan-name');
+        const costEl = document.getElementById('p-plan-cost');
+        if (!nameEl || !costEl) return;
+        if (!ea.membershipPlan) {
+            nameEl.textContent = 'No Plan Active';
+            costEl.textContent = 'Select a plan to unlock the CE catalog and Form 8554 preparation.';
+            return;
+        }
+        let planLabel = "No Plan Active", cost = "";
+        if (ea.membershipPlan === "1_YEAR") { planLabel = "1-Year CPE Plan"; cost = "$95 / year"; }
+        if (ea.membershipPlan === "3_YEAR") { planLabel = "3-Year CPE Plan"; cost = "$270 / 3 years"; }
+        if (ea.membershipPlan === "3_YEAR_8554") { planLabel = "3-Year CPE + Form 8554 Plan"; cost = "$495 / 3 years"; }
+        if (ea.hasForm8554Addon && ea.membershipPlan !== "3_YEAR_8554") cost += (cost ? " + " : "") + "Form 8554 Add-on ($240)";
+        nameEl.textContent = planLabel;
+        costEl.textContent = cost;
+    }
+
     function loadPractitionerToolTab() {
         const ea = practitioners[activeEaKey];
         if (!ea) return;
@@ -2433,6 +2344,7 @@
         document.getElementById('p-confirm-ptin').value = ea.ptin || '';
         document.getElementById('p-caf').value = ea.caf || '';
         document.getElementById('p-ssn').value = ea.ssn || '';
+        document.getElementById('p-confirm-ssn').value = ea.ssn || '';
         document.getElementById('p-email').value = ea.email || '';
         document.getElementById('p-phone').value = ea.phone || '';
         document.getElementById('p-enrollment-date').value = ea.enrollmentDate || new Date().toISOString().split('T')[0];
@@ -2442,10 +2354,6 @@
         document.getElementById('p-zip').value = ea.zip || '';
 
         document.getElementById('p-auto-renew').checked = ea.autoRenew !== false;
-        document.getElementById('p-status-active').checked = ea.statusActive ?? true;
-        document.getElementById('p-status-inactive').checked = ea.statusInactive ?? false;
-        document.getElementById('p-see-exception').checked = ea.seeException ?? false;
-        setRadioValue('p_under_suspension', ea.underSuspension || 'No');
 
         setRadioValue('p_has_ein', ea.hasEin || 'No');
         document.getElementById('p-ein-container').style.display = (ea.hasEin === 'Yes') ? 'block' : 'none';
@@ -2463,25 +2371,15 @@
             </div>`;
         }).join('');
 
-        document.getElementById('p-signature').value = ea.signature || `${ea.firstName || ''} ${ea.lastName || ''}`.trim();
-        document.getElementById('p-sig-date').value = ea.sigDate || new Date().toISOString().split('T')[0];
-
-        const s = ea.suitability || {};
-        setRadioValue('p_tax_current', s.taxCurrent || 'Yes');
-        document.getElementById('p-tax-exp').value = s.taxExplanation || '';
-        setRadioValue('p_sanctioned', s.sanctioned || 'No');
-        setRadioValue('p_admission_denied', s.admissionDenied || 'No');
-        setRadioValue('p_felony', s.felony || 'No');
-        setRadioValue('p_enjoined', s.enjoined || 'No');
-        setRadioValue('p_is_cpa', s.isCpa || 'No');
-        setRadioValue('p_is_attorney', s.isAttorney || 'No');
-
-        toggleStandaloneTaxExplanation();
+        renderPlanSummary(ea);
+        wirePractitionerLiveSync();
         runEngine();
+        validatePractitionerConfirmFields();
     }
 
-    function saveStandalonePractitioner(e) {
-        e.preventDefault();
+    // Live-sync: any edit on the Practitioner tab immediately updates the ea record,
+    // the Enrolled Agent Status roster, and the Form 8554 tab — no Save click required.
+    function syncPractitionerFieldsLive() {
         const ea = practitioners[activeEaKey];
         if (!ea) return;
 
@@ -2494,17 +2392,12 @@
         ea.ssn = document.getElementById('p-ssn').value.trim();
         ea.email = document.getElementById('p-email').value.trim();
         ea.phone = document.getElementById('p-phone').value.trim();
-        ea.enrollmentDate = document.getElementById('p-enrollment-date').value;
+        ea.enrollmentDate = document.getElementById('p-enrollment-date').value || ea.enrollmentDate;
         ea.address1 = document.getElementById('p-address1').value.trim();
         ea.city = document.getElementById('p-city').value.trim();
         ea.state = document.getElementById('p-state').value.trim();
         ea.zip = document.getElementById('p-zip').value.trim();
         ea.autoRenew = document.getElementById('p-auto-renew').checked;
-        ea.statusActive = document.getElementById('p-status-active').checked;
-        ea.statusInactive = document.getElementById('p-status-inactive').checked;
-        ea.seeException = document.getElementById('p-see-exception').checked;
-        ea.underSuspension = getRadioValue('p_under_suspension');
-
         ea.hasEin = getRadioValue('p_has_ein');
         ea.businesses = Array.from(document.querySelectorAll('#p-business-list .business-block')).map(block => {
             const einInput = block.querySelector('input[name^="p_ein_"]');
@@ -2516,23 +2409,68 @@
                 address: addrInput ? addrInput.value.trim() : ''
             };
         });
-        ea.signature = document.getElementById('p-signature').value.trim();
-        ea.sigDate = document.getElementById('p-sig-date').value;
 
-        ea.suitability = {
-            taxCurrent: getRadioValue('p_tax_current'),
-            taxExplanation: document.getElementById('p-tax-exp').value,
-            sanctioned: getRadioValue('p_sanctioned'),
-            admissionDenied: getRadioValue('p_admission_denied'),
-            felony: getRadioValue('p_felony'),
-            enjoined: getRadioValue('p_enjoined'),
-            isCpa: getRadioValue('p_is_cpa'),
-            isAttorney: getRadioValue('p_is_attorney')
-        };
-
+        // Ensure this practitioner is reflected in the roster the moment they exist/change,
+        // without requiring the Save button.
         renderRosterTable();
-        loadActiveEaDataIntoEngine();
-        alert("Practitioner profile & Form 8554 data successfully saved and auto-synced!");
+        renderPlanSummary(ea);
+        runEngine(); // refreshes Form 8554 Part 1 fields + engine + roster CE columns live
+        validatePractitionerConfirmFields();
+    }
+
+    function validatePractitionerConfirmFields() {
+        const pairs = [
+            { main: 'p-ea-num', confirm: 'p-confirm-ea-num', feedback: 'p-ea-num-feedback', label: 'EA Enrollment Number' },
+            { main: 'p-ptin', confirm: 'p-confirm-ptin', feedback: 'p-ptin-feedback', label: 'PTIN' },
+            { main: 'p-ssn', confirm: 'p-confirm-ssn', feedback: 'p-ssn-feedback', label: 'SSN (Last 4 Digits)' }
+        ];
+        let allValid = true;
+        const mismatches = [];
+
+        pairs.forEach(p => {
+            const mainEl = document.getElementById(p.main);
+            const confirmEl = document.getElementById(p.confirm);
+            const feedbackEl = document.getElementById(p.feedback);
+            if (!mainEl || !confirmEl || !feedbackEl) return;
+
+            const mainVal = mainEl.value.trim();
+            const confirmVal = confirmEl.value.trim();
+
+            if (confirmVal === '') {
+                feedbackEl.textContent = '';
+                return;
+            }
+            if (mainVal !== confirmVal) {
+                feedbackEl.textContent = `⚠️ Does not match ${p.label}.`;
+                feedbackEl.style.color = 'var(--danger, #e53e3e)';
+                allValid = false;
+                mismatches.push(p.label);
+            } else {
+                feedbackEl.textContent = '✅ Matches';
+                feedbackEl.style.color = 'var(--success, #38a169)';
+            }
+        });
+
+        return { allValid, mismatches };
+    }
+
+    function wirePractitionerLiveSync() {
+        const form = document.getElementById('standalone-practitioner-form');
+        if (!form || form.dataset.liveSyncWired) return;
+        form.dataset.liveSyncWired = '1';
+        form.addEventListener('input', syncPractitionerFieldsLive);
+        form.addEventListener('change', syncPractitionerFieldsLive);
+    }
+
+    function saveStandalonePractitioner(e) {
+        e.preventDefault();
+        syncPractitionerFieldsLive();
+        const { allValid, mismatches } = validatePractitionerConfirmFields();
+        if (!allValid) {
+            alert("Please fix the following before saving:\n\n" + mismatches.map(m => `• Confirm ${m} does not match ${m}.`).join("\n"));
+            return;
+        }
+        alert("Practitioner profile saved. Your Enrolled Agent Status and Form 8554 tabs are already up to date.");
     }
 
     function openPractitionerModal(key) {
@@ -2766,6 +2704,25 @@
         document.getElementById('ptin').dispatchEvent(new Event('input'));
         document.getElementById('confirm-ptin').dispatchEvent(new Event('input'));
 
+        // Sync EIN / business entity display (read-only here; edited on the Practitioner tab)
+        const einYesEl = document.getElementById('ein-yes');
+        const einNoEl = document.getElementById('ein-no');
+        const einContainerEl = document.getElementById('ein-container');
+        if (einYesEl && einNoEl && einContainerEl) {
+            const hasEin = ea.hasEin === 'Yes';
+            einYesEl.checked = hasEin;
+            einNoEl.checked = !hasEin;
+            einContainerEl.style.display = hasEin ? 'block' : 'none';
+            const businesses = (ea.businesses && ea.businesses.length) ? ea.businesses : [{ ein: '', name: '', address: '' }];
+            const b = businesses[0];
+            const einInput = document.querySelector('#business-list input[name="ein_1"]');
+            const nameInput = document.querySelector('#business-list input[name="business_name_1"]');
+            const addrInput = document.querySelector('#business-list input[name="business_address_1"]');
+            if (einInput) einInput.value = b.ein || '';
+            if (nameInput) nameInput.value = b.name || '';
+            if (addrInput) addrInput.value = b.address || '';
+        }
+
         const cycle = getCycleYearsFromSSN(ea.ssn);
         if (engineResult && engineResult.yearBreakdown) {
             syncEngineToForm8554Table(engineResult.yearBreakdown, cycle.endYear - 1);
@@ -2817,32 +2774,7 @@
         const engineResult = { totalRequiredCE, yearBreakdown, overallCompliant };
         renderEngineUI(totalRequiredCE, yearBreakdown, overallCompliant);
         populateForm8554FromActiveEa(engineResult);
-        renderPractitionerCeSummary(yearBreakdown, cycleEndYear);
-        renderPractitionerStatusBanner(ea, cycle, yearBreakdown);
         return engineResult;
-    }
-
-    function renderPractitionerStatusBanner(ea, cycle, yearBreakdown) {
-        const dueEl = document.getElementById('p-next-due-date');
-        const windowEl = document.getElementById('p-next-due-window');
-        const hoursEl = document.getElementById('p-hours-remaining');
-        const hoursDetailEl = document.getElementById('p-hours-remaining-detail');
-        if (!dueEl || !hoursEl) return;
-
-        dueEl.textContent = cycle.expireDate;
-        windowEl.textContent = `Filing window: ${cycle.fileWindow} (${cycle.groupName})`;
-
-        const currentYear = new Date().getFullYear();
-        const yb = yearBreakdown[currentYear];
-        if (yb) {
-            const totalRemaining = Math.max(0, yb.requiredTotal - yb.totalEarned);
-            const ethicsRemaining = Math.max(0, yb.requiredEthics - yb.earnedEthics);
-            hoursEl.textContent = totalRemaining === 0 ? '0 hours — on track ✅' : `${totalRemaining} hours`;
-            hoursDetailEl.textContent = `Includes ${ethicsRemaining} ethics hour(s) remaining · ${yb.totalEarned} of ${yb.requiredTotal} earned for ${currentYear}`;
-        } else {
-            hoursEl.textContent = 'N/A';
-            hoursDetailEl.textContent = `${currentYear} is outside your current renewal cycle (${cycle.startYear}–${cycle.endYear - 1}).`;
-        }
     }
 
     function renderPractitionerCeSummary(yearBreakdown, cycleEndYear) {
@@ -3379,23 +3311,22 @@
         const businessList = document.getElementById('business-list');
         let businessCount = 1;
 
-        einYes.addEventListener('change', () => { einContainer.style.display = 'block'; });
-        einNo.addEventListener('change', () => { einContainer.style.display = 'none'; });
-
-        addEinBtn.addEventListener('click', function () {
-            businessCount++;
-            const block = document.createElement('div');
-            block.className = 'business-block';
-            block.innerHTML = `
-                <div style="font-weight: 700; font-size: 12px; color: #4a5568; margin-bottom: 8px;">Business Entity #${businessCount}</div>
-                <div class="grid grid-2">
-                    <div class="field"><label>EIN ${businessCount}</label><input type="text" name="ein_${businessCount}" placeholder="XX-XXXXXXX" class="ein-input" maxlength="10"></div>
-                    <div class="field"><label>Business Name ${businessCount}</label><input type="text" name="business_name_${businessCount}" placeholder="Business Name"></div>
-                </div>
-                <div class="field"><label>Business Address</label><input type="text" name="business_address_${businessCount}" placeholder="Street Address"></div>
-            `;
-            businessList.appendChild(block);
-        });
+        if (addEinBtn && businessList) {
+            addEinBtn.addEventListener('click', function () {
+                businessCount++;
+                const block = document.createElement('div');
+                block.className = 'business-block';
+                block.innerHTML = `
+                    <div style="font-weight: 700; font-size: 12px; color: #4a5568; margin-bottom: 8px;">Business Entity #${businessCount}</div>
+                    <div class="grid grid-2">
+                        <div class="field"><label>EIN ${businessCount}</label><input type="text" name="ein_${businessCount}" placeholder="XX-XXXXXXX" class="ein-input" maxlength="10"></div>
+                        <div class="field"><label>Business Name ${businessCount}</label><input type="text" name="business_name_${businessCount}" placeholder="Business Name"></div>
+                    </div>
+                    <div class="field"><label>Business Address</label><input type="text" name="business_address_${businessCount}" placeholder="Street Address"></div>
+                `;
+                businessList.appendChild(block);
+            });
+        }
 
         const pEinYes = document.getElementById('p-ein-yes');
         const pEinNo = document.getElementById('p-ein-no');
