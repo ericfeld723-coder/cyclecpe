@@ -551,12 +551,13 @@
                     <div style="font-weight:700; font-size:1.2rem; color:var(--primary);">1 Year Access</div>
                     <div class="plan-price">$95 <span>/ 1 Year</span></div>
                     <p style="font-size:0.85rem; color:var(--text-muted); margin: 8px 0 14px;">Ideal for single-year catch up and annual CE requirements.</p>
-                    <ul style="font-size:0.85rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0;">
+                    <ul style="font-size:0.85rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0 0 14px;">
                         <li>Unlimited CE Courses</li>
                         <li>Instant Certificates</li>
                         <li>CPE Tracker by Year & Required Hours</li>
                         <li>External OCR Certificate Uploads</li>
                     </ul>
+                    <button type="button" class="btn btn-secondary" style="width:100%;" onclick="selectPricingPlan(1)">Select This Plan</button>
                 </div>
 
                 <!-- PLAN 2 -->
@@ -565,12 +566,13 @@
                     <div style="font-weight:700; font-size:1.2rem; color:var(--primary);">3 Year Access</div>
                     <div class="plan-price">$270 <span>/ 3 Years</span></div>
                     <p style="font-size:0.85rem; color:var(--text-muted); margin: 8px 0 14px;">Full coverage for your entire 3-year EA renewal cycle.</p>
-                    <ul style="font-size:0.85rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0;">
+                    <ul style="font-size:0.85rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0 0 14px;">
                         <li>Full 3-Year Cycle Cover</li>
                         <li>Unlimited CE Courses</li>
                         <li>CPE Tracker by Year & Required Hours</li>
                         <li>Locked-In Discounted Rate</li>
                     </ul>
+                    <button type="button" class="btn btn-secondary" style="width:100%;" onclick="selectPricingPlan(2)">Select This Plan</button>
                 </div>
 
                 <!-- PLAN 3 -->
@@ -579,12 +581,13 @@
                     <div style="font-weight:700; font-size:1.2rem; color:var(--primary);">3 Year + Form 8554</div>
                     <div class="plan-price">$495 <span>/ Full Cycle</span></div>
                     <p style="font-size:0.85rem; color:var(--text-muted); margin: 8px 0 14px;">Complete CPE compliance plus Form 8554 prep & filing.</p>
-                    <ul style="font-size:0.85rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0;">
+                    <ul style="font-size:0.85rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0 0 14px;">
                         <li>Unlimited CE 3 Years</li>
                         <li>CPE Tracker by Year & Required Hours</li>
                         <li>Form 8554 Prep & Filing Package</li>
                         <li>Priority Compliance Support</li>
                     </ul>
+                    <button type="button" class="btn btn-secondary" style="width:100%;" onclick="selectPricingPlan(3)">Select This Plan</button>
                 </div>
             </div>
 
@@ -592,7 +595,7 @@
                 🔄 <strong>Subscription & Auto-Renewal Note:</strong> All memberships automatically renew at the end of the billing term to ensure uninterrupted access. You can manage, disable auto-renewal, or cancel your plan at any time directly from your practitioner profile settings.
             </div>
 
-            <div style="text-align: center;">
+            <div style="text-align: center;" id="pricing-cta-wrap">
                 <button class="btn btn-primary" onclick="backToLoginOrApp()">🔐 Login to Select & Purchase Plan</button>
             </div>
         </div>
@@ -697,22 +700,18 @@
 
         <!-- PAGE 1: ENROLLED AGENT STATUS -->
         <div id="pageRoster" class="app-tab-view page-view">
-            <div class="metrics-grid">
+            <div class="metrics-grid" style="grid-template-columns: repeat(3, 1fr);">
                 <div class="metric-card">
-                    <div class="title">Stored EAs</div>
-                    <div class="value" id="count-total">1</div>
+                    <div class="title" id="count-hours-remaining-label">CPE Hours Remaining (thru Dec 2026)</div>
+                    <div class="value" style="color: var(--warning);" id="count-hours-remaining">0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="title">Due This Cycle</div>
-                    <div class="value" style="color: var(--warning);" id="count-due">1</div>
+                    <div class="title">Next 8554 Due Date</div>
+                    <div class="value" style="color: var(--success); font-size: 20px;" id="count-next-due">—</div>
                 </div>
                 <div class="metric-card">
-                    <div class="title">Ready for Filing</div>
-                    <div class="value" style="color: var(--success);" id="count-ready">1</div>
-                </div>
-                <div class="metric-card">
-                    <div class="title">Completed Renewals</div>
-                    <div class="value" style="color: var(--text-muted);" id="count-completed">0</div>
+                    <div class="title" id="count-hours-completed-label">CPE Hours Completed (this period)</div>
+                    <div class="value" style="color: var(--text-muted);" id="count-hours-completed">0</div>
                 </div>
             </div>
 
@@ -1261,10 +1260,13 @@
 
                     <!-- SUBSCRIPTION & MEMBERSHIP SUMMARY -->
                     <div class="section-subtitle">Subscription & Membership Management</div>
-                    <div id="p-plan-summary" style="background:#f8fafc; padding:14px 16px; border-radius:6px; border:1px solid var(--border); margin-bottom:10px;">
-                        <div style="font-size:12px; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Active Plan</div>
-                        <div id="p-plan-name" style="font-size:16px; font-weight:700; color:var(--primary);">No Plan Active</div>
-                        <div id="p-plan-cost" style="font-size:13px; color:var(--text-muted); margin-top:2px;"></div>
+                    <div id="p-plan-summary" style="background:#f8fafc; padding:14px 16px; border-radius:6px; border:1px solid var(--border); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <div style="font-size:12px; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Active Plan</div>
+                            <div id="p-plan-name" style="font-size:16px; font-weight:700; color:var(--primary);">No Plan Active</div>
+                            <div id="p-plan-cost" style="font-size:13px; color:var(--text-muted); margin-top:2px;"></div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="promptMembershipPaywall(null)">🔄 Select / Change Plan</button>
                     </div>
                     <div class="checkbox-option" style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                         <div>
@@ -2214,6 +2216,11 @@
             document.getElementById('dropdown-field-wrap').style.display = 'none';
         }
 
+        let aggregateHoursRemaining = 0;
+        let aggregateHoursCompleted = 0;
+        let earliestDueDate = null;
+        let earliestDueDateLabel = '—';
+
         visibleKeys.forEach(key => {
             const ea = practitioners[key];
             const tr = document.createElement('tr');
@@ -2227,8 +2234,16 @@
                 hoursRemainingHtml = totalRemaining === 0
                     ? `<span style="color:var(--success); font-weight:600;">0 hrs ✅</span>`
                     : `<span style="color:var(--warning); font-weight:600;">${totalRemaining} hrs</span>`;
+                aggregateHoursRemaining += totalRemaining;
+                aggregateHoursCompleted += yb.totalEarned;
             } else {
                 hoursRemainingHtml = `<span style="color:var(--text-muted);">N/A</span>`;
+            }
+
+            const expireDateObj = new Date(cycle.expireDate);
+            if (!isNaN(expireDateObj) && (!earliestDueDate || expireDateObj < earliestDueDate)) {
+                earliestDueDate = expireDateObj;
+                earliestDueDateLabel = cycle.expireDate;
             }
 
             let planDisplayHtml = "";
@@ -2240,7 +2255,7 @@
                 if (ea.membershipPlan === "3_YEAR") planLabel = "3-Yr CPE ($270)";
                 if (ea.membershipPlan === "3_YEAR_8554") planLabel = "3-Yr CPE + 8554 ($495)";
                 if (ea.hasForm8554Addon && ea.membershipPlan !== "3_YEAR_8554") planLabel += " + 8554 ($240)";
-                planDisplayHtml = `<span class="tag tag-ethics">${planLabel}</span>`;
+                planDisplayHtml = `<span class="tag tag-ethics">${planLabel}</span> <a class="membership-link" style="font-size:11px; display:block; margin-top:2px;" onclick="promptMembershipPaywallForEa('${key}')">Change Plan</a>`;
             }
 
             tr.innerHTML = `
@@ -2272,9 +2287,12 @@
         });
 
         const total = visibleKeys.length;
-        document.getElementById('count-total').textContent = total;
-        document.getElementById('count-due').textContent = total;
-        document.getElementById('count-ready').textContent = total;
+        const currentYear = new Date().getFullYear();
+        document.getElementById('count-hours-remaining-label').textContent = `CPE Hours Remaining (thru Dec ${currentYear})`;
+        document.getElementById('count-hours-remaining').textContent = total > 0 ? aggregateHoursRemaining : '—';
+        document.getElementById('count-next-due').textContent = total > 0 ? earliestDueDateLabel : '—';
+        document.getElementById('count-hours-completed-label').textContent = `CPE Hours Completed (this period)`;
+        document.getElementById('count-hours-completed').textContent = total > 0 ? aggregateHoursCompleted : '—';
     }
 
     function promptMembershipPaywallForEa(key) {
@@ -3059,6 +3077,30 @@
             return;
         }
         alert(`Initiating CycleCPE batch renewal for ${count} selected EA(s)...\n\nTotal processing fee: $${count * 110}.00`);
+    }
+
+    function selectPricingPlan(opt) {
+        if (!currentUser) {
+            alert("Please log in first to select a membership plan.");
+            backToLoginOrApp();
+            return;
+        }
+        const ea = practitioners[activeEaKey];
+        if (!ea) {
+            alert("Please log in first to select a membership plan.");
+            backToLoginOrApp();
+            return;
+        }
+
+        if (opt === 1) ea.membershipPlan = "1_YEAR";
+        if (opt === 2) ea.membershipPlan = "3_YEAR";
+        if (opt === 3) ea.membershipPlan = "3_YEAR_8554";
+        ea.hasForm8554Addon = (opt === 3) || ea.hasForm8554Addon;
+        ea.autoRenew = true;
+
+        renderRosterTable();
+        showAppTab('practitioner');
+        alert(`Membership plan activated for ${ea.firstName || ''} ${ea.lastName || ''}! You can manage it anytime from your Practitioner Tool.`);
     }
 
     // Paywall & Membership Engine Controls
