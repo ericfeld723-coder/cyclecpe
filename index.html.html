@@ -591,6 +591,16 @@
                 </div>
             </div>
 
+            <div class="panel" style="border: 2px solid var(--accent); background:#fffaf0; margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+                    <div>
+                        <div style="font-weight:700; font-size:1.15rem; color:var(--primary);">➕ Add Form 8554 Preparation & Filing Package (+$240 Total)</div>
+                        <p style="font-size:0.9rem; color:var(--text-muted); margin:6px 0 0;">Includes Form 8554 Auto-Preparation & Review + Official IRS Filing Fee.</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" style="white-space:nowrap;" onclick="selectForm8554Addon()">Add to My Plan</button>
+                </div>
+            </div>
+
             <div style="background:#f8fafc; border:1px solid var(--border); padding:16px; border-radius:6px; margin-bottom:20px; font-size:0.9rem; color:var(--text);">
                 🔄 <strong>Subscription & Auto-Renewal Note:</strong> All memberships automatically renew at the end of the billing term to ensure uninterrupted access. You can manage, disable auto-renewal, or cancel your plan at any time directly from your practitioner profile settings.
             </div>
@@ -665,6 +675,9 @@
                 <div id="login-error" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display: none;">Invalid username or password.</div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
             </form>
+            <div style="text-align: center; margin-top: 10px;">
+                <a href="#" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: underline;" onclick="handleForgotPassword(event)">Forgot Password?</a>
+            </div>
 
             <div style="text-align: center; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
                 <span style="font-size: 0.88rem; color: var(--text-muted);">Don't have an account yet?</span><br>
@@ -747,6 +760,26 @@
 
         <!-- PAGE 2: CPE LEDGER & ENGINE MATH -->
         <div id="pageEngine" class="app-tab-view page-view">
+            <div class="panel" style="padding: 32px;">
+                <h2 style="font-size: 24px; margin-bottom: 16px;">Form 8554 Compliance Status</h2>
+                <div id="complianceOutput" class="status-box status-warn" style="font-size: 16px; padding: 20px;">
+                    Calculating status...
+                </div>
+
+                <table class="ea-table" id="yearBreakdownTable" style="font-size: 15px; margin-top: 16px;">
+                    <thead>
+                        <tr>
+                            <th>Cycle Year</th>
+                            <th>Req. Total</th>
+                            <th>Federal Tax Law (Non Ethics)</th>
+                            <th>Earned Ethics</th>
+                            <th>Year Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
             <div class="grid grid-1-2">
                 <div>
                     <div class="panel">
@@ -788,6 +821,7 @@
                                     <option value="Federal Tax Law">Federal Tax Law</option>
                                     <option value="Federal Tax Update">Federal Tax Update</option>
                                     <option value="Qualified Retirement Plan Matters">Qualified Retirement Plan Matters</option>
+                                    <option value="Other Non-Ethics">Other Non-Ethics Related Course</option>
                                 </select>
                             </div>
                             <div class="field"><label>CE Hours</label><input type="number" id="intHours" value="2"></div>
@@ -806,6 +840,7 @@
                                     <option value="Ethics">Ethics</option>
                                     <option value="Federal Tax Update">Federal Tax Update</option>
                                     <option value="Qualified Retirement Plan Matters">Qualified Retirement Plan Matters</option>
+                                    <option value="Other Non-Ethics">Other Non-Ethics Related Course</option>
                                 </select>
                             </div>
                             <div class="field"><label>CE Hours</label><input type="number" id="extHours" value="4"></div>
@@ -816,26 +851,6 @@
                 </div>
 
                 <div>
-                    <div class="panel">
-                        <h2>Form 8554 Compliance Status</h2>
-                        <div id="complianceOutput" class="status-box status-warn">
-                            Calculating status...
-                        </div>
-
-                        <table class="ea-table" id="yearBreakdownTable">
-                            <thead>
-                                <tr>
-                                    <th>Cycle Year</th>
-                                    <th>Req. Total</th>
-                                    <th>Earned Non-Ethics Courses</th>
-                                    <th>Earned Ethics</th>
-                                    <th>Year Status</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
                     <div class="panel">
                         <h2>Active Course Ledger for <span id="ledgerEaName">Jane A. Doe</span></h2>
                         <div id="courseList"></div>
@@ -852,18 +867,22 @@
                 <form id="ea-renewal-form">
                     <!-- PART 1 -->
                     <div class="section-header">Part 1. Identification Information</div>
+                    <div class="checkbox-option" style="background:#fffaf0; border:1px solid var(--warning); border-radius:6px; padding:12px 14px; margin-bottom:12px;">
+                        <input type="checkbox" id="attest-part1" name="attest_part1">
+                        <label for="attest-part1"><strong>I attest all information in Part 1 is accurate.</strong></label>
+                    </div>
                     <div class="field-sync-banner" style="background:#eef4ff; border:1px solid #b8d4ff; border-radius:6px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
                         <span style="font-size:0.88rem; color:var(--primary);">🔒 These fields are synced live from your Practitioner Profile and are read-only here.</span>
                         <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-size:12px; white-space:nowrap;" onclick="showAppTab('practitioner')">✏️ Edit in Profile</button>
                     </div>
                     <div class="grid grid-2">
                         <div class="field">
-                            <label for="last-name">Last Name</label>
-                            <input type="text" id="last-name" name="last_name" placeholder="Doe" readonly>
-                        </div>
-                        <div class="field">
                             <label for="first-name">First Name & Middle Initial</label>
                             <input type="text" id="first-name" name="first_name" placeholder="Jane A." readonly>
+                        </div>
+                        <div class="field">
+                            <label for="last-name">Last Name</label>
+                            <input type="text" id="last-name" name="last_name" placeholder="Doe" readonly>
                         </div>
                     </div>
 
@@ -1013,8 +1032,8 @@
                     </div>
 
                     <!-- PART 3 -->
-                    <div class="section-header">Part 3. Continuing Education (CE) Credit Hours (Auto-Populated from CPE Tracker)</div>
-                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">Report Federal tax and Ethics continuing education hours earned during the cycle:</p>
+                    <div class="section-header">Part 3. Continuing Education (CE) Credit Hours (Auto-Populated from CPE Tracker — Read-Only)</div>
+                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">Federal tax and Ethics continuing education hours earned during the cycle. Computed live from your CPE Ledger & Engine Math tab — add or edit course credits there to update these figures.</p>
 
                     <div id="ce-validation-feedback" class="validation-box" style="display: none;"></div>
 
@@ -1030,20 +1049,20 @@
                         <tbody>
                             <tr>
                                 <td id="yr1-label">Year 1 (2024)</td>
-                                <td><input type="number" name="yr1_tax" min="0" placeholder="0"></td>
-                                <td><input type="number" name="yr1_ethics" min="0" placeholder="0"></td>
+                                <td><input type="number" name="yr1_tax" min="0" placeholder="0" readonly></td>
+                                <td><input type="number" name="yr1_ethics" min="0" placeholder="0" readonly></td>
                                 <td><input type="number" name="yr1_total" placeholder="0" readonly></td>
                             </tr>
                             <tr>
                                 <td id="yr2-label">Year 2 (2025)</td>
-                                <td><input type="number" name="yr2_tax" min="0" placeholder="0"></td>
-                                <td><input type="number" name="yr2_ethics" min="0" placeholder="0"></td>
+                                <td><input type="number" name="yr2_tax" min="0" placeholder="0" readonly></td>
+                                <td><input type="number" name="yr2_ethics" min="0" placeholder="0" readonly></td>
                                 <td><input type="number" name="yr2_total" placeholder="0" readonly></td>
                             </tr>
                             <tr>
                                 <td id="yr3-label">Year 3 (2026)</td>
-                                <td><input type="number" name="yr3_tax" min="0" placeholder="0"></td>
-                                <td><input type="number" name="yr3_ethics" min="0" placeholder="0"></td>
+                                <td><input type="number" name="yr3_tax" min="0" placeholder="0" readonly></td>
+                                <td><input type="number" name="yr3_ethics" min="0" placeholder="0" readonly></td>
                                 <td><input type="number" name="yr3_total" placeholder="0" readonly></td>
                             </tr>
                         </tbody>
@@ -1122,6 +1141,10 @@
 
                     <!-- PART 5 -->
                     <div class="section-header">Part 5. Declaration & Authorization</div>
+                    <div class="field-sync-banner" style="background:#eef4ff; border:1px solid #b8d4ff; border-radius:6px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <span style="font-size:0.88rem; color:var(--primary);">🔒 PTIN is synced live from your Practitioner Profile and is read-only here.</span>
+                        <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-size:12px; white-space:nowrap;" onclick="showAppTab('practitioner')">✏️ Edit in Profile</button>
+                    </div>
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="ptin">Preparer Tax Identification Number (PTIN)</label>
@@ -1172,55 +1195,58 @@
                     <!-- PART 1 -->
                     <div class="section-header">Part 1. Identification & Official Credentials</div>
                     <div class="grid grid-3">
-                        <div class="field"><label>First Name & MI</label><input type="text" id="p-first-name"></div>
-                        <div class="field"><label>Last Name</label><input type="text" id="p-last-name"></div>
+                        <div class="field"><label>First Name & MI</label><input type="text" id="p-first-name" required></div>
+                        <div class="field"><label>Last Name</label><input type="text" id="p-last-name" required></div>
                         <div class="field"><label>Suffix</label><input type="text" id="p-suffix"></div>
                     </div>
 
                     <div class="grid grid-2">
-                        <div class="field"><label>EA Enrollment Number</label><input type="text" id="p-ea-num" placeholder="00098412-EA"></div>
+                        <div class="field"><label>EA Enrollment Number</label><input type="text" id="p-ea-num" placeholder="" required></div>
                         <div class="field">
                             <label>Confirm EA Enrollment Number</label>
-                            <input type="text" id="p-confirm-ea-num" placeholder="00098412-EA">
+                            <input type="text" id="p-confirm-ea-num" placeholder="" required>
                             <span id="p-ea-num-feedback" class="field-feedback"></span>
                         </div>
                     </div>
 
-                    <div class="grid grid-3">
-                        <div class="field"><label>PTIN</label><input type="text" id="p-ptin" placeholder=""></div>
+                    <div class="grid grid-2">
+                        <div class="field"><label>PTIN</label><input type="text" id="p-ptin" placeholder="" required></div>
                         <div class="field">
                             <label>Confirm PTIN</label>
-                            <input type="text" id="p-confirm-ptin" placeholder="">
+                            <input type="text" id="p-confirm-ptin" placeholder="" required>
                             <span id="p-ptin-feedback" class="field-feedback"></span>
                         </div>
-                        <div class="field"><label>CAF Number</label><input type="text" id="p-caf" placeholder="0300-12345R"></div>
                     </div>
 
                     <div class="grid grid-2">
-                        <div class="field"><label>SSN (Last 4 Digits)</label><input type="text" id="p-ssn" maxlength="4" placeholder="4321"></div>
+                        <div class="field"><label>SSN (Last 4 Digits)</label><input type="text" id="p-ssn" maxlength="4" placeholder="" required></div>
                         <div class="field">
                             <label>Confirm SSN (Last 4 Digits)</label>
-                            <input type="text" id="p-confirm-ssn" maxlength="4" placeholder="4321">
+                            <input type="text" id="p-confirm-ssn" maxlength="4" placeholder="" required>
                             <span id="p-ssn-feedback" class="field-feedback"></span>
                         </div>
                     </div>
 
+                    <div class="grid grid-1">
+                        <div class="field"><label>CAF Number (if obtained)</label><input type="text" id="p-caf" placeholder=""></div>
+                    </div>
+
                     <div class="grid grid-2">
-                        <div class="field"><label>Email Address</label><input type="email" id="p-email"></div>
-                        <div class="field"><label>Phone Number</label><input type="text" id="p-phone"></div>
+                        <div class="field"><label>Email Address</label><input type="email" id="p-email" required></div>
+                        <div class="field"><label>Phone Number</label><input type="text" id="p-phone" required></div>
                     </div>
 
                     <div class="grid grid-1">
-                        <div class="field"><label>Original Enrollment Date</label><input type="date" id="p-enrollment-date"></div>
+                        <div class="field"><label>Original Enrollment Date</label><input type="date" id="p-enrollment-date" required></div>
                     </div>
 
                     <!-- CONTACT ADDRESS -->
                     <div class="section-subtitle">Contact Address</div>
-                    <div class="field"><label>Street Address / P.O. Box</label><input type="text" id="p-address1"></div>
+                    <div class="field"><label>Street Address / P.O. Box</label><input type="text" id="p-address1" required></div>
                     <div class="grid grid-3">
-                        <div class="field"><label>City</label><input type="text" id="p-city"></div>
-                        <div class="field"><label>State</label><input type="text" id="p-state" maxlength="2"></div>
-                        <div class="field"><label>ZIP Code</label><input type="text" id="p-zip"></div>
+                        <div class="field"><label>City</label><input type="text" id="p-city" required></div>
+                        <div class="field"><label>State</label><input type="text" id="p-state" maxlength="2" required></div>
+                        <div class="field"><label>ZIP Code</label><input type="text" id="p-zip" required></div>
                     </div>
 
                     <!-- BUSINESS / EMPLOYER IDENTIFICATION -->
@@ -1646,11 +1672,13 @@
                 <div class="field"><label>First Name</label><input type="text" id="reg-first-name" placeholder="Jane"></div>
                 <div class="field"><label>Last Name</label><input type="text" id="reg-last-name" placeholder="Doe"></div>
             </div>
-            <div class="field"><label>Username</label><input type="text" id="reg-username" placeholder="janedoe"></div>
             <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="jane@example.com"></div>
             <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="••••••••"></div>
             
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Complete Registration & Log In</button>
+            <div style="text-align: center; margin-top: 12px;">
+                <a href="#" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: underline;" onclick="handleForgotPassword(event)">Forgot Password?</a>
+            </div>
         </form>
     </div>
 </div>
@@ -2116,8 +2144,27 @@
     }
 
     // Show authenticated App Tabs
+    function hasForm8554Access(ea) {
+        if (!ea) return false;
+        return ea.membershipPlan === '3_YEAR_8554' || ea.hasForm8554Addon === true;
+    }
+
+    function promptForm8554Paywall() {
+        alert("🔒 Form 8554 preparation requires the Form 8554 Preparation & Filing Package ($240 add-on) or the 3-Year CPE + Form 8554 plan. Select or upgrade your plan to unlock this tab.");
+        promptMembershipPaywall(null);
+    }
+
     function showAppTab(tabId) {
         if (!currentUser) return;
+
+        if (tabId === 'form8554' && currentUser.role !== 'ADMIN') {
+            const ea = practitioners[activeEaKey];
+            if (!hasForm8554Access(ea)) {
+                promptForm8554Paywall();
+                return;
+            }
+        }
+
         hideAllPublicPages();
         document.getElementById('pageLogin').style.display = 'none';
         document.getElementById('appMain').style.display = 'block';
@@ -3129,6 +3176,23 @@
         alert(`Initiating CycleCPE batch renewal for ${count} selected EA(s)...\n\nTotal processing fee: $${count * 110}.00`);
     }
 
+    function selectForm8554Addon() {
+        if (!currentUser) {
+            alert("Please log in first to add the Form 8554 Preparation & Filing Package.");
+            backToLoginOrApp();
+            return;
+        }
+        const ea = practitioners[activeEaKey];
+        if (!ea || !ea.membershipPlan) {
+            alert("Please select a base CPE plan first, then add the Form 8554 Preparation & Filing Package.");
+            return;
+        }
+        ea.hasForm8554Addon = true;
+        renderRosterTable();
+        showAppTab('practitioner');
+        alert(`Form 8554 Preparation & Filing Package added for ${ea.firstName || ''} ${ea.lastName || ''}! Your Form 8554 Renewal Portal tab is now unlocked.`);
+    }
+
     function selectPricingPlan(opt) {
         if (!currentUser) {
             alert("Please log in first to select a membership plan.");
@@ -3631,11 +3695,27 @@
         });
     }
 
+    function isPractitionerProfileComplete(ea) {
+        if (!ea) return false;
+        const required = [
+            ea.firstName, ea.lastName, ea.eaNum, ea.ptin, ea.ssn,
+            ea.email, ea.phone, ea.enrollmentDate,
+            ea.address1, ea.city, ea.state, ea.zip
+        ];
+        const allFilled = required.every(v => v && String(v).trim() !== '');
+        return allFilled;
+    }
+
     function openCourseView(slug){
         const ea = practitioners[activeEaKey];
         if (currentUser && currentUser.role !== 'ADMIN') {
             if (!ea || !ea.membershipPlan) {
                 promptMembershipPaywall(slug);
+                return;
+            }
+            if (!isPractitionerProfileComplete(ea)) {
+                alert("🔒 Please complete all required fields on your Practitioner Profile (Part 1) before accessing the CE course catalog. CAF Number is optional; everything else is required.");
+                showAppTab('practitioner');
                 return;
             }
         }
@@ -3778,6 +3858,19 @@
             suitability: { taxCurrent: "Yes", taxExplanation: "", sanctioned: "No", admissionDenied: "No", felony: "No", enjoined: "No", isCpa: "No", isAttorney: "No" },
             credits: []
         };
+    }
+
+    function handleForgotPassword(e) {
+        if (e) e.preventDefault();
+        const email = prompt("Enter the email address associated with your account:");
+        if (!email) return;
+        if (window.supabase && window.supabase.auth && window.supabase.auth.resetPasswordForEmail) {
+            window.supabase.auth.resetPasswordForEmail(email)
+                .then(() => alert(`If an account exists for ${email}, a password reset link has been sent.`))
+                .catch(() => alert(`If an account exists for ${email}, a password reset link has been sent.`));
+        } else {
+            alert(`If an account exists for ${email}, a password reset link has been sent.`);
+        }
     }
 
     // --- REGISTRATION FUNCTION ---
