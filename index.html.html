@@ -2828,6 +2828,8 @@
             const mAuto = document.getElementById('m-auto-renew');
             if(mAuto) mAuto.checked = false;
             renderRosterTable();
+            renderPlanSummary(ea);
+            savePractitionerEverywhere();
             alert("Membership plan successfully cancelled.");
         }
     }
@@ -2897,6 +2899,7 @@
         loadActiveEaDataIntoEngine();
         loadPractitionerToolTab();
         closeModal();
+        savePractitionerEverywhere();
         alert("Practitioner profile successfully saved.");
     }
 
@@ -2919,6 +2922,7 @@
             const portalDateEl = document.getElementById('form-enrollment-date');
             if (portalDateEl) portalDateEl.value = val;
             runEngine();
+            savePractitionerEverywhere();
         }
     }
 
@@ -2929,6 +2933,7 @@
             const engineDateEl = document.getElementById('enrollmentDate');
             if (engineDateEl) engineDateEl.value = val;
             runEngine();
+            savePractitionerEverywhere();
         }
     }
 
@@ -3968,6 +3973,8 @@
                         source: 'CycleCPE Platform'
                     });
                     runEngine();
+                    renderRosterTable();
+                    savePractitionerEverywhere();
                 }
             }
 
