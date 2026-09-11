@@ -706,12 +706,12 @@
                     <div class="value" style="color: var(--warning);" id="count-hours-remaining">0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="title">Next 8554 Due Date</div>
-                    <div class="value" style="color: var(--success); font-size: 20px;" id="count-next-due">—</div>
-                </div>
-                <div class="metric-card">
                     <div class="title" id="count-hours-completed-label">CPE Hours Completed (this period)</div>
                     <div class="value" style="color: var(--text-muted);" id="count-hours-completed">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="title">Next 8554 Due Date</div>
+                    <div class="value" style="color: var(--success); font-size: 20px;" id="count-next-due">—</div>
                 </div>
             </div>
 
@@ -834,12 +834,6 @@
                             </thead>
                             <tbody></tbody>
                         </table>
-
-                        <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-                            <button class="btn btn-primary" onclick="exportIRSCsv()">📥 Download IRS PTIN Upload CSV</button>
-                            <button class="btn btn-success" onclick="generateForm8554PDF()">📄 Auto-Fill & Download Form 8554 PDF</button>
-                            <button class="btn btn-secondary" onclick="syncEngineToForm8554AndNavigate()">🔄 Sync CPE Data to Form 8554 Tab</button>
-                        </div>
                     </div>
 
                     <div class="panel">
@@ -1174,7 +1168,7 @@
                     Manage your official Enrolled Agent identification, credentials, and membership plan. Continuing education status, your Form 8554 renewal due date, and remaining CPE hours are tracked on the <a class="practitioner-link" onclick="showAppTab('roster')">Enrolled Agent Status</a> page.
                 </p>
 
-                <form id="standalone-practitioner-form" onsubmit="saveStandalonePractitioner(event)">
+                <form id="standalone-practitioner-form" onsubmit="event.preventDefault();">
                     <!-- PART 1 -->
                     <div class="section-header">Part 1. Identification & Official Credentials</div>
                     <div class="grid grid-3">
@@ -1265,6 +1259,7 @@
                             <div style="font-size:12px; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Active Plan</div>
                             <div id="p-plan-name" style="font-size:16px; font-weight:700; color:var(--primary);">No Plan Active</div>
                             <div id="p-plan-cost" style="font-size:13px; color:var(--text-muted); margin-top:2px;"></div>
+                            <div id="p-plan-dates" style="font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
                         </div>
                         <button type="button" class="btn btn-primary" onclick="promptMembershipPaywall(null)">🔄 Select / Change Plan</button>
                     </div>
@@ -1281,8 +1276,8 @@
                         You can toggle auto-renew or click "Cancel Active Plan" to terminate your recurring membership status for this profile. Continuing education status, background/suitability questions, and your Form 8554 declaration are completed on the <a class="practitioner-link" onclick="showAppTab('form8554')">Form 8554 Renewal Portal</a> tab.
                     </div>
 
-                    <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
-                        <button type="submit" class="btn btn-primary">Save</button>
+                    <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+                        <span id="p-autosave-indicator" style="font-size:0.85rem; color:var(--success, #38a169); font-weight:600; opacity:0; transition: opacity 0.3s;">✅ Saved automatically</span>
                     </div>
                 </form>
             </div>
@@ -1888,19 +1883,45 @@
 
 <script>
     // IRS Publication 5186 SSN Renewal Cycle Logic
-    function getCycleYearsFromSSN(ssnLast4) {
-        if (!ssnLast4 || ssnLast4.length === 0) {
-            return { startYear: 2024, endYear: 2027, fileWindow: "Nov 1, 2026 – Jan 31, 2027", expireDate: "March 31, 2027", groupName: "Group 7, 8, 9 (or No SSN)" };
-        }
-        const lastDigit = parseInt(ssnLast4.slice(-1));
+    function getCycleYearsFromSSN(ssnLast4, enrollmentDateStr) {
+        const lastDigit = (!ssnLast4 || ssnLast4.length === 0) ? NaN : parseInt(ssnLast4.slice(-1));
+        let groupName, anchorExpireYear;
         if (isNaN(lastDigit) || [7, 8, 9].includes(lastDigit)) {
-            return { startYear: 2024, endYear: 2027, fileWindow: "Nov 1, 2026 – Jan 31, 2027", expireDate: "March 31, 2027", groupName: "Group 7, 8, 9" };
+            groupName = ssnLast4 ? "Group 7, 8, 9" : "Group 7, 8, 9 (or No SSN)";
+            anchorExpireYear = 2027;
         } else if ([0, 1, 2, 3].includes(lastDigit)) {
-            return { startYear: 2025, endYear: 2028, fileWindow: "Nov 1, 2027 – Jan 31, 2028", expireDate: "March 31, 2028", groupName: "Group 0, 1, 2, 3" };
-        } else if ([4, 5, 6].includes(lastDigit)) {
-            return { startYear: 2026, endYear: 2029, fileWindow: "Nov 1, 2028 – Jan 31, 2029", expireDate: "March 31, 2029", groupName: "Group 4, 5, 6" };
+            groupName = "Group 0, 1, 2, 3";
+            anchorExpireYear = 2028;
+        } else {
+            groupName = "Group 4, 5, 6";
+            anchorExpireYear = 2029;
         }
-        return { startYear: 2024, endYear: 2027, fileWindow: "Nov 1, 2026 – Jan 31, 2027", expireDate: "March 31, 2027", groupName: "Group 7, 8, 9" };
+
+        // Renewal cycles repeat every 3 years on this SSN-digit schedule (IRS Pub 5186).
+        // Auto-advance to the next occurring cycle relative to today (and the practitioner's
+        // enrollment date, if later) so the due date shown is always the upcoming one, not a
+        // stale past cycle.
+        const today = new Date();
+        let referenceDate = today;
+        if (enrollmentDateStr) {
+            const ed = new Date(enrollmentDateStr);
+            if (!isNaN(ed) && ed > referenceDate) referenceDate = ed;
+        }
+
+        let expireYear = anchorExpireYear;
+        while (new Date(`March 31, ${expireYear}`) < referenceDate) {
+            expireYear += 3;
+        }
+
+        const startYear = expireYear - 3;
+        const filingWindowStartYear = expireYear - 1;
+        return {
+            startYear: startYear,
+            endYear: expireYear,
+            fileWindow: `Nov 1, ${filingWindowStartYear} – Jan 31, ${expireYear}`,
+            expireDate: `March 31, ${expireYear}`,
+            groupName: groupName
+        };
     }
 
     // User Authentication Credentials & Master Database mapped strictly by username login
@@ -2000,9 +2021,9 @@
 
         practitioners[fullName] = {
             username: assignedUsername,
-            firstName: fn, lastName: ln, suffix: "", eaNum: "", ptin: "", caf: "", ssn: "9999",
+            firstName: fn, lastName: ln, suffix: "", eaNum: "", ptin: "", caf: "", ssn: "",
             email, phone: "", address1: "", city: "", state: "", zip: "",
-            enrollmentDate: new Date().toISOString().split('T')[0],
+            enrollmentDate: "",
             membershipPlan: null,
             hasForm8554Addon: false,
             autoRenew: true,
@@ -2171,7 +2192,7 @@
     }
 
     function computeCeBreakdownForEa(ea) {
-        const cycle = getCycleYearsFromSSN(ea.ssn);
+        const cycle = getCycleYearsFromSSN(ea.ssn, ea.enrollmentDate);
         const cycleEndYear = cycle.endYear - 1;
         const enrollmentDateStr = ea.enrollmentDate || '2025-05-15';
         const enrollmentDate = new Date(enrollmentDateStr);
@@ -2216,11 +2237,6 @@
             document.getElementById('dropdown-field-wrap').style.display = 'none';
         }
 
-        let aggregateHoursRemaining = 0;
-        let aggregateHoursCompleted = 0;
-        let earliestDueDate = null;
-        let earliestDueDateLabel = '—';
-
         visibleKeys.forEach(key => {
             const ea = practitioners[key];
             const tr = document.createElement('tr');
@@ -2234,16 +2250,8 @@
                 hoursRemainingHtml = totalRemaining === 0
                     ? `<span style="color:var(--success); font-weight:600;">0 hrs ✅</span>`
                     : `<span style="color:var(--warning); font-weight:600;">${totalRemaining} hrs</span>`;
-                aggregateHoursRemaining += totalRemaining;
-                aggregateHoursCompleted += yb.totalEarned;
             } else {
                 hoursRemainingHtml = `<span style="color:var(--text-muted);">N/A</span>`;
-            }
-
-            const expireDateObj = new Date(cycle.expireDate);
-            if (!isNaN(expireDateObj) && (!earliestDueDate || expireDateObj < earliestDueDate)) {
-                earliestDueDate = expireDateObj;
-                earliestDueDateLabel = cycle.expireDate;
             }
 
             let planDisplayHtml = "";
@@ -2260,7 +2268,7 @@
 
             tr.innerHTML = `
                 <td>
-                    <a class="practitioner-link" onclick="openPractitionerModal('${key}')">${ea.firstName || 'Unnamed'} ${ea.lastName || ''} ${ea.suffix || ''}</a><br>
+                    <a class="practitioner-link" onclick="selectAndEditProfile('${key}')">${ea.firstName || 'Unnamed'} ${ea.lastName || ''} ${ea.suffix || ''}</a><br>
                     <small style="color: var(--text-muted);">${ea.email || 'No email'} | ${ea.city || 'City'}, ${ea.state || 'ST'}</small>
                 </td>
                 <td>${ea.eaNum || 'N/A'}</td>
@@ -2272,7 +2280,7 @@
                 <td>${hoursRemainingHtml}</td>
                 <td><span class="status-badge badge-ready">Ready to Renew</span></td>
                 <td>
-                    <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="openPractitionerModal('${key}')">Edit Profile</button>
+                    <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="selectAndEditProfile('${key}')">Edit Profile</button>
                     <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="selectAndManageEa('${key}')">Manage CPE</button>
                     ${currentUser && currentUser.role === 'ADMIN' ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deletePractitioner('${key}')">Delete</button>` : ''}
                 </td>
@@ -2289,10 +2297,27 @@
         const total = visibleKeys.length;
         const currentYear = new Date().getFullYear();
         document.getElementById('count-hours-remaining-label').textContent = `CPE Hours Remaining (thru Dec ${currentYear})`;
-        document.getElementById('count-hours-remaining').textContent = total > 0 ? aggregateHoursRemaining : '—';
-        document.getElementById('count-next-due').textContent = total > 0 ? earliestDueDateLabel : '—';
         document.getElementById('count-hours-completed-label').textContent = `CPE Hours Completed (this period)`;
-        document.getElementById('count-hours-completed').textContent = total > 0 ? aggregateHoursCompleted : '—';
+
+        // These three summary cards mirror the CPE Ledger & Engine Math tab for the
+        // currently active practitioner (same computeCeBreakdownForEa source of truth).
+        const activeEa = practitioners[activeEaKey];
+        if (activeEa) {
+            const { cycle: activeCycle, yearBreakdown: activeBreakdown } = computeCeBreakdownForEa(activeEa);
+            const activeYb = activeBreakdown[currentYear];
+            if (activeYb) {
+                document.getElementById('count-hours-remaining').textContent = Math.max(0, activeYb.requiredTotal - activeYb.totalEarned);
+                document.getElementById('count-hours-completed').textContent = activeYb.totalEarned;
+            } else {
+                document.getElementById('count-hours-remaining').textContent = '—';
+                document.getElementById('count-hours-completed').textContent = '—';
+            }
+            document.getElementById('count-next-due').textContent = activeCycle.expireDate;
+        } else {
+            document.getElementById('count-hours-remaining').textContent = '—';
+            document.getElementById('count-hours-completed').textContent = '—';
+            document.getElementById('count-next-due').textContent = '—';
+        }
     }
 
     function promptMembershipPaywallForEa(key) {
@@ -2325,6 +2350,13 @@
         showAppTab('engine');
     }
 
+    function selectAndEditProfile(key) {
+        activeEaKey = key;
+        document.getElementById('activeEaSelect').value = key;
+        loadPractitionerToolTab();
+        showAppTab('practitioner');
+    }
+
     function switchActiveEaFromDropdown() {
         activeEaKey = document.getElementById('activeEaSelect').value;
         loadActiveEaDataIntoEngine();
@@ -2334,19 +2366,33 @@
     function renderPlanSummary(ea) {
         const nameEl = document.getElementById('p-plan-name');
         const costEl = document.getElementById('p-plan-cost');
+        const datesEl = document.getElementById('p-plan-dates');
         if (!nameEl || !costEl) return;
         if (!ea.membershipPlan) {
             nameEl.textContent = 'No Plan Active';
             costEl.textContent = 'Select a plan to unlock the CE catalog and Form 8554 preparation.';
+            if (datesEl) datesEl.textContent = '';
             return;
         }
-        let planLabel = "No Plan Active", cost = "";
-        if (ea.membershipPlan === "1_YEAR") { planLabel = "1-Year CPE Plan"; cost = "$95 / year"; }
-        if (ea.membershipPlan === "3_YEAR") { planLabel = "3-Year CPE Plan"; cost = "$270 / 3 years"; }
-        if (ea.membershipPlan === "3_YEAR_8554") { planLabel = "3-Year CPE + Form 8554 Plan"; cost = "$495 / 3 years"; }
+        let planLabel = "No Plan Active", cost = "", termYears = 1;
+        if (ea.membershipPlan === "1_YEAR") { planLabel = "1-Year CPE Plan"; cost = "$95 / year"; termYears = 1; }
+        if (ea.membershipPlan === "3_YEAR") { planLabel = "3-Year CPE Plan"; cost = "$270 / 3 years"; termYears = 3; }
+        if (ea.membershipPlan === "3_YEAR_8554") { planLabel = "3-Year CPE + Form 8554 Plan"; cost = "$495 / 3 years"; termYears = 3; }
         if (ea.hasForm8554Addon && ea.membershipPlan !== "3_YEAR_8554") cost += (cost ? " + " : "") + "Form 8554 Add-on ($240)";
         nameEl.textContent = planLabel;
         costEl.textContent = cost;
+
+        if (datesEl) {
+            if (ea.planSelectedDate) {
+                const selected = new Date(ea.planSelectedDate + 'T00:00:00');
+                const renewal = new Date(selected);
+                renewal.setFullYear(renewal.getFullYear() + termYears);
+                const fmt = d => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                datesEl.textContent = `Selected on ${fmt(selected)} · Renews ${fmt(renewal)}${ea.autoRenew ? ' (auto-renew on)' : ' (auto-renew off)'}`;
+            } else {
+                datesEl.textContent = '';
+            }
+        }
     }
 
     function loadPractitionerToolTab() {
@@ -2365,7 +2411,7 @@
         document.getElementById('p-confirm-ssn').value = ea.ssn || '';
         document.getElementById('p-email').value = ea.email || '';
         document.getElementById('p-phone').value = ea.phone || '';
-        document.getElementById('p-enrollment-date').value = ea.enrollmentDate || new Date().toISOString().split('T')[0];
+        document.getElementById('p-enrollment-date').value = ea.enrollmentDate || '';
         document.getElementById('p-address1').value = ea.address1 || '';
         document.getElementById('p-city').value = ea.city || '';
         document.getElementById('p-state').value = ea.state || '';
@@ -2434,6 +2480,16 @@
         renderPlanSummary(ea);
         runEngine(); // refreshes Form 8554 Part 1 fields + engine + roster CE columns live
         validatePractitionerConfirmFields();
+        flashAutosaveIndicator();
+    }
+
+    let autosaveFlashTimeout = null;
+    function flashAutosaveIndicator() {
+        const el = document.getElementById('p-autosave-indicator');
+        if (!el) return;
+        el.style.opacity = '1';
+        clearTimeout(autosaveFlashTimeout);
+        autosaveFlashTimeout = setTimeout(() => { el.style.opacity = '0'; }, 1500);
     }
 
     function validatePractitionerConfirmFields() {
@@ -2481,14 +2537,8 @@
     }
 
     function saveStandalonePractitioner(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         syncPractitionerFieldsLive();
-        const { allValid, mismatches } = validatePractitionerConfirmFields();
-        if (!allValid) {
-            alert("Please fix the following before saving:\n\n" + mismatches.map(m => `• Confirm ${m} does not match ${m}.`).join("\n"));
-            return;
-        }
-        alert("Practitioner profile saved. Your Enrolled Agent Status and Form 8554 tabs are already up to date.");
     }
 
     function openPractitionerModal(key) {
@@ -2642,7 +2692,7 @@
         const ea = practitioners[activeEaKey];
         if (!ea) return;
 
-        const cycle = getCycleYearsFromSSN(ea.ssn);
+        const cycle = getCycleYearsFromSSN(ea.ssn, ea.enrollmentDate);
         document.getElementById('enrollmentDate').value = ea.enrollmentDate || '2025-05-15';
         document.getElementById('cycleEndYear').value = cycle.endYear - 1; 
         document.getElementById('ledgerEaName').textContent = `${ea.firstName || ''} ${ea.lastName || ''}`.trim();
@@ -2741,7 +2791,7 @@
             if (addrInput) addrInput.value = b.address || '';
         }
 
-        const cycle = getCycleYearsFromSSN(ea.ssn);
+        const cycle = getCycleYearsFromSSN(ea.ssn, ea.enrollmentDate);
         if (engineResult && engineResult.yearBreakdown) {
             syncEngineToForm8554Table(engineResult.yearBreakdown, cycle.endYear - 1);
         }
@@ -2752,10 +2802,9 @@
         const ea = practitioners[activeEaKey];
         if (!ea) return;
 
-        const cycle = getCycleYearsFromSSN(ea.ssn);
+        const cycle = getCycleYearsFromSSN(ea.ssn, ea.enrollmentDate);
         const cycleEndYear = cycle.endYear - 1; 
         const enrollmentDateStr = ea.enrollmentDate || document.getElementById('enrollmentDate').value || '2025-05-15';
-        ea.enrollmentDate = enrollmentDateStr;
 
         const enrollmentDate = new Date(enrollmentDateStr);
         const startYear = enrollmentDate.getUTCFullYear();
@@ -2790,7 +2839,7 @@
         }
 
         const engineResult = { totalRequiredCE, yearBreakdown, overallCompliant };
-        renderEngineUI(totalRequiredCE, yearBreakdown, overallCompliant);
+        renderEngineUI(totalRequiredCE, yearBreakdown, overallCompliant, cycle);
         populateForm8554FromActiveEa(engineResult);
         return engineResult;
     }
@@ -2810,14 +2859,15 @@
         }).join('');
     }
 
-    function renderEngineUI(totalRequired, breakdown, isOverallCompliant) {
+    function renderEngineUI(totalRequired, breakdown, isOverallCompliant, cycle) {
         const outputBox = document.getElementById('complianceOutput');
+        const dueDateLine = cycle ? `<br><strong>Next Form 8554 Due:</strong> ${cycle.expireDate} (filing window ${cycle.fileWindow}, ${cycle.groupName}) — auto-calculated from SSN and enrollment date.` : '';
         if (isOverallCompliant) {
             outputBox.className = 'status-box status-pass';
-            outputBox.innerHTML = `<strong>Status: COMPLIANT</strong><br>Prorated CE Requirement: ${totalRequired} Hours (based on enrollment date). All year-by-year Ethics & Non-Ethics minimums met. Ready for Form 8554 renewal.`;
+            outputBox.innerHTML = `<strong>Status: COMPLIANT</strong><br>Prorated CE Requirement: ${totalRequired} Hours (based on enrollment date). All year-by-year Ethics & Non-Ethics minimums met. Ready for Form 8554 renewal.${dueDateLine}`;
         } else {
             outputBox.className = 'status-box status-warn';
-            outputBox.innerHTML = `<strong>Status: ACTION REQUIRED / IN PROGRESS</strong><br>Prorated CE Requirement: ${totalRequired} Hours (based on enrollment date). Review missing credit hours below.`;
+            outputBox.innerHTML = `<strong>Status: ACTION REQUIRED / IN PROGRESS</strong><br>Prorated CE Requirement: ${totalRequired} Hours (based on enrollment date). Review missing credit hours below.${dueDateLine}`;
         }
 
         const tbody = document.querySelector('#yearBreakdownTable tbody');
@@ -2939,7 +2989,7 @@
 
     async function generateForm8554PDF() {
         const ea = practitioners[activeEaKey];
-        const cycle = getCycleYearsFromSSN(ea.ssn);
+        const cycle = getCycleYearsFromSSN(ea.ssn, ea.enrollmentDate);
         const cycleEndYear = cycle.endYear - 1;
         const cycleYears = [cycleEndYear - 2, cycleEndYear - 1, cycleEndYear];
         const engineResult = runEngine();
@@ -3097,6 +3147,7 @@
         if (opt === 3) ea.membershipPlan = "3_YEAR_8554";
         ea.hasForm8554Addon = (opt === 3) || ea.hasForm8554Addon;
         ea.autoRenew = true;
+        ea.planSelectedDate = new Date().toISOString().split('T')[0];
 
         renderRosterTable();
         showAppTab('practitioner');
@@ -3158,8 +3209,10 @@
         const hasAddon = document.getElementById('addon-8554-check').checked;
         ea.hasForm8554Addon = (selectedPlanOption === 3) || hasAddon;
         ea.autoRenew = true;
+        ea.planSelectedDate = new Date().toISOString().split('T')[0];
 
         renderRosterTable();
+        renderPlanSummary(ea);
         closeMembershipModal();
         alert(`Membership plan activated for ${ea.firstName || ''} ${ea.lastName || ''}! Course catalog is now unlocked.`);
 
@@ -3710,7 +3763,24 @@
         // Explicitly attach supabase to the window object so it's globally accessible
         window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-        // --- REGISTRATION FUNCTION ---
+        function ensurePractitionerRecord(fullName, username) {
+        if (practitioners[fullName]) return;
+        practitioners[fullName] = {
+            username: username,
+            firstName: '', lastName: '', suffix: '', eaNum: '', ptin: '', caf: '', ssn: '',
+            email: '', phone: '', address1: '', city: '', state: '', zip: '',
+            enrollmentDate: '',
+            membershipPlan: null,
+            hasForm8554Addon: false,
+            autoRenew: true,
+            planSelectedDate: '',
+            statusActive: true, statusInactive: false, seeException: false,
+            suitability: { taxCurrent: "Yes", taxExplanation: "", sanctioned: "No", admissionDenied: "No", felony: "No", enjoined: "No", isCpa: "No", isAttorney: "No" },
+            credits: []
+        };
+    }
+
+    // --- REGISTRATION FUNCTION ---
         async function handleRegistrationSubmit(e) {
             e.preventDefault();
             const fn = document.getElementById('reg-first-name').value.trim();
@@ -3731,8 +3801,17 @@
                 return;
             }
 
-            alert("Success! Check your Supabase dashboard under Authentication > Users.");
+            const fullName = `${fn || 'New'} ${ln || 'Practitioner'}`;
+            ensurePractitionerRecord(fullName, email);
+            practitioners[fullName].firstName = fn;
+            practitioners[fullName].lastName = ln;
+            practitioners[fullName].email = email;
+
+            currentUser = { username: email, role: email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER', name: fullName };
+            activeEaKey = fullName;
             closeRegisterModal();
+            setupLoggedInState();
+            showAppTab('practitioner');
         }
 
         // --- LOGIN FUNCTION ---
@@ -3757,11 +3836,14 @@
             err.style.display = 'none';
             
             const user = data.user;
+            const name = user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email;
             currentUser = {
                 username: user.email,
                 role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
-                name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+                name: name
             };
+            ensurePractitionerRecord(name, user.email);
+            activeEaKey = name;
 
             setupLoggedInState();
             showAppTab('practitioner');
@@ -3772,11 +3854,14 @@
             const { data: { session } } = await window.supabase.auth.getSession();
             if (session) {  
                 const user = session.user;
+                const name = user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email;
                 currentUser = {
                     username: user.email,
                     role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
-                    name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
+                    name: name
                 };
+                ensurePractitionerRecord(name, user.email);
+                activeEaKey = name;
                 setupLoggedInState();
                 showAppTab('practitioner');
             }
