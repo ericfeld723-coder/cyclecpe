@@ -1999,6 +1999,35 @@
     let selectedPlanOption = 1;
     let pendingCourseSlug = null;
 
+    // --- LOCAL PERSISTENCE (survives page reload / logout-login in this browser) ---
+    // NOTE: this is browser-local storage, not a shared database — it keeps each user's
+    // data on the device/browser they used. A production deployment would sync this
+    // object to a real Supabase table instead so data follows the account everywhere.
+    const PRACTITIONERS_STORAGE_KEY = 'cyclecpe_practitioners_v1';
+
+    function savePractitionersToStorage() {
+        try {
+            localStorage.setItem(PRACTITIONERS_STORAGE_KEY, JSON.stringify(practitioners));
+        } catch (err) {
+            console.error('Could not save practitioner data locally:', err);
+        }
+    }
+
+    function loadPractitionersFromStorage() {
+        try {
+            const raw = localStorage.getItem(PRACTITIONERS_STORAGE_KEY);
+            if (raw) {
+                const stored = JSON.parse(raw);
+                // Merge stored data over the seed data so demo accounts still exist
+                // even before any edits, but saved edits always win.
+                practitioners = Object.assign({}, practitioners, stored);
+            }
+        } catch (err) {
+            console.error('Could not load saved practitioner data:', err);
+        }
+    }
+    loadPractitionersFromStorage();
+
     function handleLogin(e) {
         e.preventDefault();
         const u = document.getElementById('username').value.trim().toLowerCase();
@@ -2387,6 +2416,7 @@
                 renderRosterTable();
                 document.getElementById('ledgerEaName').textContent = "None Selected";
             }
+            savePractitionersToStorage();
         }
     }
 
@@ -2528,6 +2558,7 @@
         runEngine(); // refreshes Form 8554 Part 1 fields + engine + roster CE columns live
         validatePractitionerConfirmFields();
         flashAutosaveIndicator();
+        savePractitionersToStorage();
     }
 
     let autosaveFlashTimeout = null;
@@ -3013,6 +3044,7 @@
 
         ea.credits.push({ id: type.toLowerCase() + '_' + Date.now(), title, programNo, category, hours, date, type, source: provider });
         runEngine();
+        savePractitionersToStorage();
     }
 
     function exportIRSCsv() {
@@ -3190,6 +3222,7 @@
         ea.hasForm8554Addon = true;
         renderRosterTable();
         showAppTab('practitioner');
+        savePractitionersToStorage();
         alert(`Form 8554 Preparation & Filing Package added for ${ea.firstName || ''} ${ea.lastName || ''}! Your Form 8554 Renewal Portal tab is now unlocked.`);
     }
 
@@ -3215,6 +3248,7 @@
 
         renderRosterTable();
         showAppTab('practitioner');
+        savePractitionersToStorage();
         alert(`Membership plan activated for ${ea.firstName || ''} ${ea.lastName || ''}! You can manage it anytime from your Practitioner Tool.`);
     }
 
@@ -3278,6 +3312,7 @@
         renderRosterTable();
         renderPlanSummary(ea);
         closeMembershipModal();
+        savePractitionersToStorage();
         alert(`Membership plan activated for ${ea.firstName || ''} ${ea.lastName || ''}! Course catalog is now unlocked.`);
 
         if (pendingCourseSlug) {
@@ -3565,6 +3600,7 @@
                 ea.email = document.getElementById('email').value;
                 ea.ptin = ptinInput.value;
                 renderRosterTable();
+                savePractitionersToStorage();
             }
             errorSummary.style.display = 'none';
             alert('Form 8554 renewal progress successfully saved at ' + new Date().toLocaleTimeString() + '!');
@@ -3858,6 +3894,7 @@
             suitability: { taxCurrent: "Yes", taxExplanation: "", sanctioned: "No", admissionDenied: "No", felony: "No", enjoined: "No", isCpa: "No", isAttorney: "No" },
             credits: []
         };
+        savePractitionersToStorage();
     }
 
     function handleForgotPassword(e) {
