@@ -43,12 +43,12 @@
         body { background-color: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
         /* Navbar with Top-Left How It Works, FAQ, About Us, Pricing, and Contact Links */
-        .navbar { background-color: var(--primary); color: #ffffff; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 12px; }
-        .navbar-brand-area { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .navbar { background-color: var(--primary); color: #ffffff; padding: 16px 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); gap: 12px; }
+        .navbar-brand-area { display: flex; flex-direction: column; align-items: center; gap: 14px; flex-wrap: wrap; width: 100%; }
         .navbar h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
         .navbar h1 span { color: var(--accent); }
-        .navbar-top-links { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-        .navbar-top-links a { color: #e2e8f0; font-size: 13px; font-weight: 600; text-decoration: none; transition: color 0.2s; cursor: pointer; }
+        .navbar-top-links { display: flex; gap: 24px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+        .navbar-top-links a { color: #e2e8f0; font-size: 17px; font-weight: 700; text-decoration: none; transition: color 0.2s; cursor: pointer; }
         .navbar-top-links a:hover { color: #ffffff; text-decoration: underline; }
         .navbar-user { font-size: 13px; color: #cbd5e0; display: flex; align-items: center; gap: 15px; }
 
@@ -321,6 +321,7 @@
             <div style="font-size: 12px; opacity: 0.8;">Enrolled Agent CE & Renewal Hub</div>
         </div>
         <div class="navbar-top-links">
+            <a onclick="goToPortalFromTopNav()">🏠 Portal</a>
             <a onclick="showPublicPage('howitworks')">🚀 How It Works</a>
             <a onclick="showPublicPage('faq')">❓ FAQ</a>
             <a onclick="showPublicPage('about')">ℹ️ About Us</a>
@@ -709,17 +710,16 @@
 
         <!-- TOP NAVIGATION TABS -->
         <div class="page-nav">
-            <button class="page-nav-btn active" id="btnPortal" onclick="showAppTab('portal')">🏠 PORTAL</button>
+            <button class="page-nav-btn active" id="btnPractitioner" onclick="showAppTab('practitioner')">⚙️ Practitioner Tool</button>
             <button class="page-nav-btn" id="btnRoster" onclick="showAppTab('roster')">👥 Enrolled Agent Status</button>
             <button class="page-nav-btn" id="btnEngine" onclick="showAppTab('engine')">📊 CPE Ledger & Engine Math</button>
             <button class="page-nav-btn" id="btnForm8554" onclick="showAppTab('form8554')">📝 Form 8554 Renewal Portal</button>
-            <button class="page-nav-btn" id="btnPractitioner" onclick="showAppTab('practitioner')">⚙️ Practitioner Tool</button>
             <button class="page-nav-btn" id="btnCatalog" onclick="showAppTab('catalog')">📚 CE Courses Catalog</button>
             <button class="page-nav-btn" id="btnAdmin" onclick="showAppTab('admin')" style="display: none;">🛠️ Admin Panel</button>
         </div>
 
         <!-- VIEW: PORTAL (Top Page When Logged In) -->
-        <div id="pagePortal" class="app-tab-view page-view active">
+        <div id="pagePortal" class="app-tab-view page-view">
             <div class="panel">
                 <div class="panel-header">
                     <h2>Welcome to your EA Portal</h2>
@@ -1224,14 +1224,15 @@
         </div>
 
         <!-- PAGE 4: DEDICATED PRACTITIONER TOOL TAB (FORM 8554 & CREDENTIALS INFO) -->
-        <div id="pagePractitioner" class="app-tab-view page-view">
+        <div id="pagePractitioner" class="app-tab-view page-view active">
             <div class="panel">
                 <div class="panel-header">
                     <h2>Enrolled Agent Practitioner Tool & Form 8554 Hub</h2>
                 </div>
-                <p style="color:var(--text-muted); font-size:1.05rem; margin-bottom:24px;">
+                <p style="color:var(--text-muted); font-size:1.05rem; margin-bottom:8px;">
                     Manage your official Enrolled Agent credentials, PTIN records, background suitability questionnaire, Form 8554 auto-sync details, and membership settings in one centralized workspace.
                 </p>
+                <div id="p-autosave-indicator" style="font-size:0.8rem; color:var(--success); font-weight:600; margin-bottom:20px; opacity:0.5; transition:opacity .3s;">Changes save automatically &amp; sync to your CPE Ledger.</div>
 
                 <form id="standalone-practitioner-form" onsubmit="saveStandalonePractitioner(event)">
                     <!-- PART 1 -->
@@ -1253,8 +1254,12 @@
                         <div class="field"><label>CAF Number</label><input type="text" id="p-caf" placeholder="0300-12345R"></div>
                     </div>
 
-                    <div class="grid grid-3">
+                    <div class="grid grid-2">
                         <div class="field"><label>SSN (Last 4 Digits)</label><input type="text" id="p-ssn" maxlength="4" placeholder="4321"></div>
+                        <div class="field"><label>Confirm SSN (Last 4 Digits)</label><input type="text" id="p-confirm-ssn" maxlength="4" placeholder="4321"><span id="p-confirm-ssn-feedback" class="field-feedback"></span></div>
+                    </div>
+
+                    <div class="grid grid-2">
                         <div class="field"><label>Email Address</label><input type="email" id="p-email"></div>
                         <div class="field"><label>Phone Number</label><input type="text" id="p-phone"></div>
                     </div>
@@ -1274,25 +1279,7 @@
 
                     <!-- SUBSCRIPTION & AUTO-RENEW SETTINGS -->
                     <div class="section-subtitle">Subscription & Membership Management</div>
-                    <div id="p-plan-selector-grid" class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px;">
-                        <div class="plan-card" id="p-plan-card-FREE" style="cursor:pointer; padding:12px;" onclick="choosePractitionerPlan('FREE')">
-                            <div style="font-weight:700; font-size:0.95rem; color:var(--primary);">Free</div>
-                            <div class="plan-price" style="font-size:1.1rem;">$0</div>
-                        </div>
-                        <div class="plan-card" id="p-plan-card-ESSENTIALS" style="cursor:pointer; padding:12px;" onclick="choosePractitionerPlan('ESSENTIALS')">
-                            <div style="font-weight:700; font-size:0.95rem; color:var(--primary);">Essentials</div>
-                            <div class="plan-price" style="font-size:1.1rem;">$79/yr</div>
-                        </div>
-                        <div class="plan-card" id="p-plan-card-PLUS" style="cursor:pointer; padding:12px;" onclick="choosePractitionerPlan('PLUS')">
-                            <div style="font-weight:700; font-size:0.95rem; color:var(--primary);">Plus</div>
-                            <div class="plan-price" style="font-size:1.1rem;">$129/yr</div>
-                        </div>
-                        <div class="plan-card" id="p-plan-card-COMPLETE" style="cursor:pointer; padding:12px;" onclick="choosePractitionerPlan('COMPLETE')">
-                            <div style="font-weight:700; font-size:0.95rem; color:var(--primary);">Complete</div>
-                            <div class="plan-price" style="font-size:1.1rem;">$179/yr</div>
-                        </div>
-                    </div>
-                    <div id="p-current-plan-label" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;"></div>
+                    <div id="p-current-plan-label" style="font-size:0.9rem; color:var(--text-muted); margin-bottom:14px; font-weight:600;"></div>
                     <div class="checkbox-option" style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <input type="checkbox" id="p-auto-renew" checked style="display:inline-block; margin-right:8px;">
@@ -2193,7 +2180,7 @@ let activeEaKey = "Jane A. Doe";
                 activeEaKey = matchedKey;
                 err.style.display = 'none';
                 setupLoggedInState();
-                showAppTab('portal');
+                showAppTab('practitioner');
             } else {
                 err.style.display = 'block';
             }
@@ -2236,7 +2223,7 @@ let activeEaKey = "Jane A. Doe";
         activeEaKey = fullName;
         closeRegisterModal();
         setupLoggedInState();
-        showAppTab('portal');
+        showAppTab('practitioner');
         alert(`Account successfully created for ${fullName}! Select a membership tier to access CE courses.`);
     }
 
@@ -2303,7 +2290,7 @@ let activeEaKey = "Jane A. Doe";
         hideAllPublicPages();
         if (currentUser) {
             document.getElementById('appMain').style.display = 'block';
-            showAppTab('portal');
+            showAppTab('practitioner');
         } else {
             document.getElementById('pageLogin').style.display = 'block';
         }
@@ -2327,6 +2314,7 @@ let activeEaKey = "Jane A. Doe";
         if (fieldsMismatch('ptin', 'confirm-ptin')) return 'PTIN';
         if (fieldsMismatch('p-ea-num', 'p-confirm-ea-num')) return 'EA Enrollment Number';
         if (fieldsMismatch('p-ptin', 'p-confirm-ptin')) return 'PTIN';
+        if (fieldsMismatch('p-ssn', 'p-confirm-ssn')) return 'SSN (last 4)';
         return null;
     }
 
@@ -2383,6 +2371,14 @@ let activeEaKey = "Jane A. Doe";
             loadPractitionerToolTab();
         }
         window.scrollTo(0, 0);
+    }
+
+    function goToPortalFromTopNav() {
+        if (currentUser) {
+            showAppTab('portal');
+        } else {
+            backToLoginOrApp();
+        }
     }
 
     function handleContactSubmit(e) {
@@ -2549,6 +2545,7 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('p-confirm-ptin').value = '';
         document.getElementById('p-caf').value = ea.caf || '';
         document.getElementById('p-ssn').value = ea.ssn || '';
+        document.getElementById('p-confirm-ssn').value = '';
         document.getElementById('p-email').value = ea.email || '';
         document.getElementById('p-phone').value = ea.phone || '';
         document.getElementById('p-enrollment-date').value = ea.enrollmentDate || new Date().toISOString().split('T')[0];
@@ -2576,8 +2573,8 @@ let activeEaKey = "Jane A. Doe";
         toggleStandaloneTaxExplanation();
     }
 
-    function saveStandalonePractitioner(e) {
-        e.preventDefault();
+    function saveStandalonePractitioner(e, silent) {
+        if (e && e.preventDefault) e.preventDefault();
         const ea = practitioners[activeEaKey];
         if (!ea) return;
 
@@ -2613,7 +2610,32 @@ let activeEaKey = "Jane A. Doe";
 
         renderRosterTable();
         loadActiveEaDataIntoEngine();
-        alert("Practitioner profile & Form 8554 data successfully saved and auto-synced!");
+        if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+        if (!silent) alert("Practitioner profile & Form 8554 data successfully saved and auto-synced!");
+    }
+
+    let practitionerAutosaveTimer = null;
+    function autosavePractitionerTool() {
+        clearTimeout(practitionerAutosaveTimer);
+        practitionerAutosaveTimer = setTimeout(() => {
+            saveStandalonePractitioner(null, true);
+            const indicator = document.getElementById('p-autosave-indicator');
+            if (indicator) {
+                indicator.textContent = '✓ Auto-saved & synced to CPE Ledger — ' + new Date().toLocaleTimeString();
+                indicator.style.opacity = '1';
+                clearTimeout(indicator._fadeTimer);
+                indicator._fadeTimer = setTimeout(() => { indicator.style.opacity = '0.5'; }, 2500);
+            }
+        }, 800);
+    }
+    function wirePractitionerToolAutosave() {
+        const form = document.getElementById('standalone-practitioner-form');
+        if (!form) return;
+        form.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.id === 'p-confirm-ea-num' || el.id === 'p-confirm-ptin' || el.id === 'p-confirm-ssn') return;
+            const evt = (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio' || el.type === 'date') ? 'change' : 'input';
+            el.addEventListener(evt, autosavePractitionerTool);
+        });
     }
 
     function openPractitionerModal(key) {
@@ -3607,6 +3629,8 @@ let activeEaKey = "Jane A. Doe";
         wireConfirmPairFeedback('ptin', 'confirm-ptin', 'confirm-ptin-feedback');
         wireConfirmPairFeedback('p-ea-num', 'p-confirm-ea-num', 'p-confirm-ea-feedback');
         wireConfirmPairFeedback('p-ptin', 'p-confirm-ptin', 'p-confirm-ptin-feedback');
+        wireConfirmPairFeedback('p-ssn', 'p-confirm-ssn', 'p-confirm-ssn-feedback');
+        wirePractitionerToolAutosave();
 
         const einYes = document.getElementById('ein-yes');
         const einNo = document.getElementById('ein-no');
@@ -3947,7 +3971,7 @@ let activeEaKey = "Jane A. Doe";
             };
 
             setupLoggedInState();
-            showAppTab('portal');
+            showAppTab('practitioner');
         }
 
         // --- CHECK INITIAL SESSION ON PAGE LOAD ---
@@ -3961,7 +3985,7 @@ let activeEaKey = "Jane A. Doe";
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
                 setupLoggedInState();
-                showAppTab('portal');
+                showAppTab('practitioner');
             }
         }
 
