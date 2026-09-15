@@ -43,11 +43,11 @@
         body { background-color: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
         /* Navbar with Top-Left How It Works, FAQ, About Us, Pricing, and Contact Links */
-        .navbar { background-color: var(--primary); color: #ffffff; padding: 16px 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); gap: 12px; }
-        .navbar-brand-area { display: flex; flex-direction: column; align-items: center; gap: 14px; flex-wrap: wrap; width: 100%; }
+        .navbar { background-color: var(--primary); color: #ffffff; padding: 16px 32px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 12px; }
+        .navbar-brand-area { display: flex; flex-direction: row; align-items: center; gap: 24px; flex-wrap: wrap; }
         .navbar h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
         .navbar h1 span { color: var(--accent); }
-        .navbar-top-links { display: flex; gap: 24px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+        .navbar-top-links { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
         .navbar-top-links a { color: #e2e8f0; font-size: 17px; font-weight: 700; text-decoration: none; transition: color 0.2s; cursor: pointer; }
         .navbar-top-links a:hover { color: #ffffff; text-decoration: underline; }
         .navbar-user { font-size: 13px; color: #cbd5e0; display: flex; align-items: center; gap: 15px; }
@@ -322,7 +322,6 @@
         </div>
         <div class="navbar-top-links">
             <a onclick="goToPortalFromTopNav()">🏠 Portal</a>
-            <a onclick="showPublicPage('resources')">📚 Resources</a>
             <a onclick="showPublicPage('howitworks')">🚀 How It Works</a>
             <a onclick="showPublicPage('faq')">❓ FAQ</a>
             <a onclick="showPublicPage('about')">ℹ️ About Us</a>
@@ -608,16 +607,8 @@
                 🔄 <strong>Subscription & Auto-Renewal Note:</strong> Paid memberships automatically renew at the end of the billing term to ensure uninterrupted access. You can manage, disable auto-renewal, or cancel your plan at any time directly from your practitioner profile settings.
             </div>
 
-            <div style="text-align: center; margin-bottom: 28px;">
-                <button class="btn btn-primary" onclick="backToLoginOrApp()">🔐 Login to Select & Purchase Plan</button>
-            </div>
-
-            <div style="border-top:1px solid var(--border); padding-top:20px;">
-                <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">Or manage billing directly via Stripe:</div>
-                <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-                <stripe-pricing-table pricing-table-id="prctbl_1UFzKsHLYDiifWD0vb1Wpa4U"
-                    publishable-key="pk_live_51UFyjrHLYDiifWD0UrShxb5WCnGmF6qtBWAVZ7nWOeg26pk9pYeHNxdHJ6K732mkk4XcOz4J2cjqLNKSVFrIPaEI00MQyYXYbj">
-                </stripe-pricing-table>
+            <div style="text-align: center; margin-bottom: 8px;">
+                <button class="btn btn-primary" onclick="goToPortalAndScrollToMembership()">🔐 Go to Your Portal To Select &amp; Purchase Plan</button>
             </div>
         </div>
     </div>
@@ -1279,7 +1270,7 @@
                     </div>
 
                     <!-- SUBSCRIPTION & AUTO-RENEW SETTINGS -->
-                    <div class="section-subtitle">Subscription & Membership Management</div>
+                    <div class="section-subtitle" id="p-membership-section">Subscription & Membership Management</div>
                     <div id="p-current-plan-label" style="font-size:0.9rem; color:var(--text-muted); margin-bottom:14px; font-weight:600;"></div>
                     <div class="checkbox-option" style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                         <div>
@@ -1291,11 +1282,14 @@
                         <button type="button" class="btn btn-danger" style="padding:4px 10px; font-size:12px;" onclick="cancelActiveMembershipPlan()">❌ Cancel Active Plan</button>
                     </div>
                     <div style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);">
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Or manage billing directly via Stripe:</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Select or purchase a plan directly via Stripe:</div>
                         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-                        <stripe-pricing-table pricing-table-id="prctbl_1UFzKsHLYDiifWD0vb1Wpa4U"
-                            publishable-key="pk_live_51UFyjrHLYDiifWD0UrShxb5WCnGmF6qtBWAVZ7nWOeg26pk9pYeHNxdHJ6K732mkk4XcOz4J2cjqLNKSVFrIPaEI00MQyYXYbj">
+                        <stripe-pricing-table pricing-table-id="prctbl_1UG2LVHLYDiifWD0IsiCVYsW"
+                            publishable-key="pk_test_51UFyjrHLYDiifWD080BGQqXcCOTl0l1jc6ZKT58Ow2TYdKBp45hWKUlVWWwMxCgYmu5DpFlINJMFIXjXvCZBKJy700xpFP9wGZ">
                         </stripe-pricing-table>
+                        <div style="margin-top:10px;">
+                            <a href="https://billing.stripe.com/p/login/test_6oU7sLcEg8Uw5bAfJG8EM00" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; color:var(--primary); font-weight:600;">🔄 Manage or change your existing plan (Stripe billing portal) →</a>
+                        </div>
                     </div>
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px; margin-bottom:12px;">
                         You can toggle auto-renew or click "Cancel Active Plan" to terminate your recurring membership status for this profile.
@@ -1825,14 +1819,7 @@
             </div>
         </div>
 
-        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
-            <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">Or manage billing directly via Stripe:</div>
-            <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-            <stripe-pricing-table pricing-table-id="prctbl_1UFzKsHLYDiifWD0vb1Wpa4U"
-                publishable-key="pk_live_51UFyjrHLYDiifWD0UrShxb5WCnGmF6qtBWAVZ7nWOeg26pk9pYeHNxdHJ6K732mkk4XcOz4J2cjqLNKSVFrIPaEI00MQyYXYbj">
-            </stripe-pricing-table>
         </div>
-    </div>
 </div>
 
 <!-- MODAL: SINGLE COURSE CHECKOUT (Free / Essentials plans) -->
@@ -2113,7 +2100,7 @@ let activeEaKey = "Jane A. Doe";
                 activeEaKey = matchedKey;
                 err.style.display = 'none';
                 setupLoggedInState();
-                showAppTab('practitioner');
+                showAppTab('practitioner'); applyPlanSuccessFromUrl();
             } else {
                 err.style.display = 'block';
             }
@@ -2156,7 +2143,7 @@ let activeEaKey = "Jane A. Doe";
         activeEaKey = fullName;
         closeRegisterModal();
         setupLoggedInState();
-        showAppTab('practitioner');
+        showAppTab('practitioner'); applyPlanSuccessFromUrl();
         alert(`Account successfully created for ${fullName}! Select a membership tier to access CE courses.`);
     }
 
@@ -2223,7 +2210,7 @@ let activeEaKey = "Jane A. Doe";
         hideAllPublicPages();
         if (currentUser) {
             document.getElementById('appMain').style.display = 'block';
-            showAppTab('practitioner');
+            showAppTab('practitioner'); applyPlanSuccessFromUrl();
         } else {
             document.getElementById('pageLogin').style.display = 'block';
         }
@@ -2260,7 +2247,7 @@ let activeEaKey = "Jane A. Doe";
             const ea = practitioners[activeEaKey];
             if (!ea || ea.membershipPlan !== 'COMPLETE') {
                 alert('Form 8554 preparation is included with the EA Complete plan. Upgrade your membership to access this tab.');
-                showAppTab('practitioner');
+                showAppTab('practitioner'); applyPlanSuccessFromUrl();
                 return;
             }
         }
@@ -2314,10 +2301,48 @@ let activeEaKey = "Jane A. Doe";
 
     function goToPortalFromTopNav() {
         if (currentUser) {
-            showAppTab('portal');
+            showAppTab('practitioner'); applyPlanSuccessFromUrl();
         } else {
             backToLoginOrApp();
         }
+    }
+
+    function goToPortalAndScrollToMembership() {
+        if (!currentUser) { backToLoginOrApp(); return; }
+        showAppTab('practitioner'); applyPlanSuccessFromUrl();
+        setTimeout(() => {
+            const el = document.getElementById('p-membership-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 80);
+    }
+
+    // ---- Post-payment plan sync (no backend available) ----
+    // Configure the Stripe pricing table's / Checkout success redirect to append
+    // ?plan_success=ESSENTIALS (or ESSENTIALS/PLUS/COMPLETE) to this app's URL.
+    // On load, if that param is present for a logged-in practitioner, their plan is
+    // updated automatically. This is a lightweight stopgap — a fully reliable, tamper-proof
+    // sync (source of truth) requires a Stripe webhook hitting a real backend, which a
+    // static HTML page cannot run on its own.
+    function applyPlanSuccessFromUrl() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const plan = params.get('plan_success');
+            if (plan && PLAN_INFO[plan] && currentUser) {
+                const ea = practitioners[activeEaKey];
+                if (ea) {
+                    ea.membershipPlan = plan;
+                    ea.hasForm8554Addon = (plan === 'COMPLETE');
+                    ea.autoRenew = true;
+                    savePractitionersToStorage();
+                    renderRosterTable();
+                    if (typeof renderPractitionerPlanSelector === 'function') renderPractitionerPlanSelector();
+                    alert(`Payment confirmed — ${PLAN_INFO[plan].name} plan is now active!`);
+                }
+                params.delete('plan_success');
+                const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                window.history.replaceState({}, '', newUrl);
+            }
+        } catch (e) { console.warn('applyPlanSuccessFromUrl error:', e); }
     }
 
     function handleContactSubmit(e) {
@@ -3117,8 +3142,36 @@ let activeEaKey = "Jane A. Doe";
     // Emails the certificate to the practitioner and to CycleCPE's compliance archive.
     // NOTE: true automated email delivery requires a backend mail API (e.g. SendGrid/Postmark).
     // This client-side app logs the send record and opens a pre-filled mail draft as a fallback.
-    const CERT_ARCHIVE_EMAIL = 'cyclecpe@gmail.com';
-    const SURVEY_RESULTS_EMAIL = 'cpecycle@gmail.com';
+    const CERT_ARCHIVE_EMAIL = 'info@cyclecpe.com';
+    const SURVEY_RESULTS_EMAIL = 'info@cyclecpe.com';
+
+    // NOTE: SendGrid's Mail Send API does not allow direct cross-origin browser requests
+    // (no CORS headers are returned), so this call will be blocked by the browser when run
+    // from a plain static HTML page — this is a SendGrid security restriction, not a bug here.
+    // Real delivery requires routing this fetch through a small backend/serverless proxy that
+    // holds the API key server-side. The call below is wired exactly as it would work through
+    // such a proxy; until one exists, sendViaSendGrid() will fail silently and the send is
+    // still recorded in the local audit log so nothing is lost.
+    const SENDGRID_API_KEY = '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';
+    const SENDGRID_FROM_EMAIL = 'info@cyclecpe.com';
+
+    function sendViaSendGrid(recipients, subject, bodyText) {
+        try {
+            fetch('https://api.sendgrid.com/v3/mail/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + SENDGRID_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    personalizations: [{ to: recipients.map(email => ({ email })) }],
+                    from: { email: SENDGRID_FROM_EMAIL, name: 'CycleCPE' },
+                    subject: subject,
+                    content: [{ type: 'text/plain', value: bodyText }]
+                })
+            }).catch(err => console.warn('SendGrid send blocked/failed (expected without a backend proxy):', err));
+        } catch (e) { console.warn('SendGrid send error:', e); }
+    }
 
     function emailCertificateRecord(ea, courseTitle, ceHours, category, programNo) {
         const recipients = [ea.email, CERT_ARCHIVE_EMAIL].filter(Boolean);
@@ -3129,16 +3182,8 @@ let activeEaKey = "Jane A. Doe";
         ea.certificateEmailLog.push({ courseTitle, ceHours, category, programNo, date: new Date().toISOString(), sentTo: recipients });
         savePractitionersToStorage();
 
-        // Backend hook placeholder — point this at a real email API in production.
-        try {
-            fetch('/api/send-certificate-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ to: recipients, subject, body })
-            }).catch(() => {});
-        } catch (e) {}
-
-        console.log('Certificate email record (simulated send):', { to: recipients, subject, body });
+        sendViaSendGrid(recipients, subject, body);
+        console.log('Certificate email record (SendGrid attempt logged):', { to: recipients, subject, body });
     }
 
 
@@ -3208,13 +3253,7 @@ let activeEaKey = "Jane A. Doe";
 
         const subject = `CycleCPE Course Evaluation: ${title}`;
         const body = JSON.stringify(surveyResult, null, 2);
-        try {
-            fetch('/api/send-survey-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ to: [SURVEY_RESULTS_EMAIL], subject, body: surveyResult })
-            }).catch(() => {});
-        } catch (e) {}
+        sendViaSendGrid([SURVEY_RESULTS_EMAIL], subject, body);
         console.log('Course survey submitted (simulated email to ' + SURVEY_RESULTS_EMAIL + '):', surveyResult);
 
         const confirmEl = document.getElementById('survey-confirm-' + slug);
@@ -3910,7 +3949,7 @@ let activeEaKey = "Jane A. Doe";
             };
 
             setupLoggedInState();
-            showAppTab('practitioner');
+            showAppTab('practitioner'); applyPlanSuccessFromUrl();
         }
 
         // --- CHECK INITIAL SESSION ON PAGE LOAD ---
@@ -3924,7 +3963,7 @@ let activeEaKey = "Jane A. Doe";
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
                 setupLoggedInState();
-                showAppTab('practitioner');
+                showAppTab('practitioner'); applyPlanSuccessFromUrl();
             }
         }
 
