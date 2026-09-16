@@ -1307,7 +1307,10 @@
 
                     <!-- SUBSCRIPTION & AUTO-RENEW SETTINGS -->
                     <div class="section-subtitle" id="p-membership-section">Subscription & Membership Management</div>
-                    <div id="p-current-plan-label" style="font-size:0.9rem; color:var(--text-muted); margin-bottom:14px; font-weight:600;"></div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+                        <div id="p-current-plan-label" style="font-size:0.9rem; color:var(--text-muted); font-weight:600;"></div>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="manualCheckPlanUpdate()">🔄 Check for Plan Updates</button>
+                    </div>
                     <input type="checkbox" id="p-auto-renew" checked style="display:none;">
                     <div style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
                         <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Select or purchase a plan directly via Stripe:</div>
@@ -4231,6 +4234,54 @@ let activeEaKey = "Jane A. Doe";
         // model (the `practitioners` object every other tab reads from via activeEaKey).
         // Without this, a real Supabase login had nowhere to attach — Engine, Practitioner
         // Tool, Roster, etc. all key off activeEaKey, which was never being set here.
+        // Checks Supabase for the practitioner's actual current plan (written by the
+        // Stripe webhook when they pay) and applies it locally if it differs from what
+        // the browser currently has. This is what makes a real Stripe purchase — made
+        // via the raw Payment Link, on any device — actually show up in the app.
+        async function syncPlanFromSupabase(emailOverride) {
+            const ea = practitioners[activeEaKey];
+            const email = (emailOverride || (ea && ea.email) || '').toLowerCase();
+            if (!email) return null;
+
+            try {
+                const { data, error } = await window.supabase
+                    .from('practitioner_plans')
+                    .select('plan, updated_at')
+                    .eq('email', email)
+                    .maybeSingle();
+
+                if (error) { console.warn('syncPlanFromSupabase error:', error); return null; }
+                if (!data || !data.plan) return null;
+
+                if (ea && ea.membershipPlan !== data.plan) {
+                    ea.membershipPlan = data.plan;
+                    ea.hasForm8554Addon = (data.plan === 'COMPLETE');
+                    ea.autoRenew = true;
+                    if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+                    if (typeof renderPractitionerPlanSelector === 'function') renderPractitionerPlanSelector();
+                    if (typeof renderRosterTable === 'function') renderRosterTable();
+                }
+                return data.plan;
+            } catch (e) {
+                console.warn('syncPlanFromSupabase exception:', e);
+                return null;
+            }
+        }
+
+        async function manualCheckPlanUpdate() {
+            const ea = practitioners[activeEaKey];
+            if (!ea) { alert('No active practitioner profile found.'); return; }
+            const before = ea.membershipPlan;
+            const result = await syncPlanFromSupabase();
+            if (!result) {
+                alert('No plan update found yet. If you just paid, this can take a few moments to process — try again shortly.');
+            } else if (result !== before) {
+                alert(`Your plan has been updated to ${PLAN_INFO[result].name}!`);
+            } else {
+                alert(`You're already on the ${PLAN_INFO[result].name} plan — no change.`);
+            }
+        }
+
         function resolvePractitionerForUser(user) {
             const emailLower = (user.email || '').toLowerCase();
             let matchedKey = null;
@@ -4302,7 +4353,7 @@ let activeEaKey = "Jane A. Doe";
                     role: data.user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: `${fn} ${ln}`.trim() || data.user.email
                 };
-                resolvePractitionerForUser(data.user);
+                resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             } else {
@@ -4338,7 +4389,7 @@ let activeEaKey = "Jane A. Doe";
                 name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
             };
 
-            resolvePractitionerForUser(user);
+            resolvePractitionerForUser(user); syncPlanFromSupabase(user.email);
             setupLoggedInState();
             showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         }
@@ -4353,7 +4404,7 @@ let activeEaKey = "Jane A. Doe";
                     role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
-                resolvePractitionerForUser(user);
+                resolvePractitionerForUser(user); syncPlanFromSupabase(user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             }
