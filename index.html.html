@@ -1244,6 +1244,9 @@
                         <button type="submit" class="btn btn-primary" style="flex:2;">Save & Submit Renewal Request</button>
                         <button type="button" class="btn btn-print" style="flex:1;" onclick="window.print();">Print / Save PDF</button>
                     </div>
+                    <div class="actions-bar" style="margin-top: 12px;">
+                        <button type="button" class="btn btn-success" style="width:100%;" onclick="generateForm8554PDF()">📄 Generate Form 8554</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -3155,85 +3158,139 @@ let activeEaKey = "Jane A. Doe";
 
     async function generateForm8554PDF() {
         const ea = practitioners[activeEaKey];
+        if (!ea) { alert('No active practitioner selected.'); return; }
+
+        const mismatchLabel = getMismatchedConfirmFieldLabel();
+        if (mismatchLabel) {
+            alert('The ' + mismatchLabel + ' confirmation field does not match. Please correct it before generating Form 8554.');
+            return;
+        }
+
         const cycle = getCycleYearsFromSSN(ea.ssn);
         const cycleEndYear = cycle.endYear - 1;
         const cycleYears = [cycleEndYear - 2, cycleEndYear - 1, cycleEndYear];
         const engineResult = runEngine();
+        const s = ea.suitability || {};
+        const yn = v => (v === 'Yes' ? 'X Yes    No' : 'Yes    X No');
 
         try {
             const pdfDoc = await PDFLib.PDFDocument.create();
-            const page = pdfDoc.addPage([612, 792]);
-            const { width, height } = page.getSize();
             const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
             const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            const pageSize = [612, 792];
 
-            page.drawText('Form 8554 - Application for Renewal of Enrollment to Practice Before the IRS', { x: 40, y: height - 45, size: 12, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
-            
-            let currentY = height - 70;
-            page.drawText('Part I: Practitioner Identification & Contact Details', { x: 40, y: currentY, size: 10, font: boldFont });
-            currentY -= 16;
+            function newPage() {
+                const page = pdfDoc.addPage(pageSize);
+                const { width, height } = page.getSize();
+                return { page, width, height };
+            }
+            function label(page, text, x, y, opts) {
+                page.drawText(text, Object.assign({ x, y, size: 9, font }, opts || {}));
+            }
+            function heading(page, text, x, y) {
+                page.drawText(text, { x, y, size: 11, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
+            }
+            function rule(page, y, width) {
+                page.drawLine({ start: { x: 40, y }, end: { x: 40 + width, y }, thickness: 0.75, color: PDFLib.rgb(0.75, 0.75, 0.75) });
+            }
 
-            page.drawText(`Name: ${ea.firstName || ''} ${ea.lastName || ''} ${ea.suffix || ''}`, { x: 40, y: currentY, size: 8.5, font });
-            page.drawText(`EA Enrollment #: ${ea.eaNum || 'N/A'}`, { x: 230, y: currentY, size: 8.5, font });
-            page.drawText(`PTIN: ${ea.ptin || 'N/A'}`, { x: 380, y: currentY, size: 8.5, font });
-            page.drawText(`CAF #: ${ea.caf || 'N/A'}`, { x: 480, y: currentY, size: 8.5, font });
+            // ---- PAGE 1: Header + Part 1 (Enrollment Status) ----
+            let { page, width, height } = newPage();
+            let y = height - 50;
+            page.drawText('Form 8554', { x: 40, y, size: 16, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
+            page.drawText('Application for Renewal of Enrollment to Practice Before the Internal Revenue Service', { x: 40, y: y - 18, size: 10, font });
+            page.drawText('Generated via CycleCPE — auto-populated from practitioner profile & CPE ledger', { x: 40, y: y - 32, size: 8, font, color: PDFLib.rgb(0.5, 0.5, 0.5) });
+            y -= 60;
 
-            currentY -= 14;
-            page.drawText(`Address: ${ea.address1 || ''}, ${ea.city || ''}, ${ea.state || ''} ${ea.zip || ''}`, { x: 40, y: currentY, size: 8.5, font });
-            page.drawText(`SSN (Last 4): ***-**-${ea.ssn || '****'}`, { x: 380, y: currentY, size: 8.5, font });
+            heading(page, 'Part 1. Enrollment Status', 40, y); y -= 18;
+            label(page, ea.statusActive !== false ? 'X  I want approval for Active Enrolled Agent status.' : '   I want approval for Active Enrolled Agent status.', 40, y); y -= 14;
+            label(page, `      Are you currently under suspension or disbarment?   ${yn('No')}`, 40, y); y -= 16;
+            label(page, ea.statusInactive ? 'X  I want approval to remain or be placed into Inactive Retirement status.' : '   I want approval to remain or be placed into Inactive Retirement status.', 40, y); y -= 20;
+            label(page, ea.seeException ? 'X  I passed the Special Enrollment Examination (SEE) since my last renewal.' : '   I passed the Special Enrollment Examination (SEE) since my last renewal.', 40, y); y -= 26;
 
-            currentY -= 14;
-            page.drawText(`Email: ${ea.email || 'N/A'}   |   Phone: ${ea.phone || 'N/A'}   |   Enrollment Date: ${ea.enrollmentDate || 'N/A'}`, { x: 40, y: currentY, size: 8.5, font });
+            label(page, 'Federal Tax Law and Ethics hours earned in each year of the current enrollment cycle:', 40, y); y -= 18;
+            const col = [40, 150, 260, 370, 480];
+            label(page, '', col[0], y, { font: boldFont });
+            label(page, `Year 1 (${cycleYears[0]})`, col[1], y, { font: boldFont });
+            label(page, `Year 2 (${cycleYears[1]})`, col[2], y, { font: boldFont });
+            label(page, `Year 3 (${cycleYears[2]})`, col[3], y, { font: boldFont });
+            label(page, 'Total', col[4], y, { font: boldFont });
+            y -= 6; rule(page, y, 530); y -= 16;
 
-            currentY -= 30;
-            page.drawText('Part II: Continuing Education Credit Summary (Prorated)', { x: 40, y: currentY, size: 10, font: boldFont });
-            currentY -= 18;
-
-            page.drawText('Calendar Year', { x: 40, y: currentY, size: 8.5, font: boldFont });
-            page.drawText('Non-Ethics Earned', { x: 180, y: currentY, size: 8.5, font: boldFont });
-            page.drawText('Ethics Earned', { x: 340, y: currentY, size: 8.5, font: boldFont });
-            page.drawText('Total CE Earned', { x: 470, y: currentY, size: 8.5, font: boldFont });
-
-            currentY -= 5;
-            page.drawLine({ start: { x: 40, y: currentY }, end: { x: 570, y: currentY }, thickness: 1, color: PDFLib.rgb(0.7, 0.7, 0.7) });
-
-            let grandTotal = 0;
-            cycleYears.forEach((yr, idx) => {
-                currentY -= 18;
-                const yrData = engineResult.yearBreakdown[yr] || { earnedTax: 0, earnedEthics: 0, totalEarned: 0 };
-                grandTotal += yrData.totalEarned;
-
-                page.drawText(`Year ${idx + 1} (${yr})`, { x: 40, y: currentY, size: 8.5, font });
-                page.drawText(`${yrData.earnedTax} Hours`, { x: 180, y: currentY, size: 8.5, font });
-                page.drawText(`${yrData.earnedEthics} Hours`, { x: 340, y: currentY, size: 8.5, font });
-                page.drawText(`${yrData.totalEarned} Hours`, { x: 470, y: currentY, size: 8.5, font });
+            let totalTax = 0, totalEthics = 0;
+            const taxRow = ['Federal Tax Law'];
+            const ethicsRow = ['Ethics'];
+            cycleYears.forEach(yr => {
+                const yrData = engineResult.yearBreakdown[yr] || { earnedTax: 0, earnedEthics: 0 };
+                totalTax += yrData.earnedTax; totalEthics += yrData.earnedEthics;
+                taxRow.push(yrData.earnedTax); ethicsRow.push(yrData.earnedEthics);
             });
+            label(page, 'Federal Tax Law', col[0], y);
+            taxRow.slice(1).forEach((v, i) => label(page, String(v), col[i + 1], y));
+            label(page, String(totalTax), col[4], y);
+            y -= 16;
+            label(page, 'Ethics', col[0], y);
+            ethicsRow.slice(1).forEach((v, i) => label(page, String(v), col[i + 1], y));
+            label(page, String(totalEthics), col[4], y);
+            y -= 10; rule(page, y, 530); y -= 20;
 
-            currentY -= 12;
-            page.drawLine({ start: { x: 40, y: currentY }, end: { x: 570, y: currentY }, thickness: 1, color: PDFLib.rgb(0.3, 0.3, 0.3) });
-            currentY -= 18;
-            page.drawText(`Total Cumulative CE Hours Reported: ${grandTotal} Hours`, { x: 40, y: currentY, size: 9.5, font: boldFont, color: PDFLib.rgb(0.1, 0.5, 0.2) });
+            // ---- Part 2. Identifying Information ----
+            heading(page, 'Part 2. Identifying Information', 40, y); y -= 20;
+            label(page, `1. Last four digits of your Social Security Number: ${ea.ssn || 'N/A'}`, 40, y); y -= 16;
+            label(page, `2. Your Enrollment Number: ${ea.eaNum || 'N/A'}`, 40, y); y -= 16;
+            label(page, `3. Your Full Legal Name: ${ea.firstName || ''}  ${ea.lastName || ''}  ${ea.suffix || ''}`, 40, y); y -= 16;
+            label(page, `4. Your Current Address: ${ea.address1 || ''}, ${ea.city || ''}, ${ea.state || ''} ${ea.zip || ''}`, 40, y); y -= 16;
+            label(page, `   Your Email Address: ${ea.email || 'N/A'}`, 40, y); y -= 16;
+            label(page, `   Your Telephone Number: ${ea.phone || 'N/A'}`, 40, y); y -= 24;
 
-            currentY -= 40;
-            page.drawText('Declaration: Under penalties of perjury, I declare that I have examined this application and attached statements.', { x: 40, y: currentY, size: 7.5, font });
-            currentY -= 18;
-            page.drawText(`Electronic Signature: ${ea.firstName || ''} ${ea.lastName || ''}   |   Date: ${new Date().toLocaleDateString()}`, { x: 40, y: currentY, size: 8.5, font: boldFont });
+            page.drawText('Page 1', { x: width - 80, y: 30, size: 8, font, color: PDFLib.rgb(0.6, 0.6, 0.6) });
+
+            // ---- PAGE 2: Part 2 continued + Part 3 ----
+            ({ page, width, height } = newPage());
+            y = height - 50;
+            heading(page, 'Part 2. Identifying Information (continued)', 40, y); y -= 20;
+            label(page, `5. Do you have a Centralized Authorization File (CAF) number?  ${ea.caf ? 'X Yes' : 'Yes'}    ${ea.caf ? 'No' : 'X No'}`, 40, y); y -= 14;
+            if (ea.caf) { label(page, `   CAF Number: ${ea.caf}`, 40, y); y -= 14; }
+            y -= 6;
+
+            label(page, `7. Are you current with your individual and business tax obligations?   ${yn(s.taxCurrent || 'Yes')}`, 40, y); y -= 14;
+            if (s.taxCurrent === 'No' && s.taxExplanation) { label(page, `   Explanation: ${s.taxExplanation}`, 40, y, { size: 8 }); y -= 14; }
+            label(page, `8. Have you been sanctioned by a federal or state licensing authority?   ${yn(s.sanctioned || 'No')}`, 40, y); y -= 14;
+            label(page, `9. Has any application for admission to practice ever been denied?   ${yn(s.admissionDenied || 'No')}`, 40, y); y -= 14;
+            label(page, `10. Have you been convicted of a tax crime or any felony?   ${yn(s.felony || 'No')}`, 40, y); y -= 14;
+            label(page, `11. Have you been permanently enjoined from preparing returns / representing others before the IRS?   ${yn(s.enjoined || 'No')}`, 40, y); y -= 14;
+            label(page, `12. Are you a CPA?   ${yn(s.isCpa || 'No')}`, 40, y); y -= 14;
+            label(page, `13. Are you an Attorney?   ${yn(s.isAttorney || 'No')}`, 40, y); y -= 30;
+
+            heading(page, 'Part 3. Sign Here', 40, y); y -= 20;
+            label(page, 'Under penalties of perjury, I declare that I have examined this application, and to the best of my knowledge', 40, y, { size: 8 }); y -= 12;
+            label(page, 'and belief, it is true, correct, and complete.', 40, y, { size: 8 }); y -= 24;
+
+            label(page, `PTIN: ${ea.ptin || 'N/A'}`, 40, y); y -= 24;
+            page.drawLine({ start: { x: 40, y }, end: { x: 320, y }, thickness: 1, color: PDFLib.rgb(0.3, 0.3, 0.3) });
+            label(page, `${ea.firstName || ''} ${ea.lastName || ''}`.trim(), 45, y + 4, { size: 10, font: boldFont });
+            label(page, 'Signature', 40, y - 12, { size: 7, color: PDFLib.rgb(0.5, 0.5, 0.5) });
+            page.drawLine({ start: { x: 380, y }, end: { x: 550, y }, thickness: 1, color: PDFLib.rgb(0.3, 0.3, 0.3) });
+            label(page, new Date().toLocaleDateString(), 385, y + 4, { size: 10, font: boldFont });
+            label(page, 'Date', 380, y - 12, { size: 7, color: PDFLib.rgb(0.5, 0.5, 0.5) });
+
+            page.drawText('Page 2 — Generated via CycleCPE', { x: width - 170, y: 30, size: 8, font, color: PDFLib.rgb(0.6, 0.6, 0.6) });
 
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Form_8554_Packet_${ea.ptin || 'Draft'}.pdf`;
+            link.download = `Form_8554_${ea.ptin || 'Draft'}.pdf`;
             link.click();
         } catch (err) {
-            console.error('PDF Generation Error:', err);
-            alert('Failed to generate PDF.');
+            console.error('Form 8554 PDF Generation Error:', err);
+            alert('Failed to generate Form 8554 PDF.');
         }
     }
 
-    async function generateCourseCertificatePDF(courseTitle, ceHours, category, programNo) {
+    async function buildCertificatePdfBytes(courseTitle, ceHours, category, programNo) {
         const ea = practitioners[activeEaKey];
-        try {
+        {
             const pdfDoc = await PDFLib.PDFDocument.create();
             const page = pdfDoc.addPage([792, 612]); 
             const { width, height } = page.getSize();
@@ -3264,17 +3321,49 @@ let activeEaKey = "Jane A. Doe";
             page.drawText('CycleCPE Authorized Sponsor', { x: 500, y: 80, size: 10, font: boldFont });
             page.drawLine({ start: { x: 480, y: 95 }, end: { x: 680, y: 95 }, thickness: 1, color: PDFLib.rgb(0.3, 0.3, 0.3) });
 
-            const pdfBytes = await pdfDoc.save();
+            return await pdfDoc.save();
+        }
+    }
+
+    function pdfBytesToBase64(pdfBytes) {
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let i = 0; i < pdfBytes.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, pdfBytes.subarray(i, i + chunkSize));
+        }
+        return btoa(binary);
+    }
+
+    // Download-only: does NOT trigger an email. Used by the "Download Certificate" button
+    // for re-downloading a certificate any time after the course was completed.
+    async function generateCourseCertificatePDF(courseTitle, ceHours, category, programNo) {
+        const ea = practitioners[activeEaKey];
+        try {
+            const pdfBytes = await buildCertificatePdfBytes(courseTitle, ceHours, category, programNo);
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `CE_Certificate_${ea.ptin || 'Draft'}_${courseTitle.replace(/\s+/g, '_')}.pdf`;
             link.click();
-
-            emailCertificateRecord(ea, courseTitle, ceHours, category, programNo);
         } catch(err) {
             console.error('Certificate PDF Error:', err);
             alert('Failed to generate certificate.');
+        }
+    }
+
+    // Automatically fires the moment a course is passed — builds the certificate PDF and
+    // emails it (as an attachment) to the practitioner and CycleCPE's archive, with no
+    // button click required.
+    async function autoEmailCertificateOnPass(courseTitle, ceHours, category, programNo) {
+        const ea = practitioners[activeEaKey];
+        if (!ea) return;
+        try {
+            const pdfBytes = await buildCertificatePdfBytes(courseTitle, ceHours, category, programNo);
+            const pdfBase64 = pdfBytesToBase64(pdfBytes);
+            const filename = `CE_Certificate_${ea.ptin || 'Draft'}_${courseTitle.replace(/\s+/g, '_')}.pdf`;
+            emailCertificateRecord(ea, courseTitle, ceHours, category, programNo, pdfBase64, filename);
+        } catch (err) {
+            console.error('Auto certificate email error:', err);
         }
     }
 
@@ -3289,12 +3378,21 @@ let activeEaKey = "Jane A. Doe";
     // {to, subject, body} to this endpoint, and the function forwards it to SendGrid.
     const CYCLECPE_EMAIL_ENDPOINT = 'https://cyclecpe.vercel.app/api/send-email';
 
-    function sendViaSendGrid(recipients, subject, bodyText) {
+    function sendViaSendGrid(recipients, subject, bodyText, attachment) {
         try {
+            const payload = { to: recipients, subject: subject, body: bodyText };
+            if (attachment && attachment.content) {
+                payload.attachments = [{
+                    content: attachment.content,
+                    filename: attachment.filename || 'attachment.pdf',
+                    type: 'application/pdf',
+                    disposition: 'attachment'
+                }];
+            }
             fetch(CYCLECPE_EMAIL_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ to: recipients, subject: subject, body: bodyText })
+                body: JSON.stringify(payload)
             })
                 .then(r => r.json())
                 .then(data => console.log('CycleCPE email endpoint response:', data))
@@ -3302,17 +3400,17 @@ let activeEaKey = "Jane A. Doe";
         } catch (e) { console.warn('Email send error:', e); }
     }
 
-    function emailCertificateRecord(ea, courseTitle, ceHours, category, programNo) {
+    function emailCertificateRecord(ea, courseTitle, ceHours, category, programNo, pdfBase64, pdfFilename) {
         const recipients = [ea.email, CERT_ARCHIVE_EMAIL].filter(Boolean);
         const subject = `CycleCPE Certificate of Completion: ${courseTitle}`;
-        const body = `${ea.firstName || ''} ${ea.lastName || ''} completed "${courseTitle}" (${ceHours} CE hour(s), ${category}) on ${new Date().toLocaleDateString()}. Program #: ${programNo}. EA Enrollment #: ${ea.eaNum || 'N/A'}. PTIN: ${ea.ptin || 'N/A'}.`;
+        const body = `${ea.firstName || ''} ${ea.lastName || ''} completed "${courseTitle}" (${ceHours} CE hour(s), ${category}) on ${new Date().toLocaleDateString()}. Program #: ${programNo}. EA Enrollment #: ${ea.eaNum || 'N/A'}. PTIN: ${ea.ptin || 'N/A'}. Your official CE certificate is attached as a PDF.`;
 
         ea.certificateEmailLog = ea.certificateEmailLog || [];
-        ea.certificateEmailLog.push({ courseTitle, ceHours, category, programNo, date: new Date().toISOString(), sentTo: recipients });
+        ea.certificateEmailLog.push({ courseTitle, ceHours, category, programNo, date: new Date().toISOString(), sentTo: recipients, hadAttachment: !!pdfBase64 });
         savePractitionersToStorage();
 
-        sendViaSendGrid(recipients, subject, body);
-        console.log('Certificate email record (SendGrid attempt logged):', { to: recipients, subject, body });
+        sendViaSendGrid(recipients, subject, body, pdfBase64 ? { content: pdfBase64, filename: pdfFilename } : null);
+        console.log('Certificate email record (SendGrid attempt logged, attachment:', !!pdfBase64, '):', { to: recipients, subject, body });
     }
 
 
@@ -4046,6 +4144,10 @@ let activeEaKey = "Jane A. Doe";
                     if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
                     runEngine();
                 }
+                // Fires immediately on passing — no button click required. The certificate
+                // credit record above already lives in ea.credits (saved to localStorage),
+                // so the certificate itself can always be regenerated from that data.
+                autoEmailCertificateOnPass(c.title, c.hours, categoryFullName, programNo);
             }
 
             const postCourseNav = '<div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; gap:12px; flex-wrap:wrap;">' +
@@ -4054,8 +4156,8 @@ let activeEaKey = "Jane A. Doe";
                 '</div>';
 
             result.innerHTML = '<p class="score">' + score + ' / ' + c.examQuestions.length + ' correct (' + pct + '%)</p><p>' +
-                'You passed! CE credit has been automatically added to your CPE ledger, and your certificate will be emailed to you and archived by CycleCPE.</p>' +
-                `<button class="btn btn-success" style="margin-top:12px;" onclick="generateCourseCertificatePDF('${c.title.replace(/'/g, "\\'")}', ${c.hours}, '${categoryFullName}', '${programNo}')">📜 Download &amp; Email Official CE Certificate</button>` +
+                'You passed! CE credit has been automatically added to your CPE ledger. Your certificate has been emailed to you and archived by CycleCPE — no action needed. You can also download a copy below any time.</p>' +
+                `<button class="btn btn-success" style="margin-top:12px;" onclick="generateCourseCertificatePDF('${c.title.replace(/'/g, "\\'")}', ${c.hours}, '${categoryFullName}', '${programNo}')">📥 Download Certificate</button>` +
                 renderCourseSurveyHtml(c.slug, c.title) +
                 postCourseNav;
         } else {
