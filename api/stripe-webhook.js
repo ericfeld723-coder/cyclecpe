@@ -31,8 +31,19 @@ async function setPlanForEmail(email, plan) {
     plan,
     updated_at: new Date().toISOString(),
   });
-  if (error) console.error('Supabase upsert error:', error);
+  if (error) console.error('Supabase plan upsert error:', error);
   else console.log(`Plan updated: ${email} -> ${plan}`);
+}
+
+async function recordCoursePurchase(email, slug) {
+  if (!email || !slug) return;
+  const { error } = await supabase.from('course_purchases').upsert({
+    email: email.toLowerCase(),
+    slug,
+    purchased_at: new Date().toISOString(),
+  });
+  if (error) console.error('Supabase course purchase upsert error:', error);
+  else console.log(`Course purchase recorded: ${email} -> ${slug}`);
 }
 
 export default async function handler(req, res) {
@@ -55,14 +66,22 @@ export default async function handler(req, res) {
       const email = session.customer_details?.email;
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
       const priceId = lineItems.data[0]?.price?.id;
-      await setPlanForEmail(email, PRICE_TO_PLAN[priceId]);
+      const plan = PRICE_TO_PLAN[priceId];
+
+      if (plan) {
+        // A membership plan purchase.
+        await setPlanForEmail(email, plan);
+      } else if (session.client_reference_id) {
+        // Not a plan price — client_reference_id carries the specific course slug
+        // for an individual course purchase.
+        await recordCoursePurchase(email, session.client_reference_id);
+      }
     }
 
     if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
       const subscription = event.data.object;
       const priceId = subscription.items.data[0]?.price?.id;
       const plan = PRICE_TO_PLAN[priceId];
-
       if (plan) {
         const customer = await stripe.customers.retrieve(subscription.customer);
         await setPlanForEmail(customer.email, plan);
