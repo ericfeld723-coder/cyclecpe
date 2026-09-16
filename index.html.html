@@ -245,6 +245,8 @@
         .catalog-card .go { color: var(--ledger); font-weight: 600; }
         .catalog-badge-done { position: absolute; top: 18px; right: 18px; background: var(--ledger-light); color: var(--ledger); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 4px 9px; border-radius: 12px; display: none; }
         .catalog-card.completed .catalog-badge-done { display: inline-block; }
+        .catalog-badge-purchased { position: absolute; top: 18px; right: 18px; background: #fff3cd; color: #7a5c00; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 4px 9px; border-radius: 12px; display: none; }
+        .catalog-card.purchased:not(.completed) .catalog-badge-purchased { display: inline-block; }
         #view-catalog footer { max-width: 1040px; margin: 0 auto; padding: 0 10px 40px; color: var(--ink-soft); font-size: .85rem; }
 
         /* Course View Styles */
@@ -1392,6 +1394,7 @@
                             <div class="radio-option"><input type="radio" name="p_is_cpa" value="Yes"> Yes</div>
                             <div class="radio-option"><input type="radio" name="p_is_cpa" value="No" checked> No</div>
                         </div>
+                        <input type="text" id="p-cpa-states" placeholder="If Yes, states licensed (e.g. FL, NY)" style="margin-top:6px;">
                     </div>
 
                     <div class="field">
@@ -1400,6 +1403,23 @@
                             <div class="radio-option"><input type="radio" name="p_is_attorney" value="Yes"> Yes</div>
                             <div class="radio-option"><input type="radio" name="p_is_attorney" value="No" checked> No</div>
                         </div>
+                        <input type="text" id="p-attorney-states" placeholder="If Yes, states licensed (e.g. FL, NY)" style="margin-top:6px;">
+                    </div>
+
+                    <div class="field">
+                        <label>Do you have an Employer Identification Number (EIN)?</label>
+                        <div class="radio-group-inline">
+                            <div class="radio-option"><input type="radio" name="p_has_ein" value="Yes"> Yes</div>
+                            <div class="radio-option"><input type="radio" name="p_has_ein" value="No" checked> No</div>
+                        </div>
+                        <input type="text" id="p-ein-list" placeholder="If Yes, list EIN(s), business name(s) &amp; address(es)" style="margin-top:6px;">
+                    </div>
+
+                    <div class="field" style="flex-direction:row; align-items:center; gap:8px;">
+                        <input type="checkbox" id="p-no-ssn" style="width:auto;">
+                        <label for="p-no-ssn" style="margin:0;">I do not have an SSN</label>
+                        <input type="checkbox" id="p-new-address" style="width:auto; margin-left:20px;">
+                        <label for="p-new-address" style="margin:0;">This is a new address</label>
                     </div>
 
                     <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
@@ -1449,7 +1469,7 @@
 
                     <div class="catalog-grid" id="catalog-grid">
                         <div class="catalog-card" data-cat="Ethics" data-course="ethics" data-hours="1" onclick="openCourseView('ethics')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Practicing Under Circular 230</h2>
                             <p>Duties, restrictions, and disciplinary standards under Treasury Circular 230 — and the practice habits most likely to trigger an OPR inquiry.</p>
@@ -1457,7 +1477,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="s-corp" data-hours="1" onclick="openCourseView('s-corp')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>S Corporation Taxation: Elections, Compensation, and Basis</h2>
                             <p>Eligibility, elections, reasonable compensation, and the stock-versus-debt basis rules that decide how much of a shareholder's loss is deductible.</p>
@@ -1465,7 +1485,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="estate-gift" data-hours="1" onclick="openCourseView('estate-gift')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Estate &amp; Gift Tax Planning Under OBBBA</h2>
                             <p>The permanent $15 million exemption, the annual exclusion, and the planning conversations worth having with clients now that the scheduled 2026 sunset has been repealed.</p>
@@ -1473,7 +1493,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="biz-incentives" data-hours="1" onclick="openCourseView('biz-incentives')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Business Cost Recovery &amp; Investment Incentives</h2>
                             <p>R&amp;D expensing restored under new §174A, the 2026 luxury-auto depreciation limits, and Opportunity Zones 2.0 — three OBBBA-driven changes that reshape how business clients recover the cost of what they build and buy.</p>
@@ -1481,7 +1501,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="qrp" data-hours="1" onclick="openCourseView('qrp')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>Qualified Retirement Plan Matters</h2>
                             <p>Plan choice, 2026 contribution limits, and correction procedures for the small-business retirement plans enrolled agents design and administer alongside a client's tax return.</p>
@@ -1489,7 +1509,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="partnership-tax" data-hours="1" onclick="openCourseView('partnership-tax')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Partnership Taxation Fundamentals</h2>
                             <p>Outside basis, the §704(b) allocation rules, guaranteed payments, and the K-1 line items that generate the most preparer questions.</p>
@@ -1497,7 +1517,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="like-kind-exchanges" data-hours="1" onclick="openCourseView('like-kind-exchanges')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Like-Kind Exchanges &amp; Real Estate Taxation</h2>
                             <p>Section 1031 mechanics for real property only, the identification and exchange deadlines that make or break a deferral, depreciation recapture, and passive activity rules for rental real estate clients.</p>
@@ -1505,7 +1525,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Update" data-course="digital-assets" data-hours="1" onclick="openCourseView('digital-assets')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Digital Assets &amp; Information Reporting Update</h2>
                             <p>New Form 1099-DA broker reporting, wallet-by-wallet basis tracking, and the digital asset question every return now carries — what's changed for tax year 2026.</p>
@@ -1513,7 +1533,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="simple-sep-design" data-hours="1" onclick="openCourseView('simple-sep-design')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>SIMPLE &amp; SEP Plan Design for Small Business</h2>
                             <p>SIMPLE IRA's new higher-deferral option under SECURE 2.0, SEP-IRA's after-year-end funding flexibility, and the conversion pitfalls that arise when a growing business outgrows either one.</p>
@@ -1521,7 +1541,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Update" data-course="tax-update" data-hours="2" onclick="openCourseView('tax-update')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Federal Tax Law Update</h2>
                             <p>The individual and business changes enrolled agents need for tax year 2026 — the One Big Beautiful Bill Act's permanent provisions, the new temporary deductions, and the Rev. Proc. 2025-32 numbers that go with them.</p>
@@ -1529,7 +1549,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Special Enrollment Examination Prep" data-course="see-prep" data-hours="2" onclick="openCourseView('see-prep')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">P</span> SPECIAL ENROLLMENT EXAMINATION PREP</div>
                             <h2>Special Enrollment Examination Prep</h2>
                             <p>A structured review of all three SEE parts — Individuals, Businesses, and Representation/Practice/Procedures — for candidates preparing to sit for the exam and become enrolled agents.</p>
@@ -1537,7 +1557,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Annual Federal Tax Refresher" data-course="aftr" data-hours="6" onclick="openCourseView('aftr')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">A</span> ANNUAL FEDERAL TAX REFRESHER</div>
                             <h2>Annual Federal Tax Refresher</h2>
                             <p>The three required AFTR domains — filing season tax law updates, a general review of individual taxation, and ethics/practices — for non-credentialed preparers seeking an Annual Filing Season Program Record of Completion.</p>
@@ -1545,7 +1565,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Update" data-course="individual-credits-deep-dive" data-hours="4" onclick="openCourseView('individual-credits-deep-dive')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Individual Credits &amp; Provisions Deep Dive</h2>
                             <p>A comprehensive walk through every major individual credit and recent-year provision change — including OBBBA's rollback of clean energy credits — with the eligibility rules and phase-outs that separate a correct claim from an audit flag.</p>
@@ -1553,7 +1573,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Update" data-course="business-depreciation-update" data-hours="4" onclick="openCourseView('business-depreciation-update')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>Business Entity &amp; Depreciation Law Update</h2>
                             <p>A deep dive into 2026's business depreciation and entity-level changes — bonus depreciation, Section 179, §174A research expensing, and the interaction between all three when a client places significant assets in service in the same year.</p>
@@ -1561,7 +1581,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Ethics" data-course="circular-230-case-studies" data-hours="4" onclick="openCourseView('circular-230-case-studies')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Circular 230 in Practice: Case Studies &amp; Scenarios</h2>
                             <p>Circular 230's rules applied to the situations enrolled agents actually run into — conflicting client interests, staff review failures, fee disputes, and the gray areas between aggressive advocacy and an unreasonable position.</p>
@@ -1569,7 +1589,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Ethics" data-course="preparer-penalties-enforcement" data-hours="4" onclick="openCourseView('preparer-penalties-enforcement')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Preparer Penalties &amp; IRS Enforcement Priorities</h2>
                             <p>The full preparer penalty framework under §§6694 and 6695, how OPR and Criminal Investigation actually build cases against practitioners, and the current enforcement priorities that put certain client fact patterns under heightened scrutiny.</p>
@@ -1577,7 +1597,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="trust-estate-income-tax" data-hours="4" onclick="openCourseView('trust-estate-income-tax')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Trust &amp; Estate Income Taxation (Form 1041)</h2>
                             <p>Distributable net income, the distinction between simple and complex trusts, the compressed trust tax brackets, and the fiduciary income tax return most enrolled agents see rarely enough to relearn from scratch each time.</p>
@@ -1585,7 +1605,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="multistate-nexus" data-hours="4" onclick="openCourseView('multistate-nexus')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Multistate Taxation &amp; Nexus Fundamentals</h2>
                             <p>Economic nexus after Wayfair, the credit-for-taxes-paid mechanics for a client working across state lines, and the apportionment questions that come up the moment a small business client sells or works outside their home state.</p>
@@ -1593,7 +1613,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Federal Tax Law" data-course="fbar-fatca-reporting" data-hours="4" onclick="openCourseView('fbar-fatca-reporting')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>International Information Reporting: FBAR &amp; FATCA</h2>
                             <p>The foreign account and asset reporting requirements enrolled agents most often miss — FBAR filing thresholds, Form 8938, the penalty structure that makes these the most dangerous omissions in a preparer's practice, and the streamlined procedures for a client discovering a past miss.</p>
@@ -1601,7 +1621,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="defined-benefit-plans" data-hours="4" onclick="openCourseView('defined-benefit-plans')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>Defined Benefit &amp; Cash Balance Plan Design</h2>
                             <p>How defined benefit and cash balance plans let high-earning, late-career business owners shelter far more than a 401(k) allows — and the actuarial, funding, and compliance obligations that come with that capacity.</p>
@@ -1609,7 +1629,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="ira-rollovers-conversions" data-hours="4" onclick="openCourseView('ira-rollovers-conversions')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>IRA Rollovers, Conversions, and Beneficiary Planning</h2>
                             <p>The 60-day rollover rule and its exceptions, the once-per-year limit, backdoor and mega backdoor Roth mechanics, and the beneficiary distribution rules that trip up even experienced preparers.</p>
@@ -1617,7 +1637,7 @@
                         </div>
 
                         <div class="catalog-card" data-cat="Ethics" data-course="data-security-safeguards" data-hours="4" onclick="openCourseView('data-security-safeguards')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span>
+                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Data Security &amp; Safeguards Obligations for Tax Practices</h2>
                             <p>The FTC Safeguards Rule's Written Information Security Plan requirement, IRS Publication 4557 guidance, and how a data breach intersects with Circular 230's competence and diligence standards.</p>
@@ -2687,7 +2707,13 @@ let activeEaKey = "Jane A. Doe";
         setRadioValue('p_felony', s.felony || 'No');
         setRadioValue('p_enjoined', s.enjoined || 'No');
         setRadioValue('p_is_cpa', s.isCpa || 'No');
+        document.getElementById('p-cpa-states').value = s.cpaStates || '';
         setRadioValue('p_is_attorney', s.isAttorney || 'No');
+        document.getElementById('p-attorney-states').value = s.attorneyStates || '';
+        setRadioValue('p_has_ein', s.hasEin || 'No');
+        document.getElementById('p-ein-list').value = s.einList || '';
+        document.getElementById('p-no-ssn').checked = !!s.noSsn;
+        document.getElementById('p-new-address').checked = !!s.newAddress;
 
         toggleStandaloneTaxExplanation();
     }
@@ -2724,7 +2750,13 @@ let activeEaKey = "Jane A. Doe";
             felony: getRadioValue('p_felony'),
             enjoined: getRadioValue('p_enjoined'),
             isCpa: getRadioValue('p_is_cpa'),
-            isAttorney: getRadioValue('p_is_attorney')
+            cpaStates: document.getElementById('p-cpa-states').value,
+            isAttorney: getRadioValue('p_is_attorney'),
+            attorneyStates: document.getElementById('p-attorney-states').value,
+            hasEin: getRadioValue('p_has_ein'),
+            einList: document.getElementById('p-ein-list').value,
+            noSsn: document.getElementById('p-no-ssn').checked,
+            newAddress: document.getElementById('p-new-address').checked
         };
 
         renderRosterTable();
@@ -3083,7 +3115,7 @@ let activeEaKey = "Jane A. Doe";
             item.innerHTML = `
                 <div class="course-info">
                     <h3>${c.title} <span class="tag ${tagClass}">${c.category}</span> ${sourceTag}</h3>
-                    <div class="course-meta">Provider: <strong>${c.source}</strong> | Program #: ${c.programNo} | Date: ${c.date}</div>
+                    <div class="course-meta">Provider: <strong>${c.source}</strong> | Program #: ${c.programNo} | Date Completed: ${c.date}</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px;">
                     <div style="font-weight: bold; font-size: 1.05rem; color: var(--primary);">
@@ -3142,6 +3174,7 @@ let activeEaKey = "Jane A. Doe";
 
         ea.credits = ea.credits.filter(c => c.id !== creditId);
         if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+        if (typeof deleteCreditFromSupabase === 'function' && ea.email) deleteCreditFromSupabase(ea.email, creditId);
         runEngine();
         alert('Certificate deleted.');
     }
@@ -3172,7 +3205,10 @@ let activeEaKey = "Jane A. Doe";
             return;
         }
 
-        ea.credits.push({ id: type.toLowerCase() + '_' + Date.now(), title, programNo, category, hours, date, type, source: provider });
+        const newCredit = { id: type.toLowerCase() + '_' + Date.now(), title, programNo, category, hours, date, type, source: provider };
+        ea.credits.push(newCredit);
+        if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+        if (typeof pushCreditToSupabase === 'function' && ea.email) pushCreditToSupabase(ea.email, newCredit);
         runEngine();
     }
 
@@ -3210,110 +3246,177 @@ let activeEaKey = "Jane A. Doe";
         const cycleYears = [cycleEndYear - 2, cycleEndYear - 1, cycleEndYear];
         const engineResult = runEngine();
         const s = ea.suitability || {};
-        const yn = v => (v === 'Yes' ? 'X Yes    No' : 'Yes    X No');
 
         try {
             const pdfDoc = await PDFLib.PDFDocument.create();
             const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
             const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
             const pageSize = [612, 792];
+            const black = PDFLib.rgb(0, 0, 0);
+            const gray = PDFLib.rgb(0.45, 0.45, 0.45);
 
             function newPage() {
                 const page = pdfDoc.addPage(pageSize);
-                const { width, height } = page.getSize();
-                return { page, width, height };
+                return { page, width: page.getWidth(), height: page.getHeight() };
             }
-            function label(page, text, x, y, opts) {
-                page.drawText(text, Object.assign({ x, y, size: 9, font }, opts || {}));
+            function text(page, str, x, y, opts) {
+                page.drawText(String(str), Object.assign({ x, y, size: 8.5, font, color: black }, opts || {}));
             }
-            function heading(page, text, x, y) {
-                page.drawText(text, { x, y, size: 11, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
+            function bold(page, str, x, y, opts) {
+                text(page, str, x, y, Object.assign({ font: boldFont }, opts || {}));
             }
-            function rule(page, y, width) {
-                page.drawLine({ start: { x: 40, y }, end: { x: 40 + width, y }, thickness: 0.75, color: PDFLib.rgb(0.75, 0.75, 0.75) });
+            function checkbox(page, x, y, checked, sizeBox) {
+                const sz = sizeBox || 8;
+                page.drawRectangle({ x, y, width: sz, height: sz, borderColor: black, borderWidth: 0.75 });
+                if (checked) {
+                    page.drawText('X', { x: x + 1.3, y: y + 1, size: sz - 1, font: boldFont, color: black });
+                }
+            }
+            function yesNo(page, x, y, value, label1, label2) {
+                checkbox(page, x, y, value === 'Yes'); text(page, label1 || 'Yes', x + 11, y);
+                checkbox(page, x + 55, y, value === 'No'); text(page, label2 || 'No', x + 66, y);
+            }
+            function rule(page, x, y, w) {
+                page.drawLine({ start: { x, y }, end: { x: x + w, y }, thickness: 0.6, color: PDFLib.rgb(0.6, 0.6, 0.6) });
+            }
+            function footer(page, width, pageLabel) {
+                text(page, 'Form 8554 (Rev. 11-2022) — Generated via CycleCPE, auto-populated from practitioner profile & CPE ledger.', 40, 26, { size: 6.5, color: gray });
+                text(page, pageLabel, width - 60, 26, { size: 6.5, color: gray });
             }
 
-            // ---- PAGE 1: Header + Part 1 (Enrollment Status) ----
+            // ================= PAGE 1 =================
             let { page, width, height } = newPage();
-            let y = height - 50;
-            page.drawText('Form 8554', { x: 40, y, size: 16, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
-            page.drawText('Application for Renewal of Enrollment to Practice Before the Internal Revenue Service', { x: 40, y: y - 18, size: 10, font });
-            page.drawText('Generated via CycleCPE — auto-populated from practitioner profile & CPE ledger', { x: 40, y: y - 32, size: 8, font, color: PDFLib.rgb(0.5, 0.5, 0.5) });
-            y -= 60;
+            let y = height - 45;
+            bold(page, 'Form 8554', 40, y, { size: 15 });
+            text(page, '(November 2022)', 40, y - 13, { size: 7.5, color: gray });
+            bold(page, 'Application for Renewal of Enrollment to Practice Before the Internal Revenue Service', 40, y - 30, { size: 10.5 });
+            text(page, 'OMB Number 1545-0946', width - 150, y, { size: 7.5, color: gray });
+            y -= 55;
 
-            heading(page, 'Part 1. Enrollment Status', 40, y); y -= 18;
-            label(page, ea.statusActive !== false ? 'X  I want approval for Active Enrolled Agent status.' : '   I want approval for Active Enrolled Agent status.', 40, y); y -= 14;
-            label(page, `      Are you currently under suspension or disbarment?   ${yn('No')}`, 40, y); y -= 16;
-            label(page, ea.statusInactive ? 'X  I want approval to remain or be placed into Inactive Retirement status.' : '   I want approval to remain or be placed into Inactive Retirement status.', 40, y); y -= 20;
-            label(page, ea.seeException ? 'X  I passed the Special Enrollment Examination (SEE) since my last renewal.' : '   I passed the Special Enrollment Examination (SEE) since my last renewal.', 40, y); y -= 26;
+            checkbox(page, 40, y, !!ea.seeException);
+            text(page, 'Check here if you passed the Special Enrollment Examination (SEE) since your last renewal.', 52, y);
+            y -= 22;
 
-            label(page, 'Federal Tax Law and Ethics hours earned in each year of the current enrollment cycle:', 40, y); y -= 18;
-            const col = [40, 150, 260, 370, 480];
-            label(page, '', col[0], y, { font: boldFont });
-            label(page, `Year 1 (${cycleYears[0]})`, col[1], y, { font: boldFont });
-            label(page, `Year 2 (${cycleYears[1]})`, col[2], y, { font: boldFont });
-            label(page, `Year 3 (${cycleYears[2]})`, col[3], y, { font: boldFont });
-            label(page, 'Total', col[4], y, { font: boldFont });
-            y -= 6; rule(page, y, 530); y -= 16;
+            text(page, 'For IRS use — Enrollment Number: ___________________   Date Enrolled: ___________________', 40, y, { size: 8, color: gray });
+            y -= 22;
+
+            bold(page, 'Part 1. Enrollment Status', 40, y, { size: 10.5 }); y -= 18;
+            checkbox(page, 40, y, ea.statusActive !== false);
+            text(page, 'I want approval for Active Enrolled Agent status.', 52, y); y -= 14;
+            text(page, 'Are you currently under suspension or disbarment?', 60, y);
+            yesNo(page, 300, y, 'No'); y -= 18;
+
+            checkbox(page, 40, y, !!ea.statusInactive);
+            text(page, 'I want approval to remain or be placed into Inactive Retirement status.', 52, y); y -= 12;
+            text(page, 'Note: Inactive Retirement status is not available to individuals under suspension or disbarment.', 52, y, { size: 7, color: gray }); y -= 22;
+
+            text(page, 'If you want Active status, enter Federal Tax Law and Ethics hours earned in each year of the current cycle:', 40, y); y -= 16;
+
+            const col = [220, 300, 380, 460];
+            bold(page, 'Year 1 (' + cycleYears[0] + ')', col[0], y);
+            bold(page, 'Year 2 (' + cycleYears[1] + ')', col[1], y);
+            bold(page, 'Year 3 (' + cycleYears[2] + ')', col[2], y);
+            bold(page, 'Total', col[3], y);
+            y -= 6; rule(page, 40, y, 480); y -= 15;
 
             let totalTax = 0, totalEthics = 0;
-            const taxRow = ['Federal Tax Law'];
-            const ethicsRow = ['Ethics'];
+            const taxVals = [], ethicsVals = [];
             cycleYears.forEach(yr => {
                 const yrData = engineResult.yearBreakdown[yr] || { earnedTax: 0, earnedEthics: 0 };
                 totalTax += yrData.earnedTax; totalEthics += yrData.earnedEthics;
-                taxRow.push(yrData.earnedTax); ethicsRow.push(yrData.earnedEthics);
+                taxVals.push(yrData.earnedTax); ethicsVals.push(yrData.earnedEthics);
             });
-            label(page, 'Federal Tax Law', col[0], y);
-            taxRow.slice(1).forEach((v, i) => label(page, String(v), col[i + 1], y));
-            label(page, String(totalTax), col[4], y);
-            y -= 16;
-            label(page, 'Ethics', col[0], y);
-            ethicsRow.slice(1).forEach((v, i) => label(page, String(v), col[i + 1], y));
-            label(page, String(totalEthics), col[4], y);
-            y -= 10; rule(page, y, 530); y -= 20;
+            text(page, 'Federal Tax Law', 40, y);
+            taxVals.forEach((v, i) => text(page, String(v), col[i], y));
+            bold(page, String(totalTax), col[3], y);
+            y -= 15;
+            text(page, 'Ethics', 40, y);
+            ethicsVals.forEach((v, i) => text(page, String(v), col[i], y));
+            bold(page, String(totalEthics), col[3], y);
+            y -= 8; rule(page, 40, y, 480); y -= 26;
 
-            // ---- Part 2. Identifying Information ----
-            heading(page, 'Part 2. Identifying Information', 40, y); y -= 20;
-            label(page, `1. Last four digits of your Social Security Number: ${ea.ssn || 'N/A'}`, 40, y); y -= 16;
-            label(page, `2. Your Enrollment Number: ${ea.eaNum || 'N/A'}`, 40, y); y -= 16;
-            label(page, `3. Your Full Legal Name: ${ea.firstName || ''}  ${ea.lastName || ''}  ${ea.suffix || ''}`, 40, y); y -= 16;
-            label(page, `4. Your Current Address: ${ea.address1 || ''}, ${ea.city || ''}, ${ea.state || ''} ${ea.zip || ''}`, 40, y); y -= 16;
-            label(page, `   Your Email Address: ${ea.email || 'N/A'}`, 40, y); y -= 16;
-            label(page, `   Your Telephone Number: ${ea.phone || 'N/A'}`, 40, y); y -= 24;
+            bold(page, 'Part 2. Identifying Information', 40, y, { size: 10.5 }); y -= 18;
 
-            page.drawText('Page 1', { x: width - 80, y: 30, size: 8, font, color: PDFLib.rgb(0.6, 0.6, 0.6) });
+            text(page, '1  Last four digits of your Social Security Number:', 40, y);
+            bold(page, ea.ssn || '____', 320, y);
+            checkbox(page, 400, y - 1, !!s.noSsn);
+            text(page, 'I do not have an SSN', 412, y); y -= 18;
 
-            // ---- PAGE 2: Part 2 continued + Part 3 ----
+            text(page, '2  Your Enrollment Number (from your EA card, NOT your PTIN):', 40, y);
+            bold(page, ea.eaNum || '', 320, y); y -= 18;
+
+            text(page, '3  Your Full Legal Name (First MI Last):', 40, y);
+            bold(page, `${ea.firstName || ''} ${ea.lastName || ''} ${ea.suffix || ''}`.trim(), 320, y); y -= 18;
+
+            text(page, '4  Your Current Address:', 40, y);
+            checkbox(page, 400, y - 1, !!s.newAddress);
+            text(page, 'This is a new address', 412, y); y -= 14;
+            text(page, `${ea.address1 || ''}`, 60, y); y -= 14;
+            text(page, `${ea.city || ''}, ${ea.state || ''} ${ea.zip || ''}`, 60, y); y -= 18;
+
+            text(page, '   Your Email Address:', 40, y);
+            bold(page, ea.email || '', 190, y); y -= 16;
+            text(page, '   Your Telephone Number:', 40, y);
+            bold(page, ea.phone || '', 190, y); y -= 10;
+
+            footer(page, width, 'Page 1 of 2');
+
+            // ================= PAGE 2 =================
             ({ page, width, height } = newPage());
-            y = height - 50;
-            heading(page, 'Part 2. Identifying Information (continued)', 40, y); y -= 20;
-            label(page, `5. Do you have a Centralized Authorization File (CAF) number?  ${ea.caf ? 'X Yes' : 'Yes'}    ${ea.caf ? 'No' : 'X No'}`, 40, y); y -= 14;
-            if (ea.caf) { label(page, `   CAF Number: ${ea.caf}`, 40, y); y -= 14; }
-            y -= 6;
+            y = height - 45;
+            bold(page, 'Form 8554 (Rev. 11-2022) — Page 2', 40, y, { size: 11 }); y -= 30;
 
-            label(page, `7. Are you current with your individual and business tax obligations?   ${yn(s.taxCurrent || 'Yes')}`, 40, y); y -= 14;
-            if (s.taxCurrent === 'No' && s.taxExplanation) { label(page, `   Explanation: ${s.taxExplanation}`, 40, y, { size: 8 }); y -= 14; }
-            label(page, `8. Have you been sanctioned by a federal or state licensing authority?   ${yn(s.sanctioned || 'No')}`, 40, y); y -= 14;
-            label(page, `9. Has any application for admission to practice ever been denied?   ${yn(s.admissionDenied || 'No')}`, 40, y); y -= 14;
-            label(page, `10. Have you been convicted of a tax crime or any felony?   ${yn(s.felony || 'No')}`, 40, y); y -= 14;
-            label(page, `11. Have you been permanently enjoined from preparing returns / representing others before the IRS?   ${yn(s.enjoined || 'No')}`, 40, y); y -= 14;
-            label(page, `12. Are you a CPA?   ${yn(s.isCpa || 'No')}`, 40, y); y -= 14;
-            label(page, `13. Are you an Attorney?   ${yn(s.isAttorney || 'No')}`, 40, y); y -= 30;
+            text(page, '5  Do you have a Centralized Authorization File (CAF) number?', 40, y);
+            yesNo(page, 400, y, ea.caf ? 'Yes' : 'No'); y -= 14;
+            if (ea.caf) { text(page, '   CAF Number(s): ' + ea.caf, 52, y, { size: 8 }); y -= 14; }
+            y -= 4;
 
-            heading(page, 'Part 3. Sign Here', 40, y); y -= 20;
-            label(page, 'Under penalties of perjury, I declare that I have examined this application, and to the best of my knowledge', 40, y, { size: 8 }); y -= 12;
-            label(page, 'and belief, it is true, correct, and complete.', 40, y, { size: 8 }); y -= 24;
+            text(page, '6  Do you have an Employer Identification Number (EIN)?', 40, y);
+            yesNo(page, 400, y, s.hasEin || 'No'); y -= 14;
+            if (s.hasEin === 'Yes' && s.einList) { text(page, '   ' + s.einList, 52, y, { size: 7.5 }); y -= 14; }
+            y -= 6; rule(page, 40, y, 530); y -= 20;
 
-            label(page, `PTIN: ${ea.ptin || 'N/A'}`, 40, y); y -= 24;
-            page.drawLine({ start: { x: 40, y }, end: { x: 320, y }, thickness: 1, color: PDFLib.rgb(0.3, 0.3, 0.3) });
-            label(page, `${ea.firstName || ''} ${ea.lastName || ''}`.trim(), 45, y + 4, { size: 10, font: boldFont });
-            label(page, 'Signature', 40, y - 12, { size: 7, color: PDFLib.rgb(0.5, 0.5, 0.5) });
-            page.drawLine({ start: { x: 380, y }, end: { x: 550, y }, thickness: 1, color: PDFLib.rgb(0.3, 0.3, 0.3) });
-            label(page, new Date().toLocaleDateString(), 385, y + 4, { size: 10, font: boldFont });
-            label(page, 'Date', 380, y - 12, { size: 7, color: PDFLib.rgb(0.5, 0.5, 0.5) });
+            text(page, 'Since becoming an enrolled agent or your last renewal (whichever is later):', 40, y, { size: 8, color: gray }); y -= 18;
 
-            page.drawText('Page 2 — Generated via CycleCPE', { x: width - 170, y: 30, size: 8, font, color: PDFLib.rgb(0.6, 0.6, 0.6) });
+            function suitabilityRow(num, question, value, explanation) {
+                text(page, num + '  ' + question, 40, y, { size: 8 });
+                yesNo(page, 460, y, value);
+                y -= 14;
+                if (explanation) { text(page, '   Explanation: ' + explanation, 52, y, { size: 7.5, color: gray }); y -= 14; }
+            }
+
+            suitabilityRow('7', 'Are you current with your individual and business tax obligations?', s.taxCurrent || 'Yes', s.taxCurrent === 'No' ? s.taxExplanation : null);
+            suitabilityRow('8', 'Have you been sanctioned by a federal or state licensing authority?', s.sanctioned || 'No');
+            suitabilityRow('9', 'Has any application for admission to practice ever been denied?', s.admissionDenied || 'No');
+            suitabilityRow('10', 'Have you been convicted of a tax crime or any felony?', s.felony || 'No');
+            suitabilityRow('11', 'Have you been permanently enjoined from preparing returns or representing others before the IRS?', s.enjoined || 'No');
+
+            text(page, '12  Are you a CPA?', 40, y);
+            yesNo(page, 460, y, s.isCpa || 'No'); y -= 14;
+            if (s.isCpa === 'Yes' && s.cpaStates) { text(page, '   States licensed: ' + s.cpaStates, 52, y, { size: 7.5 }); y -= 14; }
+
+            text(page, '13  Are you an Attorney?', 40, y);
+            yesNo(page, 460, y, s.isAttorney || 'No'); y -= 14;
+            if (s.isAttorney === 'Yes' && s.attorneyStates) { text(page, '   States licensed: ' + s.attorneyStates, 52, y, { size: 7.5 }); y -= 14; }
+
+            y -= 10; rule(page, 40, y, 530); y -= 26;
+
+            bold(page, 'Part 3. Sign Here', 40, y, { size: 10.5 }); y -= 16;
+            text(page, 'Under penalties of perjury, I declare that I have examined this application, and to the best of my', 40, y, { size: 7.5 }); y -= 11;
+            text(page, 'knowledge and belief, it is true, correct, and complete.', 40, y, { size: 7.5 }); y -= 24;
+
+            text(page, 'PTIN:', 40, y);
+            bold(page, ea.ptin || '', 75, y); y -= 26;
+
+            page.drawLine({ start: { x: 40, y }, end: { x: 320, y }, thickness: 1, color: black });
+            bold(page, `${ea.firstName || ''} ${ea.lastName || ''}`.trim(), 45, y + 4, { size: 10 });
+            text(page, 'Signature', 40, y - 11, { size: 7, color: gray });
+
+            page.drawLine({ start: { x: 380, y }, end: { x: 550, y }, thickness: 1, color: black });
+            bold(page, new Date().toLocaleDateString(), 385, y + 4, { size: 10 });
+            text(page, 'Date', 380, y - 11, { size: 7, color: gray });
+
+            footer(page, width, 'Page 2 of 2');
 
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -4082,11 +4185,16 @@ let activeEaKey = "Jane A. Doe";
 
     function refreshCatalogProgress(){
         const cards = document.querySelectorAll('#catalog-grid .catalog-card');
+        const ea = practitioners[activeEaKey];
+        const purchased = (ea && ea.purchasedCourses) || [];
         let done = 0;
         cards.forEach(c => {
             const key = 'ea_ce_complete_' + c.dataset.course;
             if (localStorage.getItem(key) === '1') { c.classList.add('completed'); done++; }
             else { c.classList.remove('completed'); }
+
+            if (purchased.includes(c.dataset.course)) { c.classList.add('purchased'); }
+            else { c.classList.remove('purchased'); }
         });
         const pct = Math.round(100 * done / cards.length);
         const fill = document.getElementById('progress-fill');
@@ -4228,7 +4336,7 @@ let activeEaKey = "Jane A. Doe";
                 
                 const exists = ea.credits.some(credit => credit.title === c.title);
                 if (!exists) {
-                    ea.credits.push({
+                    const newCredit = {
                         id: 'auto_' + Date.now(),
                         title: c.title,
                         programNo: programNo,
@@ -4237,8 +4345,10 @@ let activeEaKey = "Jane A. Doe";
                         date: today,
                         type: 'INTERNAL',
                         source: 'CycleCPE Platform'
-                    });
+                    };
+                    ea.credits.push(newCredit);
                     if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+                    if (typeof pushCreditToSupabase === 'function' && ea.email) pushCreditToSupabase(ea.email, newCredit);
                     runEngine();
                 }
                 // Fires immediately on passing — no button click required. The certificate
@@ -4336,6 +4446,79 @@ let activeEaKey = "Jane A. Doe";
         // purchasedCourses list. This is what makes a paid course stay unlocked forever,
         // on any device or browser — not just the one it was purchased from — instead of
         // relying only on what happens to still be in this browser's local storage.
+        // Pulls every CE credit this practitioner has ever earned/logged out of Supabase
+        // and merges it into their local ledger — so the Active Course Ledger shows the
+        // same courses no matter which browser or device they log in from, instead of
+        // each browser only knowing about credits added locally to itself.
+        async function syncCreditsFromSupabase(emailOverride) {
+            const ea = practitioners[activeEaKey];
+            const email = (emailOverride || (ea && ea.email) || '').toLowerCase();
+            if (!email || !ea) return;
+
+            try {
+                const { data, error } = await window.supabase
+                    .from('practitioner_credits')
+                    .select('credit_id, title, program_no, category, hours, date, type, source')
+                    .eq('email', email);
+
+                if (error) { console.warn('syncCreditsFromSupabase error:', error); return; }
+                if (!data || !data.length) return;
+
+                ea.credits = ea.credits || [];
+                let addedAny = false;
+                data.forEach(row => {
+                    if (row.credit_id && !ea.credits.some(c => c.id === row.credit_id)) {
+                        ea.credits.push({
+                            id: row.credit_id, title: row.title, programNo: row.program_no,
+                            category: row.category, hours: row.hours, date: row.date,
+                            type: row.type, source: row.source
+                        });
+                        addedAny = true;
+                    }
+                });
+                if (addedAny) {
+                    if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+                    if (typeof runEngine === 'function') runEngine();
+                }
+            } catch (e) {
+                console.warn('syncCreditsFromSupabase exception:', e);
+            }
+        }
+
+        // Writes a single credit up to Supabase the moment it's added locally, so it's
+        // immediately backed up — call this right after any ea.credits.push(...).
+        async function pushCreditToSupabase(email, credit) {
+            if (!email || !credit) return;
+            try {
+                const { error } = await window.supabase.from('practitioner_credits').upsert({
+                    email: email.toLowerCase(),
+                    credit_id: credit.id,
+                    title: credit.title,
+                    program_no: credit.programNo,
+                    category: credit.category,
+                    hours: credit.hours,
+                    date: credit.date,
+                    type: credit.type,
+                    source: credit.source
+                });
+                if (error) console.warn('pushCreditToSupabase error:', error);
+            } catch (e) {
+                console.warn('pushCreditToSupabase exception:', e);
+            }
+        }
+
+        // Removes a credit from Supabase when it's deleted locally, keeping both in sync.
+        async function deleteCreditFromSupabase(email, creditId) {
+            if (!email || !creditId) return;
+            try {
+                const { error } = await window.supabase.from('practitioner_credits')
+                    .delete().eq('email', email.toLowerCase()).eq('credit_id', creditId);
+                if (error) console.warn('deleteCreditFromSupabase error:', error);
+            } catch (e) {
+                console.warn('deleteCreditFromSupabase exception:', e);
+            }
+        }
+
         async function syncPurchasedCoursesFromSupabase(emailOverride) {
             const ea = practitioners[activeEaKey];
             const email = (emailOverride || (ea && ea.email) || '').toLowerCase();
@@ -4435,7 +4618,7 @@ let activeEaKey = "Jane A. Doe";
                     role: data.user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: `${fn} ${ln}`.trim() || data.user.email
                 };
-                resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email); syncPurchasedCoursesFromSupabase(data.user.email);
+                resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email); syncPurchasedCoursesFromSupabase(data.user.email); syncCreditsFromSupabase(data.user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             } else {
@@ -4471,7 +4654,7 @@ let activeEaKey = "Jane A. Doe";
                 name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
             };
 
-            resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email);
+            resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email);
             setupLoggedInState();
             showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         }
@@ -4486,7 +4669,7 @@ let activeEaKey = "Jane A. Doe";
                     role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
-                resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email);
+                resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             }
