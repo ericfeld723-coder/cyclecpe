@@ -603,6 +603,29 @@
                 </div>
             </div>
 
+            <div style="background:#fff; border:2px solid var(--primary); border-radius:8px; padding:20px 24px; margin-bottom:20px;">
+                <div style="font-weight:700; color:var(--primary); font-size:1.05rem; margin-bottom:4px;">💳 Individual Course Pricing</div>
+                <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">CPE courses can be purchased individually with the Free or EA Essentials plan at the following rates:</p>
+                <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                    <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
+                        <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$9</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">1-hour course</div>
+                    </div>
+                    <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
+                        <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$15</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">2-hour course</div>
+                    </div>
+                    <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
+                        <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$25</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">4-hour course</div>
+                    </div>
+                    <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
+                        <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$35</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">6-hour course</div>
+                    </div>
+                </div>
+            </div>
+
             <div style="background:#f8fafc; border:1px solid var(--border); padding:16px; border-radius:6px; margin-bottom:20px; font-size:0.9rem; color:var(--text);">
                 🔄 <strong>Subscription & Auto-Renewal Note:</strong> Paid memberships automatically renew at the end of the billing term to ensure uninterrupted access. You can manage, disable auto-renewal, or cancel your plan at any time directly from your practitioner profile settings.
             </div>
@@ -667,14 +690,14 @@
             <p>Log in to access your continuing education catalog, track CPE credits, and manage practitioner profile settings.</p>
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="field">
-                    <label for="username">Username / Email</label>
-                    <input type="text" id="username" placeholder="e.g. admin or jane">
+                    <label for="username">Email Address</label>
+                    <input type="email" id="username" placeholder="jane@example.com">
                 </div>
                 <div class="field">
                     <label for="password">Password</label>
                     <input type="password" id="password" placeholder="••••••••">
                 </div>
-                <div id="login-error" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display: none;">Invalid username or password.</div>
+                <div id="login-error" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display: none;">Invalid email or password.</div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
             </form>
 
@@ -751,21 +774,29 @@
         <!-- PAGE 1: ENROLLED AGENT STATUS -->
         <div id="pageRoster" class="app-tab-view page-view">
             <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="title">Stored EAs</div>
-                    <div class="value" id="count-total">1</div>
+                <div class="metric-card" style="cursor:pointer;" onclick="showAppTab('engine')" title="View in CPE Ledger & Engine Math">
+                    <div class="title">Completed Hours This Year</div>
+                    <div class="value" style="color: var(--success);" id="status-completed-hours">0</div>
+                </div>
+                <div class="metric-card" style="cursor:pointer;" onclick="showAppTab('engine')" title="View in CPE Ledger & Engine Math">
+                    <div class="title">Remaining Ethics Hours</div>
+                    <div class="value" style="color: var(--warning);" id="status-remaining-ethics">0</div>
+                </div>
+                <div class="metric-card" style="cursor:pointer;" onclick="showAppTab('engine')" title="View in CPE Ledger & Engine Math">
+                    <div class="title">Remaining Federal Tax Law</div>
+                    <div class="value" style="color: var(--warning);" id="status-remaining-fedtax">0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="title">Due This Cycle</div>
-                    <div class="value" style="color: var(--warning);" id="count-due">1</div>
+                    <div class="title">Form 8554 Next Due Date</div>
+                    <div class="value" style="color: var(--text-muted); font-size: 1.3rem;" id="status-8554-due">—</div>
                 </div>
-                <div class="metric-card">
-                    <div class="title">Ready for Filing</div>
-                    <div class="value" style="color: var(--success);" id="count-ready">1</div>
-                </div>
-                <div class="metric-card">
-                    <div class="title">Completed Renewals</div>
-                    <div class="value" style="color: var(--text-muted);" id="count-completed">0</div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 20px;">
+                <div class="panel-header"><h2 style="font-size:1.1rem;">Manage CPE</h2></div>
+                <div class="actions-bar">
+                    <button class="btn btn-secondary" onclick="openPractitionerModal(activeEaKey || 'new')">Edit Profile</button>
+                    <button class="btn btn-primary" onclick="showAppTab('catalog')">📚 Access CPE</button>
                 </div>
             </div>
 
@@ -812,8 +843,8 @@
                             </select>
                         </div>
                         <div class="field">
-                            <label>Original Enrollment Date (Proration Basis)</label>
-                            <input type="date" id="enrollmentDate" value="2025-05-15" onchange="syncEngineEnrollmentDate(this.value)">
+                            <label>Original Enrollment Date (Proration Basis) <span style="font-weight:400; color:var(--text-muted); font-size:11px;">— edit on Practitioner Tool tab</span></label>
+                            <input type="date" id="enrollmentDate" value="2025-05-15" readonly style="background:#f1f3f5; cursor:not-allowed;">
                         </div>
                         <div class="field">
                             <label>Current Cycle End Year (Year 3)</label>
@@ -891,8 +922,7 @@
 
                         <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="exportIRSCsv()">📥 Download IRS PTIN Upload CSV</button>
-                            <button class="btn btn-success" onclick="generateForm8554PDF()">📄 Auto-Fill & Download Form 8554 PDF</button>
-                            <button class="btn btn-secondary" onclick="syncEngineToForm8554AndNavigate()">🔄 Sync CPE Data to Form 8554 Tab</button>
+                            
                         </div>
                     </div>
 
@@ -907,6 +937,9 @@
         <!-- PAGE 3: FORM 8554 RENEWAL PORTAL -->
         <div id="pageForm8554" class="app-tab-view page-view">
             <div class="panel">
+                <div style="background:#eef6ff; border:1px solid #b6d9ff; border-radius:6px; padding:10px 14px; margin-bottom:16px; font-size:0.85rem; color:#1a4d7a;">
+                    🔒 <strong>Auto-synced from your other tabs.</strong> Identification and contact fields below are populated automatically from the Practitioner Tool tab and locked here. To update your name, SSN, PTIN, enrollment number, CAF number, enrollment date, address, phone, or email, edit them on the <a onclick="showAppTab('practitioner')" style="color:#1a4d7a; text-decoration:underline; cursor:pointer;">Practitioner Tool tab</a> — changes sync here automatically.
+                </div>
                 <div id="form-error-summary" class="error-alert-box" style="display: none;"></div>
 
                 <form id="ea-renewal-form">
@@ -915,18 +948,18 @@
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="last-name">Last Name</label>
-                            <input type="text" id="last-name" name="last_name" placeholder="Doe">
+                            <input type="text" id="last-name" name="last_name" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="Doe">
                         </div>
                         <div class="field">
                             <label for="first-name">First Name & Middle Initial</label>
-                            <input type="text" id="first-name" name="first_name" placeholder="Jane A.">
+                            <input type="text" id="first-name" name="first_name" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="Jane A.">
                         </div>
                     </div>
 
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="ssn-last4">SSN (Last 4 Digits)</label>
-                            <input type="text" id="ssn-last4" name="ssn_last4" placeholder="1234" maxlength="4" autocomplete="off">
+                            <input type="text" id="ssn-last4" name="ssn_last4" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="1234" maxlength="4" autocomplete="off">
                             <span id="ssn-feedback" class="field-feedback"></span>
                         </div>
                         <div class="field">
@@ -944,7 +977,7 @@
                     <div class="grid grid-3">
                         <div class="field">
                             <label for="enrollment-num">EA Enrollment Number</label>
-                            <input type="text" id="enrollment-num" name="enrollment_num" placeholder="00000000-EA" maxlength="11" autocomplete="off">
+                            <input type="text" id="enrollment-num" name="enrollment_num" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="00000000-EA" maxlength="11" autocomplete="off">
                             <span id="ea-feedback" class="field-feedback"></span>
                         </div>
                         <div class="field">
@@ -954,7 +987,7 @@
                         </div>
                         <div class="field">
                             <label for="caf-num">CAF Number (Optional)</label>
-                            <input type="text" id="caf-num" name="caf_num" placeholder="0000-0000R" maxlength="10" autocomplete="off">
+                            <input type="text" id="caf-num" name="caf_num" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="0000-0000R" maxlength="10" autocomplete="off">
                             <span id="caf-feedback" class="field-feedback"></span>
                         </div>
                     </div>
@@ -962,39 +995,39 @@
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="form-enrollment-date">Original Enrollment Date</label>
-                            <input type="date" id="form-enrollment-date" name="enrollment_date" onchange="syncPortalEnrollmentDate(this.value)">
+                            <input type="date" id="form-enrollment-date" name="enrollment_date" readonly style="background:#f1f3f5; cursor:not-allowed;" onchange="syncPortalEnrollmentDate(this.value)">
                         </div>
                     </div>
 
                     <div class="section-subtitle">Contact Information</div>
                     <div class="field" style="margin-bottom: 16px;">
                         <label for="street">Street Address / P.O. Box</label>
-                        <input type="text" id="street" name="street" placeholder="123 Main Street, Suite 100">
+                        <input type="text" id="street" name="street" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="123 Main Street, Suite 100">
                     </div>
 
                     <div class="grid grid-3">
                         <div class="field">
                             <label for="city">City</label>
-                            <input type="text" id="city" name="city" placeholder="City">
+                            <input type="text" id="city" name="city" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="City">
                         </div>
                         <div class="field">
                             <label for="state">State</label>
-                            <input type="text" id="state" name="state" placeholder="FL" maxlength="2">
+                            <input type="text" id="state" name="state" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="FL" maxlength="2">
                         </div>
                         <div class="field">
                             <label for="zip">ZIP Code</label>
-                            <input type="text" id="zip" name="zip" placeholder="33431">
+                            <input type="text" id="zip" name="zip" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="33431">
                         </div>
                     </div>
 
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="phone">Primary Phone Number</label>
-                            <input type="text" id="phone" name="phone" placeholder="(555) 000-0000">
+                            <input type="text" id="phone" name="phone" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="(555) 000-0000">
                         </div>
                         <div class="field">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" placeholder="jane.doe@example.com">
+                            <input type="email" id="email" name="email" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="jane.doe@example.com">
                         </div>
                     </div>
 
@@ -1182,7 +1215,7 @@
                     <div class="grid grid-2">
                         <div class="field">
                             <label for="ptin">Preparer Tax Identification Number (PTIN)</label>
-                            <input type="text" id="ptin" name="ptin" placeholder="P00000000" maxlength="9" autocomplete="off">
+                            <input type="text" id="ptin" name="ptin" readonly style="background:#f1f3f5; cursor:not-allowed;" placeholder="P00000000" maxlength="9" autocomplete="off">
                             <span id="ptin-feedback" class="field-feedback"></span>
                         </div>
                         <div class="field">
@@ -1272,16 +1305,8 @@
                     <!-- SUBSCRIPTION & AUTO-RENEW SETTINGS -->
                     <div class="section-subtitle" id="p-membership-section">Subscription & Membership Management</div>
                     <div id="p-current-plan-label" style="font-size:0.9rem; color:var(--text-muted); margin-bottom:14px; font-weight:600;"></div>
-                    <div class="checkbox-option" style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <input type="checkbox" id="p-auto-renew" checked style="display:inline-block; margin-right:8px;">
-                            <label for="p-auto-renew" style="font-weight:600; color:var(--primary); display:inline;">
-                                Enable Automatic Membership Renewal
-                            </label>
-                        </div>
-                        <button type="button" class="btn btn-danger" style="padding:4px 10px; font-size:12px;" onclick="cancelActiveMembershipPlan()">❌ Cancel Active Plan</button>
-                    </div>
-                    <div style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);">
+                    <input type="checkbox" id="p-auto-renew" checked style="display:none;">
+                    <div style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
                         <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Select or purchase a plan directly via Stripe:</div>
                         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
                         <stripe-pricing-table pricing-table-id="prctbl_1UG2LVHLYDiifWD0IsiCVYsW"
@@ -1291,9 +1316,7 @@
                             <a href="https://billing.stripe.com/p/login/test_6oU7sLcEg8Uw5bAfJG8EM00" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; color:var(--primary); font-weight:600;">🔄 Manage or change your existing plan (Stripe billing portal) →</a>
                         </div>
                     </div>
-                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px; margin-bottom:12px;">
-                        You can toggle auto-renew or click "Cancel Active Plan" to terminate your recurring membership status for this profile.
-                    </div>
+                    
 
                     <!-- PART 2 -->
                     <div class="section-header">Part 2. Enrollment Status & Exceptions</div>
@@ -1403,13 +1426,22 @@
                         <button class="catalog-filter-btn" data-filter="Annual Federal Tax Refresher">Annual Federal Tax Refresher</button>
                     </div>
 
+                    <div class="catalog-filters" id="catalog-hours-filters" style="margin-top: -6px;">
+                        <span style="font-size:12px; color:var(--ink-soft); align-self:center; font-family:'IBM Plex Mono',monospace; margin-right:4px;">CE HOURS:</span>
+                        <button class="catalog-filter-btn active" data-hours-filter="all">All</button>
+                        <button class="catalog-filter-btn" data-hours-filter="1">1 hour</button>
+                        <button class="catalog-filter-btn" data-hours-filter="2">2 hours</button>
+                        <button class="catalog-filter-btn" data-hours-filter="4">4 hours</button>
+                        <button class="catalog-filter-btn" data-hours-filter="6">6 hours</button>
+                    </div>
+
                     <div class="catalog-progress-bar">
                         <div class="catalog-progress-track"><div class="catalog-progress-fill" id="progress-fill"></div></div>
                         <div class="catalog-progress-label" id="progress-label">0 of 22 courses completed</div>
                     </div>
 
                     <div class="catalog-grid" id="catalog-grid">
-                        <div class="catalog-card" data-cat="Ethics" data-course="ethics" onclick="openCourseView('ethics')">
+                        <div class="catalog-card" data-cat="Ethics" data-course="ethics" data-hours="1" onclick="openCourseView('ethics')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Practicing Under Circular 230</h2>
@@ -1417,7 +1449,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="s-corp" onclick="openCourseView('s-corp')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="s-corp" data-hours="1" onclick="openCourseView('s-corp')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>S Corporation Taxation: Elections, Compensation, and Basis</h2>
@@ -1425,7 +1457,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="estate-gift" onclick="openCourseView('estate-gift')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="estate-gift" data-hours="1" onclick="openCourseView('estate-gift')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Estate &amp; Gift Tax Planning Under OBBBA</h2>
@@ -1433,7 +1465,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="biz-incentives" onclick="openCourseView('biz-incentives')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="biz-incentives" data-hours="1" onclick="openCourseView('biz-incentives')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Business Cost Recovery &amp; Investment Incentives</h2>
@@ -1441,7 +1473,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="qrp" onclick="openCourseView('qrp')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="qrp" data-hours="1" onclick="openCourseView('qrp')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>Qualified Retirement Plan Matters</h2>
@@ -1449,7 +1481,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="partnership-tax" onclick="openCourseView('partnership-tax')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="partnership-tax" data-hours="1" onclick="openCourseView('partnership-tax')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Partnership Taxation Fundamentals</h2>
@@ -1457,7 +1489,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="like-kind-exchanges" onclick="openCourseView('like-kind-exchanges')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="like-kind-exchanges" data-hours="1" onclick="openCourseView('like-kind-exchanges')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Like-Kind Exchanges &amp; Real Estate Taxation</h2>
@@ -1465,7 +1497,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="digital-assets" onclick="openCourseView('digital-assets')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="digital-assets" data-hours="1" onclick="openCourseView('digital-assets')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Digital Assets &amp; Information Reporting Update</h2>
@@ -1473,7 +1505,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="simple-sep-design" onclick="openCourseView('simple-sep-design')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="simple-sep-design" data-hours="1" onclick="openCourseView('simple-sep-design')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>SIMPLE &amp; SEP Plan Design for Small Business</h2>
@@ -1481,7 +1513,7 @@
                             <div class="meta-row"><span>1.0 CE HR · 3 review + 5 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="tax-update" onclick="openCourseView('tax-update')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="tax-update" data-hours="2" onclick="openCourseView('tax-update')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Federal Tax Law Update</h2>
@@ -1489,7 +1521,7 @@
                             <div class="meta-row"><span>2.0 CE HRS · 6 review + 10 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Special Enrollment Examination Prep" data-course="see-prep" onclick="openCourseView('see-prep')">
+                        <div class="catalog-card" data-cat="Special Enrollment Examination Prep" data-course="see-prep" data-hours="2" onclick="openCourseView('see-prep')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">P</span> SPECIAL ENROLLMENT EXAMINATION PREP</div>
                             <h2>Special Enrollment Examination Prep</h2>
@@ -1497,7 +1529,7 @@
                             <div class="meta-row"><span>3 EXAM PARTS COVERED · 6 review + 10 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Annual Federal Tax Refresher" data-course="aftr" onclick="openCourseView('aftr')">
+                        <div class="catalog-card" data-cat="Annual Federal Tax Refresher" data-course="aftr" data-hours="6" onclick="openCourseView('aftr')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">A</span> ANNUAL FEDERAL TAX REFRESHER</div>
                             <h2>Annual Federal Tax Refresher</h2>
@@ -1505,7 +1537,7 @@
                             <div class="meta-row"><span>6.0 CE HRS · 18 review + 100 final Qs (timed test)</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="individual-credits-deep-dive" onclick="openCourseView('individual-credits-deep-dive')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="individual-credits-deep-dive" data-hours="4" onclick="openCourseView('individual-credits-deep-dive')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>2026 Individual Credits &amp; Provisions Deep Dive</h2>
@@ -1513,7 +1545,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="business-depreciation-update" onclick="openCourseView('business-depreciation-update')">
+                        <div class="catalog-card" data-cat="Federal Tax Update" data-course="business-depreciation-update" data-hours="4" onclick="openCourseView('business-depreciation-update')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">U</span> FEDERAL TAX UPDATE</div>
                             <h2>Business Entity &amp; Depreciation Law Update</h2>
@@ -1521,7 +1553,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Ethics" data-course="circular-230-case-studies" onclick="openCourseView('circular-230-case-studies')">
+                        <div class="catalog-card" data-cat="Ethics" data-course="circular-230-case-studies" data-hours="4" onclick="openCourseView('circular-230-case-studies')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Circular 230 in Practice: Case Studies &amp; Scenarios</h2>
@@ -1529,7 +1561,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Ethics" data-course="preparer-penalties-enforcement" onclick="openCourseView('preparer-penalties-enforcement')">
+                        <div class="catalog-card" data-cat="Ethics" data-course="preparer-penalties-enforcement" data-hours="4" onclick="openCourseView('preparer-penalties-enforcement')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Preparer Penalties &amp; IRS Enforcement Priorities</h2>
@@ -1537,7 +1569,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="trust-estate-income-tax" onclick="openCourseView('trust-estate-income-tax')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="trust-estate-income-tax" data-hours="4" onclick="openCourseView('trust-estate-income-tax')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Trust &amp; Estate Income Taxation (Form 1041)</h2>
@@ -1545,7 +1577,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="multistate-nexus" onclick="openCourseView('multistate-nexus')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="multistate-nexus" data-hours="4" onclick="openCourseView('multistate-nexus')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>Multistate Taxation &amp; Nexus Fundamentals</h2>
@@ -1553,7 +1585,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="fbar-fatca-reporting" onclick="openCourseView('fbar-fatca-reporting')">
+                        <div class="catalog-card" data-cat="Federal Tax Law" data-course="fbar-fatca-reporting" data-hours="4" onclick="openCourseView('fbar-fatca-reporting')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">T</span> FEDERAL TAX LAW</div>
                             <h2>International Information Reporting: FBAR &amp; FATCA</h2>
@@ -1561,7 +1593,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="defined-benefit-plans" onclick="openCourseView('defined-benefit-plans')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="defined-benefit-plans" data-hours="4" onclick="openCourseView('defined-benefit-plans')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>Defined Benefit &amp; Cash Balance Plan Design</h2>
@@ -1569,7 +1601,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="ira-rollovers-conversions" onclick="openCourseView('ira-rollovers-conversions')">
+                        <div class="catalog-card" data-cat="Qualified Retirement Plan Matters" data-course="ira-rollovers-conversions" data-hours="4" onclick="openCourseView('ira-rollovers-conversions')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">Q</span> QUALIFIED RETIREMENT PLAN MATTERS</div>
                             <h2>IRA Rollovers, Conversions, and Beneficiary Planning</h2>
@@ -1577,7 +1609,7 @@
                             <div class="meta-row"><span>4.0 CE HRS · 12 review + 20 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Ethics" data-course="data-security-safeguards" onclick="openCourseView('data-security-safeguards')">
+                        <div class="catalog-card" data-cat="Ethics" data-course="data-security-safeguards" data-hours="4" onclick="openCourseView('data-security-safeguards')">
                             <span class="catalog-badge-done">✓ COMPLETED</span>
                             <div class="cat"><span class="letter">E</span> ETHICS</div>
                             <h2>Data Security &amp; Safeguards Obligations for Tax Practices</h2>
@@ -1651,7 +1683,7 @@
                 <table class="ea-table">
                     <thead>
                         <tr>
-                            <th>Username</th>
+                            <th>Login Email</th>
                             <th>Role</th>
                             <th>Associated Practitioner</th>
                             <th>PTIN</th>
@@ -1729,7 +1761,6 @@
                 <div class="field"><label>First Name</label><input type="text" id="reg-first-name" placeholder="Jane"></div>
                 <div class="field"><label>Last Name</label><input type="text" id="reg-last-name" placeholder="Doe"></div>
             </div>
-            <div class="field"><label>Username</label><input type="text" id="reg-username" placeholder="janedoe"></div>
             <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="jane@example.com"></div>
             <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="••••••••"></div>
             
@@ -1835,9 +1866,19 @@
             <span style="color:var(--text-muted);">Price</span>
             <span id="course-checkout-price" style="font-size:1.6rem; font-weight:700; color:var(--primary);"></span>
         </div>
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <p id="course-checkout-instructions" style="font-size:0.78rem; color:var(--text-muted); margin-bottom:14px;">You'll be taken to Stripe's secure checkout in a new tab.</p>
+        <div id="course-checkout-step1" style="display:flex; justify-content:flex-end; gap:8px;">
             <button class="btn btn-secondary" onclick="closeCourseCheckoutModal()">Cancel</button>
-            <button class="btn btn-success" onclick="confirmCoursePurchase()">Complete Purchase</button>
+            <button class="btn btn-primary" onclick="goToStripeForCourse()">Pay with Stripe →</button>
+        </div>
+        <div id="course-checkout-step2" style="display:none; flex-direction:column; gap:10px;">
+            <div style="background:#fffbea; border:1px solid #f0c36d; border-radius:6px; padding:10px 12px; font-size:0.8rem; color:#7a5c00;">
+                Complete your payment in the Stripe tab, then click below once you see Stripe's confirmation.
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-secondary" onclick="closeCourseCheckoutModal()">Cancel</button>
+                <button class="btn btn-success" onclick="confirmCoursePurchase()">✓ I've Completed Payment — Unlock Course</button>
+            </div>
         </div>
     </div>
 </div>
@@ -2005,12 +2046,78 @@
         return { startYear: 2024, endYear: 2027, fileWindow: "Nov 1, 2026 – Jan 31, 2027", expireDate: "March 31, 2027", groupName: "Group 7, 8, 9" };
     }
 
+    // Form 8554 renewal filing windows rotate on a fixed 3-year cadence by SSN last digit.
+    // This computes the NEXT upcoming window/deadline relative to today, so it keeps
+    // advancing automatically (e.g. once Jan 31, 2027 passes for the 7/8/9 group, the
+    // next due date shown becomes Jan 31, 2030 without any manual update).
+    function getForm8554NextDueDate(ssnLast4) {
+        let baseDeadlineYear;
+        const lastDigit = (ssnLast4 && ssnLast4.length) ? parseInt(ssnLast4.slice(-1)) : NaN;
+        if (isNaN(lastDigit) || [7, 8, 9].includes(lastDigit)) {
+            baseDeadlineYear = 2027;
+        } else if ([0, 1, 2, 3].includes(lastDigit)) {
+            baseDeadlineYear = 2028;
+        } else {
+            baseDeadlineYear = 2029;
+        }
+
+        const today = new Date();
+        let deadlineYear = baseDeadlineYear;
+        let deadline = new Date(deadlineYear, 0, 31); // Jan 31
+        while (today.getTime() > deadline.getTime()) {
+            deadlineYear += 3;
+            deadline = new Date(deadlineYear, 0, 31);
+        }
+        const windowStartYear = deadlineYear - 1;
+        const windowStart = new Date(windowStartYear, 10, 1); // Nov 1 prior year
+        const cycleStartYear = deadlineYear; // renewal cycle begins April 1 of the deadline year
+
+        const fmt = d => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        return {
+            deadline, windowStart, deadlineYear,
+            label: fmt(deadline),
+            windowLabel: `${fmt(windowStart)} – ${fmt(deadline)}`,
+            cycleStartLabel: `April 1, ${cycleStartYear}`,
+        };
+    }
+
+    let lastEngineResult = null;
+    function renderRosterStatusCards() {
+        const ea = practitioners[activeEaKey];
+        const completedEl = document.getElementById('status-completed-hours');
+        const ethicsEl = document.getElementById('status-remaining-ethics');
+        const fedtaxEl = document.getElementById('status-remaining-fedtax');
+        const dueEl = document.getElementById('status-8554-due');
+        if (!completedEl) return;
+
+        if (!ea) {
+            completedEl.textContent = '—'; ethicsEl.textContent = '—'; fedtaxEl.textContent = '—'; dueEl.textContent = '—';
+            return;
+        }
+
+        const currentYear = new Date().getFullYear();
+        const yr = lastEngineResult && lastEngineResult.yearBreakdown ? lastEngineResult.yearBreakdown[currentYear] : null;
+
+        if (yr) {
+            completedEl.textContent = yr.totalEarned;
+            ethicsEl.textContent = Math.max(0, yr.requiredEthics - yr.earnedEthics);
+            const nonEthicsRequired = yr.requiredTotal - yr.requiredEthics;
+            fedtaxEl.textContent = Math.max(0, nonEthicsRequired - yr.earnedTax);
+        } else {
+            completedEl.textContent = '0'; ethicsEl.textContent = '0'; fedtaxEl.textContent = '0';
+        }
+
+        const due = getForm8554NextDueDate(ea.ssn);
+        dueEl.textContent = due.label;
+        dueEl.title = `File between ${due.windowLabel} (for the renewal cycle starting ${due.cycleStartLabel})`;
+    }
+
     // User Authentication Credentials & Master Database mapped strictly by username login
     let currentUser = null;
 
     let practitioners = {
         "Jane A. Doe": {
-            username: "jane",
+            username: "jane.doe@example.com",
             firstName: "Jane A.", lastName: "Doe", suffix: "", eaNum: "00098412-EA", ptin: "P01234567", caf: "0300-12345R", ssn: "4321",
             email: "jane.doe@example.com", phone: "(555) 234-5678", address1: "100 Boca Center Blvd", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2025-05-15",
@@ -2030,7 +2137,7 @@
             ]
         },
         "Robert M. Smith": {
-            username: "robert",
+            username: "rsmith@apextax.com",
             firstName: "Robert M.", lastName: "Smith", suffix: "Jr.", eaNum: "00041120-EA", ptin: "P09876543", caf: "0305-98765R", ssn: "8812",
             email: "rsmith@apextax.com", phone: "(555) 987-6543", address1: "450 Glades Road", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2024-01-10",
@@ -2100,7 +2207,7 @@ let activeEaKey = "Jane A. Doe";
                 activeEaKey = matchedKey;
                 err.style.display = 'none';
                 setupLoggedInState();
-                showAppTab('practitioner'); applyPlanSuccessFromUrl();
+                showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             } else {
                 err.style.display = 'block';
             }
@@ -2120,11 +2227,15 @@ let activeEaKey = "Jane A. Doe";
         e.preventDefault();
         const fn = document.getElementById('reg-first-name').value.trim();
         const ln = document.getElementById('reg-last-name').value.trim();
-        const uname = document.getElementById('reg-username').value.trim().toLowerCase();
         const email = document.getElementById('reg-email').value.trim();
 
+        if (!email) {
+            alert('Please enter a valid email address to register.');
+            return;
+        }
+
         const fullName = `${fn || 'New'} ${ln || 'Practitioner'}`;
-        const assignedUsername = uname || ('user_' + Date.now());
+        const assignedUsername = email.toLowerCase();
 
         practitioners[fullName] = {
             username: assignedUsername,
@@ -2143,7 +2254,7 @@ let activeEaKey = "Jane A. Doe";
         activeEaKey = fullName;
         closeRegisterModal();
         setupLoggedInState();
-        showAppTab('practitioner'); applyPlanSuccessFromUrl();
+        showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         alert(`Account successfully created for ${fullName}! Select a membership tier to access CE courses.`);
     }
 
@@ -2210,7 +2321,7 @@ let activeEaKey = "Jane A. Doe";
         hideAllPublicPages();
         if (currentUser) {
             document.getElementById('appMain').style.display = 'block';
-            showAppTab('practitioner'); applyPlanSuccessFromUrl();
+            showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         } else {
             document.getElementById('pageLogin').style.display = 'block';
         }
@@ -2247,7 +2358,7 @@ let activeEaKey = "Jane A. Doe";
             const ea = practitioners[activeEaKey];
             if (!ea || ea.membershipPlan !== 'COMPLETE') {
                 alert('Form 8554 preparation is included with the EA Complete plan. Upgrade your membership to access this tab.');
-                showAppTab('practitioner'); applyPlanSuccessFromUrl();
+                showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
                 return;
             }
         }
@@ -2283,6 +2394,10 @@ let activeEaKey = "Jane A. Doe";
             if (el) el.className = (t === tabId) ? 'app-tab-view page-view active' : 'app-tab-view page-view';
         });
 
+        if (tabId === 'roster' && activeEaKey && typeof runEngine === 'function') {
+            runEngine();
+        }
+
         const tabBtns = ['Portal', 'Roster', 'Engine', 'Form8554', 'Practitioner', 'Catalog', 'Admin'];
         tabBtns.forEach(btnName => {
             const btnEl = document.getElementById('btn' + btnName);
@@ -2301,7 +2416,7 @@ let activeEaKey = "Jane A. Doe";
 
     function goToPortalFromTopNav() {
         if (currentUser) {
-            showAppTab('practitioner'); applyPlanSuccessFromUrl();
+            showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         } else {
             backToLoginOrApp();
         }
@@ -2309,7 +2424,7 @@ let activeEaKey = "Jane A. Doe";
 
     function goToPortalAndScrollToMembership() {
         if (!currentUser) { backToLoginOrApp(); return; }
-        showAppTab('practitioner'); applyPlanSuccessFromUrl();
+        showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         setTimeout(() => {
             const el = document.getElementById('p-membership-section');
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2323,6 +2438,26 @@ let activeEaKey = "Jane A. Doe";
     // updated automatically. This is a lightweight stopgap — a fully reliable, tamper-proof
     // sync (source of truth) requires a Stripe webhook hitting a real backend, which a
     // static HTML page cannot run on its own.
+    function applyCoursePurchaseSuccessFromUrl() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('course_purchase_success');
+            if (slug && bySlug[slug] && currentUser) {
+                const ea = practitioners[activeEaKey];
+                if (ea) {
+                    ea.purchasedCourses = ea.purchasedCourses || [];
+                    if (!ea.purchasedCourses.includes(slug)) ea.purchasedCourses.push(slug);
+                    savePractitionersToStorage();
+                    try { localStorage.removeItem('cyclecpe_pending_course_purchase'); } catch (e) {}
+                    alert(`Payment confirmed — "${bySlug[slug].title}" is now unlocked!`);
+                }
+                params.delete('course_purchase_success');
+                const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                window.history.replaceState({}, '', newUrl);
+            }
+        } catch (e) { console.warn('applyCoursePurchaseSuccessFromUrl error:', e); }
+    }
+
     function applyPlanSuccessFromUrl() {
         try {
             const params = new URLSearchParams(window.location.search);
@@ -2416,15 +2551,12 @@ let activeEaKey = "Jane A. Doe";
             const cycle = getCycleYearsFromSSN(ea.ssn);
 
             let planDisplayHtml = "";
-            if (!ea.membershipPlan) {
+            if (!ea.membershipPlan || !PLAN_INFO[ea.membershipPlan]) {
                 planDisplayHtml = `<span class="membership-link" onclick="promptMembershipPaywallForEa('${key}')">No Plan Active (Click to Select)</span>`;
             } else {
-                let planLabel = "No Plan Active";
-                if (ea.membershipPlan === "1_YEAR") planLabel = "1-Yr CPE ($95)";
-                if (ea.membershipPlan === "3_YEAR") planLabel = "3-Yr CPE ($270)";
-                if (ea.membershipPlan === "3_YEAR_8554") planLabel = "3-Yr CPE + 8554 ($495)";
-                if (ea.hasForm8554Addon && ea.membershipPlan !== "3_YEAR_8554") planLabel += " + 8554 ($240)";
-                planDisplayHtml = `<span class="tag tag-ethics">${planLabel}</span>`;
+                const info = PLAN_INFO[ea.membershipPlan];
+                const priceLabel = info.price === 0 ? 'Free' : `$${info.price}/yr`;
+                planDisplayHtml = `<span class="tag tag-ethics">${info.name} (${priceLabel})</span>`;
             }
 
             tr.innerHTML = `
@@ -2441,7 +2573,7 @@ let activeEaKey = "Jane A. Doe";
                 <td><span class="status-badge badge-ready">Ready to Renew</span></td>
                 <td>
                     <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="openPractitionerModal('${key}')">Edit Profile</button>
-                    <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="selectAndManageEa('${key}')">Manage CPE</button>
+                    <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="selectAndAccessCpe('${key}')">Access CPE</button>
                     ${currentUser && currentUser.role === 'ADMIN' ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deletePractitioner('${key}')">Delete</button>` : ''}
                 </td>
             `;
@@ -2455,9 +2587,7 @@ let activeEaKey = "Jane A. Doe";
         });
 
         const total = visibleKeys.length;
-        document.getElementById('count-total').textContent = total;
-        document.getElementById('count-due').textContent = total;
-        document.getElementById('count-ready').textContent = total;
+        renderRosterStatusCards();
     }
 
     function promptMembershipPaywallForEa(key) {
@@ -2488,6 +2618,13 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('activeEaSelect').value = key;
         loadActiveEaDataIntoEngine();
         showAppTab('engine');
+    }
+
+    function selectAndAccessCpe(key) {
+        activeEaKey = key;
+        document.getElementById('activeEaSelect').value = key;
+        loadActiveEaDataIntoEngine();
+        showAppTab('catalog');
     }
 
     function switchActiveEaFromDropdown() {
@@ -2884,6 +3021,8 @@ let activeEaKey = "Jane A. Doe";
         const engineResult = { totalRequiredCE, yearBreakdown, overallCompliant };
         renderEngineUI(totalRequiredCE, yearBreakdown, overallCompliant);
         populateForm8554FromActiveEa(engineResult);
+        lastEngineResult = engineResult;
+        renderRosterStatusCards();
         return engineResult;
     }
 
@@ -3145,32 +3284,22 @@ let activeEaKey = "Jane A. Doe";
     const CERT_ARCHIVE_EMAIL = 'info@cyclecpe.com';
     const SURVEY_RESULTS_EMAIL = 'info@cyclecpe.com';
 
-    // NOTE: SendGrid's Mail Send API does not allow direct cross-origin browser requests
-    // (no CORS headers are returned), so this call will be blocked by the browser when run
-    // from a plain static HTML page — this is a SendGrid security restriction, not a bug here.
-    // Real delivery requires routing this fetch through a small backend/serverless proxy that
-    // holds the API key server-side. The call below is wired exactly as it would work through
-    // such a proxy; until one exists, sendViaSendGrid() will fail silently and the send is
-    // still recorded in the local audit log so nothing is lost.
-    const SENDGRID_API_KEY = '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';
-    const SENDGRID_FROM_EMAIL = 'info@cyclecpe.com';
+    // Emails are sent through a small Vercel serverless function (api/send-email.js) that
+    // holds the SendGrid API key server-side. The browser never sees the key — it just posts
+    // {to, subject, body} to this endpoint, and the function forwards it to SendGrid.
+    const CYCLECPE_EMAIL_ENDPOINT = 'https://cyclecpe.vercel.app/api/send-email';
 
     function sendViaSendGrid(recipients, subject, bodyText) {
         try {
-            fetch('https://api.sendgrid.com/v3/mail/send', {
+            fetch(CYCLECPE_EMAIL_ENDPOINT, {
                 method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + SENDGRID_API_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    personalizations: [{ to: recipients.map(email => ({ email })) }],
-                    from: { email: SENDGRID_FROM_EMAIL, name: 'CycleCPE' },
-                    subject: subject,
-                    content: [{ type: 'text/plain', value: bodyText }]
-                })
-            }).catch(err => console.warn('SendGrid send blocked/failed (expected without a backend proxy):', err));
-        } catch (e) { console.warn('SendGrid send error:', e); }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to: recipients, subject: subject, body: bodyText })
+            })
+                .then(r => r.json())
+                .then(data => console.log('CycleCPE email endpoint response:', data))
+                .catch(err => console.warn('Email send failed:', err));
+        } catch (e) { console.warn('Email send error:', e); }
     }
 
     function emailCertificateRecord(ea, courseTitle, ceHours, category, programNo) {
@@ -3372,6 +3501,13 @@ let activeEaKey = "Jane A. Doe";
     }
 
     // SINGLE-COURSE CHECKOUT (Free / Essentials plan holders)
+    const STRIPE_PAYMENT_LINKS_BY_HOURS = {
+        1: 'https://buy.stripe.com/test_5kQ3cv1S50RDerJ0LzbAs00',
+        2: 'https://buy.stripe.com/test_8x24gzgMZ2ZLdnF51PbAs02',
+        4: 'https://buy.stripe.com/test_3cI9ATcwJcAl5Vd0LzbAs03',
+        6: 'https://buy.stripe.com/test_aFa8wPeER57T6Zh3XLbAs01'
+    };
+
     function openCourseCheckout(slug) {
         const c = bySlug[slug];
         if (!c) return;
@@ -3380,12 +3516,29 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('course-checkout-title').textContent = c.title;
         document.getElementById('course-checkout-meta').textContent = `${c.hours}-hour CE course`;
         document.getElementById('course-checkout-price').textContent = `$${price}`;
+        document.getElementById('course-checkout-step1').style.display = 'flex';
+        document.getElementById('course-checkout-step2').style.display = 'none';
+        document.getElementById('course-checkout-instructions').textContent = "You'll be taken to Stripe's secure checkout in a new tab.";
         document.getElementById('course-checkout-modal').style.display = 'flex';
     }
 
     function closeCourseCheckoutModal() {
         document.getElementById('course-checkout-modal').style.display = 'none';
         pendingCheckoutSlug = null;
+    }
+
+    function goToStripeForCourse() {
+        const c = bySlug[pendingCheckoutSlug];
+        if (!c) return;
+        const link = STRIPE_PAYMENT_LINKS_BY_HOURS[c.hours];
+        if (!link) return;
+        try {
+            localStorage.setItem('cyclecpe_pending_course_purchase', JSON.stringify({ slug: pendingCheckoutSlug, ea: activeEaKey, startedAt: Date.now() }));
+        } catch (e) {}
+        window.open(link, '_blank', 'noopener');
+        document.getElementById('course-checkout-step1').style.display = 'none';
+        document.getElementById('course-checkout-step2').style.display = 'flex';
+        document.getElementById('course-checkout-instructions').textContent = 'Payment window opened in a new tab.';
     }
 
     function confirmCoursePurchase() {
@@ -3396,6 +3549,7 @@ let activeEaKey = "Jane A. Doe";
             ea.purchasedCourses.push(pendingCheckoutSlug);
         }
         savePractitionersToStorage();
+        try { localStorage.removeItem('cyclecpe_pending_course_purchase'); } catch (e) {}
         const slug = pendingCheckoutSlug;
         closeCourseCheckoutModal();
         openCourseView(slug);
@@ -3698,14 +3852,35 @@ let activeEaKey = "Jane A. Doe";
     COURSES.forEach(c => bySlug[c.slug] = c);
 
     document.addEventListener("DOMContentLoaded", function() {
-        const filters = document.querySelectorAll('.catalog-filter-btn');
+        const catFilters = document.querySelectorAll('#catalog-filters .catalog-filter-btn');
+        const hoursFilters = document.querySelectorAll('#catalog-hours-filters .catalog-filter-btn');
         const cards = document.querySelectorAll('#catalog-grid .catalog-card');
-        filters.forEach(btn => {
+        let activeCat = 'all';
+        let activeHours = 'all';
+
+        function applyCatalogFilters() {
+            cards.forEach(c => {
+                const catOk = (activeCat === 'all' || c.dataset.cat === activeCat);
+                const hoursOk = (activeHours === 'all' || c.dataset.hours === activeHours);
+                c.style.display = (catOk && hoursOk) ? 'flex' : 'none';
+            });
+        }
+
+        catFilters.forEach(btn => {
             btn.addEventListener('click', () => {
-                filters.forEach(b => b.classList.remove('active'));
+                catFilters.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                const f = btn.dataset.filter;
-                cards.forEach(c => { c.style.display = (f === 'all' || c.dataset.cat === f) ? 'flex' : 'none'; });
+                activeCat = btn.dataset.filter;
+                applyCatalogFilters();
+            });
+        });
+
+        hoursFilters.forEach(btn => {
+            btn.addEventListener('click', () => {
+                hoursFilters.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeHours = btn.dataset.hoursFilter;
+                applyCatalogFilters();
             });
         });
     });
@@ -3873,12 +4048,22 @@ let activeEaKey = "Jane A. Doe";
                 }
             }
 
+            const postCourseNav = '<div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; gap:12px; flex-wrap:wrap;">' +
+                '<button class="btn btn-secondary" onclick="showAppTab(\'engine\')">↩ Return to Main Tracker</button>' +
+                '<button class="btn btn-secondary" onclick="exitCourseToCatalog()">📚 Back to CPE Catalog</button>' +
+                '</div>';
+
             result.innerHTML = '<p class="score">' + score + ' / ' + c.examQuestions.length + ' correct (' + pct + '%)</p><p>' +
                 'You passed! CE credit has been automatically added to your CPE ledger, and your certificate will be emailed to you and archived by CycleCPE.</p>' +
                 `<button class="btn btn-success" style="margin-top:12px;" onclick="generateCourseCertificatePDF('${c.title.replace(/'/g, "\\'")}', ${c.hours}, '${categoryFullName}', '${programNo}')">📜 Download &amp; Email Official CE Certificate</button>` +
-                renderCourseSurveyHtml(c.slug, c.title);
+                renderCourseSurveyHtml(c.slug, c.title) +
+                postCourseNav;
         } else {
-            result.innerHTML = '<p class="score">' + score + ' / ' + c.examQuestions.length + ' correct (' + pct + '%)</p><p>Score below 70%. Review the module above and retake the exam.</p>';
+            const postCourseNavFail = '<div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; gap:12px; flex-wrap:wrap;">' +
+                '<button class="btn btn-secondary" onclick="showAppTab(\'engine\')">↩ Return to Main Tracker</button>' +
+                '<button class="btn btn-secondary" onclick="exitCourseToCatalog()">📚 Back to CPE Catalog</button>' +
+                '</div>';
+            result.innerHTML = '<p class="score">' + score + ' / ' + c.examQuestions.length + ' correct (' + pct + '%)</p><p>Score below 70%. Review the module above and retake the exam.</p>' + postCourseNavFail;
         }
 
         result.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3949,7 +4134,7 @@ let activeEaKey = "Jane A. Doe";
             };
 
             setupLoggedInState();
-            showAppTab('practitioner'); applyPlanSuccessFromUrl();
+            showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         }
 
         // --- CHECK INITIAL SESSION ON PAGE LOAD ---
@@ -3963,7 +4148,7 @@ let activeEaKey = "Jane A. Doe";
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
                 setupLoggedInState();
-                showAppTab('practitioner'); applyPlanSuccessFromUrl();
+                showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             }
         }
 
