@@ -24,6 +24,17 @@ function buffer(readable) {
   });
 }
 
+async function setPlanForEmail(email, plan) {
+  if (!email || !plan) return;
+  const { error } = await supabase.from('practitioner_plans').upsert({
+    email: email.toLowerCase(),
+    plan,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) console.error('Supabase upsert error:', error);
+  else console.log(`Plan updated: ${email} -> ${plan}`);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -38,25 +49,37 @@ export default async function handler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const email = (session.customer_details?.email || '').toLowerCase();
-
-    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-    const priceId = lineItems.data[0]?.price?.id;
-    const plan = PRICE_TO_PLAN[priceId];
-
-    if (email && plan) {
-      const { error } = await supabase.from('practitioner_plans').upsert({
-        email,
-        plan,
-        updated_at: new Date().toISOString(),
-      });
-      if (error) console.error('Supabase upsert error:', error);
-      else console.log(`Plan updated: ${email} -> ${plan}`);
-    } else {
-      console.warn('Could not resolve email/plan from session', { email, priceId });
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const email = session.customer_details?.email;
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      const priceId = lineItems.data[0]?.price?.id;
+      await setPlanForEmail(email, PRICE_TO_PLAN[priceId]);
     }
+
+    // Fires when a plan is switched, renewed, or otherwise changed on an
+    // existing subscription — e.g. via the Stripe billing portal.
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
+      const subscription = event.data.object;
+      const priceId = subscription.items.data[0]?.price?.id;
+      const plan = PRICE_TO_PLAN[priceId];
+
+      if (plan) {
+        const customer = await stripe.customers.retrieve(subscription.customer);
+        const email = customer.email;
+        await setPlanForEmail(email, plan);
+      }
+    }
+
+    // Cancellation — drop them back to FREE.
+    if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object;
+      const customer = await stripe.customers.retrieve(subscription.customer);
+      await setPlanForEmail(customer.email, 'FREE');
+    }
+  } catch (err) {
+    console.error('Webhook handler error:', err);
   }
 
   return res.status(200).json({ received: true });
