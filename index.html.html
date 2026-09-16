@@ -708,13 +708,6 @@
                 <span style="font-size: 0.88rem; color: var(--text-muted);">Don't have an account yet?</span><br>
                 <a href="#" style="color: var(--accent); font-weight: bold; font-size: 0.95rem; text-decoration: none; display: inline-block; margin-top: 4px;" onclick="openRegisterModal(event)">👉 Register for a Practitioner Account</a>
             </div>
-
-            <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); background: #f8fafc; padding: 12px; border-radius: 4px; border: 1px solid var(--border);">
-                <strong>Demo Credentials:</strong><br>
-                • <strong>Admin Login:</strong> Username: <code>admin</code> | Password: <code>admin</code><br>
-                • <strong>Jane Login:</strong> Username: <code>jane</code> | Password: <code>user</code><br>
-                • <strong>Robert Login:</strong> Username: <code>robert</code> | Password: <code>user</code>
-            </div>
         </div>
     </div>
 
@@ -808,7 +801,6 @@
                     <h2>Enrolled Agent Roster & Cycle Tracking</h2>
                     <div class="actions-bar" id="roster-actions-bar">
                         <button class="btn btn-secondary" onclick="openPractitionerModal('new')" id="add-ea-btn">+ Add New EA Record</button>
-                        <button class="btn btn-success" onclick="processBatchSubmissions()">Submit Batch Renewals (<span id="selected-count">0</span>)</button>
                     </div>
                 </div>
 
@@ -918,7 +910,7 @@
                                 <tr>
                                     <th>Cycle Year</th>
                                     <th>Req. Total</th>
-                                    <th>Earned Non-Ethics Courses</th>
+                                    <th>Federal Tax Law</th>
                                     <th>Earned Ethics</th>
                                     <th>Year Status</th>
                                 </tr>
@@ -1315,7 +1307,6 @@
                     <div class="section-subtitle" id="p-membership-section">Part 2. Subscription &amp; Membership Management</div>
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
                         <div id="p-current-plan-label" style="font-size:0.9rem; color:var(--text-muted); font-weight:600;"></div>
-                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="manualCheckPlanUpdate()">🔄 Check for Plan Updates</button>
                     </div>
                     <input type="checkbox" id="p-auto-renew" checked style="display:none;">
                     <div style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
@@ -2769,6 +2760,7 @@ let activeEaKey = "Jane A. Doe";
         renderRosterTable();
         loadActiveEaDataIntoEngine();
         if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+        if (typeof syncFullProfileToSupabase === 'function') syncFullProfileToSupabase(ea);
         if (!silent) alert("Practitioner profile & Form 8554 data successfully saved and auto-synced!");
     }
 
@@ -3048,8 +3040,11 @@ let activeEaKey = "Jane A. Doe";
         const startMonth = enrollmentDate.getUTCMonth() + 1;
 
         let totalRequiredCE = 0;
+        let totalRequiredEthics = 0;
+        let totalEarnedAllYears = 0;
+        let totalEarnedEthicsAllYears = 0;
         let yearBreakdown = {};
-        let overallCompliant = true;
+        let allYearMinimumsMet = true;
 
         const cycleStartYear = cycle.startYear;
         for (let year = cycleStartYear; year <= cycleEndYear; year++) {
@@ -3060,7 +3055,17 @@ let activeEaKey = "Jane A. Doe";
                 monthsInYear = 0; 
             }
 
-            const requiredTotal = monthsInYear * 2;
+            // The TRUE cumulative 3-year requirement is 2 hrs/month enrolled (72 hrs for a
+            // full 3-year cycle, prorated for a partial first year). That cumulative figure
+            // is tracked separately below and is what actually governs overall compliance.
+            const cumulativeContribution = monthsInYear * 2;
+
+            // Each individual year only has to clear the IRS's flat per-year minimum — 16
+            // hours (2 of them Ethics) for a full year, prorated for a partial year — not an
+            // even one-third split of the 3-year total. Hours can be front- or back-loaded
+            // across the cycle as long as every year clears this floor and the 3-year
+            // cumulative total is met by the end of the cycle.
+            const requiredTotal = monthsInYear > 0 ? Math.round(16 * monthsInYear / 12) : 0;
             const requiredEthics = monthsInYear > 0 ? 2 : 0;
 
             const yearCredits = ea.credits.filter(c => new Date(c.date).getUTCFullYear() === year);
@@ -3071,26 +3076,39 @@ let activeEaKey = "Jane A. Doe";
             const isCompliant = (totalEarned >= requiredTotal) && (earnedEthics >= requiredEthics);
 
             yearBreakdown[year] = { requiredTotal, requiredEthics, earnedEthics, earnedTax, totalEarned, isCompliant, monthsInYear };
-            totalRequiredCE += requiredTotal;
-            if (!isCompliant) overallCompliant = false;
+            totalRequiredCE += cumulativeContribution;
+            totalRequiredEthics += (monthsInYear > 0 ? 2 : 0);
+            totalEarnedAllYears += totalEarned;
+            totalEarnedEthicsAllYears += earnedEthics;
+            if (!isCompliant) allYearMinimumsMet = false;
         }
 
-        const engineResult = { totalRequiredCE, yearBreakdown, overallCompliant };
-        renderEngineUI(totalRequiredCE, yearBreakdown, overallCompliant);
+        const cumulativeMet = (totalEarnedAllYears >= totalRequiredCE) && (totalEarnedEthicsAllYears >= totalRequiredEthics);
+        const overallCompliant = allYearMinimumsMet && cumulativeMet;
+
+        const engineResult = {
+            totalRequiredCE, totalRequiredEthics, totalEarnedAllYears, totalEarnedEthicsAllYears,
+            cumulativeMet, yearBreakdown, overallCompliant
+        };
+        renderEngineUI(engineResult);
         populateForm8554FromActiveEa(engineResult);
         lastEngineResult = engineResult;
         renderRosterStatusCards();
         return engineResult;
     }
 
-    function renderEngineUI(totalRequired, breakdown, isOverallCompliant) {
+    function renderEngineUI(engineResult) {
+        const { totalRequiredCE, totalRequiredEthics, totalEarnedAllYears, totalEarnedEthicsAllYears, cumulativeMet, yearBreakdown: breakdown, overallCompliant: isOverallCompliant } = engineResult;
         const outputBox = document.getElementById('complianceOutput');
         if (isOverallCompliant) {
             outputBox.className = 'status-box status-pass';
-            outputBox.innerHTML = `<strong>Status: COMPLIANT</strong><br>Prorated CE Requirement: ${totalRequired} Hours (based on enrollment date). All year-by-year Ethics & Non-Ethics minimums met. Ready for Form 8554 renewal.`;
+            outputBox.innerHTML = `<strong>Status: COMPLIANT</strong><br>Prorated 3-Year CE Requirement: ${totalRequiredCE} Hours (based on enrollment date), including ${totalRequiredEthics} Ethics hours. Every year has met its 16-hour (2 Ethics) minimum, and the cumulative cycle total has been earned. Ready for Form 8554 renewal.`;
+        } else if (!cumulativeMet) {
+            outputBox.className = 'status-box status-warn';
+            outputBox.innerHTML = `<strong>Status: ACTION REQUIRED / IN PROGRESS</strong><br>Prorated 3-Year CE Requirement: ${totalRequiredCE} Hours (including ${totalRequiredEthics} Ethics hours). Earned so far: ${totalEarnedAllYears} Hours (${totalEarnedEthicsAllYears} Ethics). Hours can be earned unevenly across the 3 years — just make sure the cumulative cycle total is reached by the end of Year 3.`;
         } else {
             outputBox.className = 'status-box status-warn';
-            outputBox.innerHTML = `<strong>Status: ACTION REQUIRED / IN PROGRESS</strong><br>Prorated CE Requirement: ${totalRequired} Hours (based on enrollment date). Review missing credit hours below.`;
+            outputBox.innerHTML = `<strong>Status: ACTION REQUIRED / IN PROGRESS</strong><br>Prorated 3-Year CE Requirement: ${totalRequiredCE} Hours. At least one year has not yet met its 16-hour (2 Ethics) per-year minimum — review the year-by-year breakdown below.`;
         }
 
         const tbody = document.querySelector('#yearBreakdownTable tbody');
@@ -3100,15 +3118,31 @@ let activeEaKey = "Jane A. Doe";
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${year}</strong> <small style="color:var(--text-muted);">(${data.monthsInYear} mo)</small></td>
-                <td>${data.requiredTotal} Hrs</td>
+                <td>${data.requiredTotal} Hrs <small style="color:var(--text-muted);">(min.)</small></td>
                 <td>${data.earnedTax} Hrs</td>
                 <td>${data.earnedEthics} / ${data.requiredEthics} Hrs Req.</td>
                 <td style="color: ${data.isCompliant ? 'var(--success)' : 'var(--warning)'}; font-weight: bold;">
-                    ${data.isCompliant ? '✓ Compliant' : '✗ Deficit'}
+                    ${data.isCompliant ? '✓ Min. Met' : '✗ Below Min.'}
                 </td>
             `;
             tbody.appendChild(tr);
         });
+
+        // Cumulative 3-year total row — this is the figure that actually governs overall
+        // cycle compliance, since hours don't have to be split evenly year to year.
+        const totalTr = document.createElement('tr');
+        totalTr.style.borderTop = '2px solid var(--primary)';
+        totalTr.style.fontWeight = 'bold';
+        totalTr.innerHTML = `
+            <td>Total Required (3-Yr Cycle)</td>
+            <td>${totalRequiredCE} Hrs</td>
+            <td colspan="1">Earned: ${totalEarnedAllYears - totalEarnedEthicsAllYears} Hrs</td>
+            <td>${totalEarnedEthicsAllYears} / ${totalRequiredEthics} Hrs Req.</td>
+            <td style="color: ${cumulativeMet ? 'var(--success)' : 'var(--warning)'};">
+                ${cumulativeMet ? '✓ Cumulative Met' : '✗ Cumulative Deficit'}
+            </td>
+        `;
+        tbody.appendChild(totalTr);
 
         const container = document.getElementById('courseList');
         container.innerHTML = '';
@@ -4460,6 +4494,85 @@ let activeEaKey = "Jane A. Doe";
             }
         }
 
+        // Syncs the practitioner's FULL profile (identity, contact, credentials, and
+        // suitability answers) to Supabase — this is what makes practitioner info persist
+        // reliably across devices/browsers, instead of living only in this one browser's
+        // local storage (which is what "not saving" actually meant: it was saving, just
+        // only locally, so a different browser/device never saw it).
+        async function syncFullProfileToSupabase(ea) {
+            if (!ea || !ea.email) return;
+            try {
+                const { error } = await window.supabase.from('practitioner_profiles').upsert({
+                    email: ea.email.toLowerCase(),
+                    first_name: ea.firstName || '',
+                    last_name: ea.lastName || '',
+                    suffix: ea.suffix || '',
+                    ea_num: ea.eaNum || '',
+                    ptin: ea.ptin || '',
+                    caf: ea.caf || '',
+                    ssn: ea.ssn || '',
+                    phone: ea.phone || '',
+                    address1: ea.address1 || '',
+                    city: ea.city || '',
+                    state: ea.state || '',
+                    zip: ea.zip || '',
+                    enrollment_date: ea.enrollmentDate || null,
+                    status_active: ea.statusActive !== false,
+                    status_inactive: !!ea.statusInactive,
+                    see_exception: !!ea.seeException,
+                    auto_renew: ea.autoRenew !== false,
+                    suitability: JSON.stringify(ea.suitability || {}),
+                    updated_at: new Date().toISOString(),
+                });
+                if (error) console.warn('syncFullProfileToSupabase error:', error);
+            } catch (e) {
+                console.warn('syncFullProfileToSupabase exception:', e);
+            }
+        }
+
+        // Pulls the full practitioner profile back down from Supabase on login, so the
+        // record is correct no matter which device/browser the practitioner logs in from.
+        async function syncFullProfileFromSupabase(email) {
+            const ea = practitioners[activeEaKey];
+            if (!ea || !email) return;
+            try {
+                const { data, error } = await window.supabase
+                    .from('practitioner_profiles')
+                    .select('*')
+                    .eq('email', email.toLowerCase())
+                    .maybeSingle();
+
+                if (error) { console.warn('syncFullProfileFromSupabase error:', error); return; }
+                if (!data) return;
+
+                ea.firstName = data.first_name || ea.firstName;
+                ea.lastName = data.last_name || ea.lastName;
+                ea.suffix = data.suffix || ea.suffix;
+                ea.eaNum = data.ea_num || ea.eaNum;
+                ea.ptin = data.ptin || ea.ptin;
+                ea.caf = data.caf || ea.caf;
+                ea.ssn = data.ssn || ea.ssn;
+                ea.phone = data.phone || ea.phone;
+                ea.address1 = data.address1 || ea.address1;
+                ea.city = data.city || ea.city;
+                ea.state = data.state || ea.state;
+                ea.zip = data.zip || ea.zip;
+                ea.enrollmentDate = data.enrollment_date || ea.enrollmentDate;
+                ea.statusActive = data.status_active !== false;
+                ea.statusInactive = !!data.status_inactive;
+                ea.seeException = !!data.see_exception;
+                ea.autoRenew = data.auto_renew !== false;
+                if (data.suitability) {
+                    try { ea.suitability = JSON.parse(data.suitability); } catch (e) {}
+                }
+                if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+                if (typeof loadPractitionerToolTab === 'function') loadPractitionerToolTab();
+                if (typeof renderRosterTable === 'function') renderRosterTable();
+            } catch (e) {
+                console.warn('syncFullProfileFromSupabase exception:', e);
+            }
+        }
+
         async function syncPurchasedCoursesFromSupabase(emailOverride) {
             const ea = practitioners[activeEaKey];
             const email = (emailOverride || (ea && ea.email) || '').toLowerCase();
@@ -4559,7 +4672,7 @@ let activeEaKey = "Jane A. Doe";
                     role: data.user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: `${fn} ${ln}`.trim() || data.user.email
                 };
-                resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email); syncPurchasedCoursesFromSupabase(data.user.email); syncCreditsFromSupabase(data.user.email);
+                resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email); syncPurchasedCoursesFromSupabase(data.user.email); syncCreditsFromSupabase(data.user.email); syncFullProfileFromSupabase(data.user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             } else {
@@ -4595,7 +4708,7 @@ let activeEaKey = "Jane A. Doe";
                 name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
             };
 
-            resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email);
+            resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email); syncFullProfileFromSupabase(user.email);
             setupLoggedInState();
             showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         }
@@ -4610,7 +4723,7 @@ let activeEaKey = "Jane A. Doe";
                     role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
-                resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email);
+                resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email); syncFullProfileFromSupabase(user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             }
