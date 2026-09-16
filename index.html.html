@@ -2654,6 +2654,16 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('p-caf').value = ea.caf || '';
         document.getElementById('p-ssn').value = ea.ssn || '';
         document.getElementById('p-confirm-ssn').value = '';
+        // Keep the email field in sync with the account's actual registered login email
+        // (rather than a possibly-blank or stale ea.email) whenever this profile belongs
+        // to the person currently logged in — but never overwrite another EA's email when
+        // an admin is viewing/managing someone else's profile.
+        if (currentUser && currentUser.username && (ea.username || '').toLowerCase() === currentUser.username.toLowerCase()) {
+            if (ea.email !== currentUser.username) {
+                ea.email = currentUser.username;
+                if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+            }
+        }
         document.getElementById('p-email').value = ea.email || '';
         document.getElementById('p-phone').value = ea.phone || '';
         document.getElementById('p-enrollment-date').value = ea.enrollmentDate || new Date().toISOString().split('T')[0];
@@ -3638,12 +3648,11 @@ let activeEaKey = "Jane A. Doe";
     // Shows/hides the Form 8554 nav tab based on the active practitioner's plan —
     // only EA Complete subscribers (or Admins) can see and access it.
     function refreshForm8554TabAccess() {
+        // The Form 8554 tab stays visible to everyone; access itself is gated in
+        // showAppTab(), which shows an upgrade popup for non-Complete practitioners.
         const btn = document.getElementById('btnForm8554');
         if (!btn) return;
-        const ea = practitioners[activeEaKey];
-        const isComplete = ea && ea.membershipPlan === 'COMPLETE';
-        const isAdmin = currentUser && currentUser.role === 'ADMIN';
-        btn.style.display = (isComplete || isAdmin) ? 'block' : 'none';
+        btn.style.display = 'block';
     }
 
     // SINGLE-COURSE CHECKOUT (Free / Essentials plan holders)
@@ -3678,27 +3687,66 @@ let activeEaKey = "Jane A. Doe";
         if (!c) return;
         const link = STRIPE_PAYMENT_LINKS_BY_HOURS[c.hours];
         if (!link) return;
+        const ea = practitioners[activeEaKey];
         try {
             localStorage.setItem('cyclecpe_pending_course_purchase', JSON.stringify({ slug: pendingCheckoutSlug, ea: activeEaKey, startedAt: Date.now() }));
         } catch (e) {}
-        window.open(link, '_blank', 'noopener');
+
+        // client_reference_id tells the webhook exactly which course was bought (a Stripe
+        // Payment Link on its own only knows the price tier, not the specific course), and
+        // prefilled_email keeps the checkout tied to the practitioner's actual account email
+        // so the purchase can be verified against it afterward.
+        const params = new URLSearchParams();
+        params.set('client_reference_id', pendingCheckoutSlug);
+        if (ea && ea.email) params.set('prefilled_email', ea.email);
+        const fullLink = link + (link.includes('?') ? '&' : '?') + params.toString();
+
+        window.open(fullLink, '_blank', 'noopener');
         document.getElementById('course-checkout-step1').style.display = 'none';
         document.getElementById('course-checkout-step2').style.display = 'flex';
         document.getElementById('course-checkout-instructions').textContent = 'Payment window opened in a new tab.';
     }
 
-    function confirmCoursePurchase() {
+    // Verifies the purchase against Supabase (written only by a real Stripe webhook event)
+    // instead of trusting the click itself — so a course only unlocks once it has genuinely
+    // been paid for.
+    async function confirmCoursePurchase() {
         const ea = practitioners[activeEaKey];
-        if (!ea || !pendingCheckoutSlug) return;
-        ea.purchasedCourses = ea.purchasedCourses || [];
-        if (!ea.purchasedCourses.includes(pendingCheckoutSlug)) {
-            ea.purchasedCourses.push(pendingCheckoutSlug);
+        if (!ea || !pendingCheckoutSlug || !ea.email) { alert('Missing practitioner email — cannot verify purchase.'); return; }
+
+        const verifyBtn = document.querySelector('#course-checkout-step2 .btn-success');
+        if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying...'; }
+
+        try {
+            const { data, error } = await window.supabase
+                .from('course_purchases')
+                .select('slug')
+                .eq('email', ea.email.toLowerCase())
+                .eq('slug', pendingCheckoutSlug)
+                .maybeSingle();
+
+            if (error) { console.warn('Course purchase verification error:', error); }
+
+            if (!data) {
+                alert("We can't find a completed payment for this course yet. If you just paid, it can take a few moments to process — wait a moment and try again.");
+                if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.textContent = "✓ I've Completed Payment — Unlock Course"; }
+                return;
+            }
+
+            ea.purchasedCourses = ea.purchasedCourses || [];
+            if (!ea.purchasedCourses.includes(pendingCheckoutSlug)) {
+                ea.purchasedCourses.push(pendingCheckoutSlug);
+            }
+            savePractitionersToStorage();
+            try { localStorage.removeItem('cyclecpe_pending_course_purchase'); } catch (e) {}
+            const slug = pendingCheckoutSlug;
+            closeCourseCheckoutModal();
+            openCourseView(slug);
+        } catch (e) {
+            console.warn('confirmCoursePurchase exception:', e);
+            alert('Could not verify payment right now. Please try again in a moment.');
+            if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.textContent = "✓ I've Completed Payment — Unlock Course"; }
         }
-        savePractitionersToStorage();
-        try { localStorage.removeItem('cyclecpe_pending_course_purchase'); } catch (e) {}
-        const slug = pendingCheckoutSlug;
-        closeCourseCheckoutModal();
-        openCourseView(slug);
     }
 
     // AI Chat Assistant Widget Logic
