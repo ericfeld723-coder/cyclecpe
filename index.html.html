@@ -2287,6 +2287,7 @@ let activeEaKey = "Jane A. Doe";
         renderRosterTable();
         loadActiveEaDataIntoEngine();
         loadPractitionerToolTab();
+        if (typeof refreshForm8554TabAccess === 'function') refreshForm8554TabAccess();
     }
 
     function logout() {
@@ -3581,6 +3582,7 @@ let activeEaKey = "Jane A. Doe";
 
         savePractitionersToStorage();
         renderRosterTable();
+        if (typeof renderPractitionerPlanSelector === 'function') renderPractitionerPlanSelector();
         closeMembershipModal();
         alert(`${PLAN_INFO[ea.membershipPlan].name} plan activated for ${ea.firstName || ''} ${ea.lastName || ''}!`);
 
@@ -3615,11 +3617,30 @@ let activeEaKey = "Jane A. Doe";
             const el = document.getElementById('p-plan-card-' + k);
             if (el) el.classList.remove('selected');
         });
-        if (!ea) { if (label) label.textContent = ''; return; }
+        if (!ea) { if (label) label.innerHTML = ''; refreshForm8554TabAccess(); return; }
         const current = ea.membershipPlan || 'FREE';
         const el = document.getElementById('p-plan-card-' + current);
         if (el) el.classList.add('selected');
-        if (label) label.textContent = `Current plan: ${PLAN_INFO[current].name}${ea.autoRenew !== false && PLAN_INFO[current].price > 0 ? ' (auto-renews annually)' : ''}`;
+        const info = PLAN_INFO[current];
+        const priceLabel = info.price === 0 ? 'Free' : `$${info.price}/year`;
+        const renewLabel = (ea.autoRenew !== false && info.price > 0) ? ' — auto-renews annually' : '';
+        if (label) {
+            label.innerHTML = `<span style="display:inline-block; background:${info.price > 0 ? 'var(--primary)' : '#94a3b8'}; color:#fff; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:700;">
+                ✓ Current Plan: ${info.name} (${priceLabel})
+            </span><span style="font-size:0.8rem; color:var(--text-muted); margin-left:8px;">${renewLabel}</span>`;
+        }
+        refreshForm8554TabAccess();
+    }
+
+    // Shows/hides the Form 8554 nav tab based on the active practitioner's plan —
+    // only EA Complete subscribers (or Admins) can see and access it.
+    function refreshForm8554TabAccess() {
+        const btn = document.getElementById('btnForm8554');
+        if (!btn) return;
+        const ea = practitioners[activeEaKey];
+        const isComplete = ea && ea.membershipPlan === 'COMPLETE';
+        const isAdmin = currentUser && currentUser.role === 'ADMIN';
+        btn.style.display = (isComplete || isAdmin) ? 'block' : 'none';
     }
 
     // SINGLE-COURSE CHECKOUT (Free / Essentials plan holders)
