@@ -8,9 +8,9 @@ const supabase = createClient(
 );
 
 const PRICE_TO_PLAN = {
-  'price_1UG2FVHanYNo34o68FdVIVbR': 'ESSENTIALS',
-  'price_1UG2FiHanYNo34o6XlfB5U9A': 'PLUS',
-  'price_1UG2G4HanYNo34o6uaUPFNp': 'COMPLETE',
+  'price_1UG2LzHLYDiifWD02VO6IRh5': 'ESSENTIALS',
+  'price_1UG2KVHLYDiifWD0WY1Pc06G': 'PLUS',
+  'price_1UG2L4HLYDiifWD089k4TUxW': 'COMPLETE',
 };
 
 export const config = { api: { bodyParser: false } };
@@ -58,8 +58,6 @@ export default async function handler(req, res) {
       await setPlanForEmail(email, PRICE_TO_PLAN[priceId]);
     }
 
-    // Fires when a plan is switched, renewed, or otherwise changed on an
-    // existing subscription — e.g. via the Stripe billing portal.
     if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
       const subscription = event.data.object;
       const priceId = subscription.items.data[0]?.price?.id;
@@ -67,12 +65,10 @@ export default async function handler(req, res) {
 
       if (plan) {
         const customer = await stripe.customers.retrieve(subscription.customer);
-        const email = customer.email;
-        await setPlanForEmail(email, plan);
+        await setPlanForEmail(customer.email, plan);
       }
     }
 
-    // Cancellation — drop them back to FREE.
     if (event.type === 'customer.subscription.deleted') {
       const subscription = event.data.object;
       const customer = await stripe.customers.retrieve(subscription.customer);
