@@ -3075,6 +3075,7 @@ let activeEaKey = "Jane A. Doe";
                         ${c.hours} Hrs
                     </div>
                     <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="generateCourseCertificatePDF('${c.title.replace(/'/g, "\\'")}', ${c.hours}, '${c.category}', '${c.programNo}')">📜 Download Certificate</button>
+                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="confirmDeleteCertificate('${c.id}')">🗑️ Delete</button>
                 </div>
             `;
             container.appendChild(item);
@@ -3105,6 +3106,29 @@ let activeEaKey = "Jane A. Doe";
         if (typeof calculateForm8554CETotals === 'function') {
             calculateForm8554CETotals();
         }
+    }
+
+    // Permanently removes a certificate/credit record. This cannot be undone — once
+    // deleted, the underlying course data is gone and the certificate can never be
+    // regenerated or re-downloaded again, so this requires an explicit, unambiguous
+    // confirmation before anything is removed.
+    function confirmDeleteCertificate(creditId) {
+        const ea = practitioners[activeEaKey];
+        if (!ea) return;
+        const credit = (ea.credits || []).find(c => c.id === creditId);
+        if (!credit) return;
+
+        const confirmed = confirm(
+            `Delete this certificate permanently?\n\n"${credit.title}" (${credit.hours} CE hour${credit.hours === 1 ? '' : 's'}, ${credit.date})\n\n` +
+            `WARNING: Once deleted, this certificate CANNOT be retrieved again. It will be removed from your CPE ledger and can no longer be downloaded or regenerated. This action is permanent and cannot be undone.\n\n` +
+            `Click OK to permanently delete, or Cancel to keep it.`
+        );
+        if (!confirmed) return;
+
+        ea.credits = ea.credits.filter(c => c.id !== creditId);
+        if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+        runEngine();
+        alert('Certificate deleted.');
     }
 
     function addCourseCredit(type) {
@@ -4182,6 +4206,52 @@ let activeEaKey = "Jane A. Doe";
         // Explicitly attach supabase to the window object so it's globally accessible
         window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+        // Links a Supabase-authenticated user to a practitioner record in the app's data
+        // model (the `practitioners` object every other tab reads from via activeEaKey).
+        // Without this, a real Supabase login had nowhere to attach — Engine, Practitioner
+        // Tool, Roster, etc. all key off activeEaKey, which was never being set here.
+        function resolvePractitionerForUser(user) {
+            const emailLower = (user.email || '').toLowerCase();
+            let matchedKey = null;
+
+            Object.keys(practitioners).forEach(k => {
+                const ea = practitioners[k];
+                const eaEmail = (ea.email || '').toLowerCase();
+                const eaUsername = (ea.username || '').toLowerCase();
+                if (eaEmail === emailLower || eaUsername === emailLower) matchedKey = k;
+            });
+
+            if (matchedKey) {
+                activeEaKey = matchedKey;
+                return matchedKey;
+            }
+
+            const fn = user.user_metadata?.first_name || '';
+            const ln = user.user_metadata?.last_name || '';
+            const fullName = `${fn || 'New'} ${ln || 'Practitioner'}`.trim();
+            let uniqueName = fullName;
+            let suffix = 2;
+            while (practitioners[uniqueName]) { uniqueName = `${fullName} (${suffix})`; suffix++; }
+
+            practitioners[uniqueName] = {
+                username: emailLower,
+                firstName: fn, lastName: ln, suffix: "", eaNum: "", ptin: "", caf: "", ssn: "",
+                email: user.email, phone: "", address1: "", city: "", state: "", zip: "",
+                enrollmentDate: new Date().toISOString().split('T')[0],
+                membershipPlan: null,
+                hasForm8554Addon: false,
+                autoRenew: true,
+                purchasedCourses: [],
+                statusActive: true, statusInactive: false, seeException: false,
+                suitability: { taxCurrent: "Yes", taxExplanation: "", sanctioned: "No", admissionDenied: "No", felony: "No", enjoined: "No", isCpa: "No", isAttorney: "No" },
+                credits: []
+            };
+
+            if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+            activeEaKey = uniqueName;
+            return uniqueName;
+        }
+
         // --- REGISTRATION FUNCTION ---
         async function handleRegistrationSubmit(e) {
             e.preventDefault();
@@ -4203,8 +4273,20 @@ let activeEaKey = "Jane A. Doe";
                 return;
             }
 
-            alert("Success! Check your Supabase dashboard under Authentication > Users.");
             closeRegisterModal();
+
+            if (data.session && data.user) {
+                currentUser = {
+                    username: data.user.email,
+                    role: data.user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                    name: `${fn} ${ln}`.trim() || data.user.email
+                };
+                resolvePractitionerForUser(data.user);
+                setupLoggedInState();
+                showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
+            } else {
+                alert("Account created! Check your email to confirm, then log in.");
+            }
         }
 
         // --- LOGIN FUNCTION ---
@@ -4235,6 +4317,7 @@ let activeEaKey = "Jane A. Doe";
                 name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
             };
 
+            resolvePractitionerForUser(user);
             setupLoggedInState();
             showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         }
@@ -4249,6 +4332,7 @@ let activeEaKey = "Jane A. Doe";
                     role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
+                resolvePractitionerForUser(user);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             }
