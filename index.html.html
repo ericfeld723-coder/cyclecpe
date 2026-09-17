@@ -2985,16 +2985,24 @@ let activeEaKey = "Jane A. Doe";
     // Confirm fields (EA #, PTIN, SSN) only need to be filled in if their primary field
     // has a value — an empty primary field has nothing to confirm.
     function getMissingConfirmLabel() {
-        function missing(primaryId, confirmId, label) {
+        const ea = practitioners[activeEaKey];
+        function missing(primaryId, confirmId, label, confirmedKey) {
             const p = document.getElementById(primaryId);
             const c = document.getElementById(confirmId);
             if (!p || !c) return null;
-            if (p.value.trim() && !c.value.trim()) return label;
+            const currentVal = p.value.trim();
+            if (!currentVal) return null;
+            // Only require re-confirmation when this value has actually changed since it
+            // was last confirmed & saved — not just because of a fresh login/navigation.
+            const lastConfirmed = ea ? ea[confirmedKey] : undefined;
+            const alreadyConfirmed = lastConfirmed !== undefined && lastConfirmed === currentVal;
+            if (alreadyConfirmed) return null;
+            if (!c.value.trim()) return label;
             return null;
         }
-        return missing('p-ea-num', 'p-confirm-ea-num', 'EA Enrollment Number')
-            || missing('p-ptin', 'p-confirm-ptin', 'PTIN')
-            || missing('p-ssn', 'p-confirm-ssn', 'SSN (Last 4 Digits)');
+        return missing('p-ea-num', 'p-confirm-ea-num', 'EA Enrollment Number', 'confirmedEaNum')
+            || missing('p-ptin', 'p-confirm-ptin', 'PTIN', 'confirmedPtin')
+            || missing('p-ssn', 'p-confirm-ssn', 'SSN (Last 4 Digits)', 'confirmedSsn');
     }
 
     function saveStandalonePractitioner(e, silent) {
@@ -3017,6 +3025,16 @@ let activeEaKey = "Jane A. Doe";
         ea.ptin = document.getElementById('p-ptin').value.trim();
         ea.caf = document.getElementById('p-caf').value.trim();
         ea.ssn = document.getElementById('p-ssn').value.trim();
+
+        // Snapshot a field as "confirmed" only when its confirm field genuinely matches
+        // right now — this is what lets an unchanged value skip re-confirmation on future
+        // logins, while a real edit still requires confirming again.
+        const confirmEaNumVal = document.getElementById('p-confirm-ea-num').value.trim();
+        if (ea.eaNum && confirmEaNumVal === ea.eaNum) ea.confirmedEaNum = ea.eaNum;
+        const confirmPtinVal = document.getElementById('p-confirm-ptin').value.trim();
+        if (ea.ptin && confirmPtinVal === ea.ptin) ea.confirmedPtin = ea.ptin;
+        const confirmSsnVal = document.getElementById('p-confirm-ssn').value.trim();
+        if (ea.ssn && confirmSsnVal === ea.ssn) ea.confirmedSsn = ea.ssn;
         ea.email = document.getElementById('p-email').value.trim();
         ea.phone = document.getElementById('p-phone').value.trim();
         ea.enrollmentDate = document.getElementById('p-enrollment-date').value;
