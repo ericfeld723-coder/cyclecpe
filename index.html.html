@@ -3653,11 +3653,11 @@ let activeEaKey = "Jane A. Doe";
             cycleYears.forEach((yr, i) => {
                 const yrData = engineResult.yearBreakdown[yr] || { earnedTax: 0, earnedEthics: 0 };
                 totalTax += yrData.earnedTax; totalEthics += yrData.earnedEthics;
-                put(p1, yrData.earnedTax, yearColX[i], H1 - 409, { size: 9 });
-                put(p1, yrData.earnedEthics, yearColX[i], H1 - 421, { size: 9 });
+                put(p1, yrData.earnedTax, yearColX[i], H1 - 405, { size: 9 });
+                put(p1, yrData.earnedEthics, yearColX[i], H1 - 417, { size: 9 });
             });
-            put(p1, totalTax, yearColX[3], H1 - 409, { size: 9, font: boldFont });
-            put(p1, totalEthics, yearColX[3], H1 - 421, { size: 9, font: boldFont });
+            put(p1, totalTax, yearColX[3], H1 - 405, { size: 9, font: boldFont });
+            put(p1, totalEthics, yearColX[3], H1 - 417, { size: 9, font: boldFont });
 
             putInBoxes(p1, ea.ssn, [296, 324.8, 353.6, 382.4], H1 - 484, 10);
 
@@ -3668,12 +3668,12 @@ let activeEaKey = "Jane A. Doe";
             put(p1, ea.suffix || '', 422, H1 - 580, { size: 10, font: boldFont });
             put(p1, ea.lastName || '', 452, H1 - 580, { size: 10, font: boldFont });
 
-            put(p1, ea.address1 || '', 294, H1 - 616, { size: 9.5 });
+            put(p1, ea.address1 || '', 294, H1 - 610, { size: 9.5 });
 
-            put(p1, ea.city || '', 70, H1 - 652, { size: 9.5 });
-            put(p1, ea.state || '', 294, H1 - 652, { size: 9.5 });
-            put(p1, ea.zip || '', 337, H1 - 652, { size: 9.5 });
-            put(p1, 'USA', 424, H1 - 652, { size: 9.5 });
+            put(p1, ea.city || '', 70, H1 - 648, { size: 9.5 });
+            put(p1, ea.state || '', 294, H1 - 648, { size: 9.5 });
+            put(p1, ea.zip || '', 337, H1 - 648, { size: 9.5 });
+            put(p1, 'USA', 424, H1 - 648, { size: 9.5 });
 
             put(p1, ea.email || '', 294, H1 - 688, { size: 9.5 });
             put(p1, ea.phone || '', 294, H1 - 724, { size: 9.5 });
