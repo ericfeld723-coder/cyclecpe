@@ -2923,27 +2923,22 @@ let activeEaKey = "Jane A. Doe";
         loadPractitionerToolTab();
     }
 
-    let lastLoadedPractitionerKey = null;
     function loadPractitionerToolTab() {
         const ea = practitioners[activeEaKey];
         if (!ea) return;
 
-        // Only clear the confirm fields when switching to a DIFFERENT practitioner's
-        // record — revisiting the same person's own tab (e.g. Practitioner Tool → Form
-        // 8554 → back) should never wipe what they just typed in.
-        const switchedPerson = lastLoadedPractitionerKey !== null && lastLoadedPractitionerKey !== activeEaKey;
-        lastLoadedPractitionerKey = activeEaKey;
+        // Confirm fields (EA #, PTIN, SSN) are intentionally left untouched here — they
+        // are never auto-populated from data in the first place, so there is nothing to
+        // protect by clearing them, and doing so was wiping out what the practitioner had
+        // just typed whenever they revisited this tab.
 
         document.getElementById('p-first-name').value = ea.firstName || '';
         document.getElementById('p-last-name').value = ea.lastName || '';
         document.getElementById('p-suffix').value = ea.suffix || '';
         document.getElementById('p-ea-num').value = ea.eaNum || '';
-        if (switchedPerson) document.getElementById('p-confirm-ea-num').value = '';
         document.getElementById('p-ptin').value = ea.ptin || '';
-        if (switchedPerson) document.getElementById('p-confirm-ptin').value = '';
         document.getElementById('p-caf').value = ea.caf || '';
         document.getElementById('p-ssn').value = ea.ssn || '';
-        if (switchedPerson) document.getElementById('p-confirm-ssn').value = '';
         // Keep the email field in sync with the account's actual registered login email
         // (rather than a possibly-blank or stale ea.email) whenever this profile belongs
         // to the person currently logged in — but never overwrite another EA's email when
@@ -3685,7 +3680,7 @@ let activeEaKey = "Jane A. Doe";
             mark(p2, s.hasEin === 'Yes' ? 360.0 : 410.4, 130.0, H2);
             if (s.hasEin === 'Yes' && s.einBusinesses.length) {
                 const einColX = 70, nameColX = 128, addrColX = 322;
-                const rowYs = [H2 - 172, H2 - 196, H2 - 220]; // rows 6a, 6b, 6c
+                const rowYs = [H2 - 166, H2 - 190, H2 - 214]; // rows 6a, 6b, 6c
                 s.einBusinesses.forEach((biz, i) => {
                     if (i > 2) return;
                     put(p2, biz.ein, einColX, rowYs[i], { size: 7.5 });
