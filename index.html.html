@@ -316,6 +316,11 @@
 </head>
 <body>
 
+<!-- TESTING MODE NOTICE — remove once courses are IRS-approved and the platform is live -->
+<div style="background:#b91c1c; color:#fff; text-align:center; padding:10px 16px; font-size:0.95rem; font-weight:700; position:sticky; top:0; z-index:1000; box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+    ⚠️ THIS WEBSITE IS IN TESTING MODE. Do not use it for any course right now — the courses on this platform have not yet been approved by the IRS.
+</div>
+
 <!-- NAVBAR WITH TOP-LEFT PUBLIC ACCESSIBLE PAGES (HOW IT WORKS, FAQ, ABOUT US, PRICING, CONTACT) -->
 <div class="navbar">
     <div class="navbar-brand-area">
@@ -1149,6 +1154,20 @@
                         <h2>Active Course Ledger for <span id="ledgerEaName">Jane A. Doe</span></h2>
                         <div id="courseList"></div>
                     </div>
+
+                    <div class="panel" id="form8554-pdf-panel">
+                        <h2>8554 Preparation PDFs</h2>
+                        <div id="form8554-pdf-empty" style="color: var(--text-muted); font-size: 0.9rem;">
+                            No Form 8554 has been generated yet. Generate one from the Form 8554 Renewal Portal tab and it will appear here.
+                        </div>
+                        <div id="form8554-pdf-entry" style="display:none; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                            <div>
+                                <div style="font-weight:600; color:var(--primary);" id="form8554-pdf-filename"></div>
+                                <div style="font-size:0.8rem; color:var(--text-muted);">Generated <span id="form8554-pdf-date"></span></div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="downloadSavedForm8554Pdf()">📥 Download Most Recent</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1412,8 +1431,14 @@
                             <div class="radio-option"><input type="radio" id="q-cpa-no" name="is_cpa" value="No" checked><label for="q-cpa-no">No</label></div>
                         </div>
                         <div id="cpa-states-container" style="display:none; margin-top:10px;">
-                            <label for="cpa-states">States where you are licensed to practice</label>
-                            <input type="text" id="cpa-states" name="cpa_states" placeholder="e.g., FL, NY">
+                            <label>States where you are licensed to practice</label>
+                            <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px;">
+                                <input type="text" id="cpa-state-1" name="cpa_state_1" placeholder="State 1" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="cpa-state-2" name="cpa_state_2" placeholder="State 2" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="cpa-state-3" name="cpa_state_3" placeholder="State 3" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="cpa-state-4" name="cpa_state_4" placeholder="State 4" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="cpa-state-5" name="cpa_state_5" placeholder="State 5" maxlength="2" style="text-transform:uppercase;">
+                            </div>
                         </div>
                     </div>
 
@@ -1424,8 +1449,14 @@
                             <div class="radio-option"><input type="radio" id="q-attorney-no" name="is_attorney" value="No" checked><label for="q-attorney-no">No</label></div>
                         </div>
                         <div id="attorney-states-container" style="display:none; margin-top:10px;">
-                            <label for="attorney-states">States where you are licensed to practice</label>
-                            <input type="text" id="attorney-states" name="attorney_states" placeholder="e.g., FL, NY">
+                            <label>States where you are licensed to practice</label>
+                            <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px;">
+                                <input type="text" id="attorney-state-1" name="attorney_state_1" placeholder="State 1" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="attorney-state-2" name="attorney_state_2" placeholder="State 2" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="attorney-state-3" name="attorney_state_3" placeholder="State 3" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="attorney-state-4" name="attorney_state_4" placeholder="State 4" maxlength="2" style="text-transform:uppercase;">
+                                <input type="text" id="attorney-state-5" name="attorney_state_5" placeholder="State 5" maxlength="2" style="text-transform:uppercase;">
+                            </div>
                         </div>
                     </div>
 
@@ -2649,6 +2680,14 @@ let activeEaKey = "Jane A. Doe";
             runEngine();
         }
 
+        if (tabId === 'form8554' && activeEaKey && typeof loadForm8554PartAnswers === 'function') {
+            loadForm8554PartAnswers();
+        }
+
+        if (tabId === 'engine' && activeEaKey && typeof renderForm8554PdfPanel === 'function') {
+            renderForm8554PdfPanel();
+        }
+
         const tabBtns = ['Portal', 'Roster', 'Engine', 'Form8554', 'Practitioner', 'Catalog', 'Admin'];
         tabBtns.forEach(btnName => {
             const btnEl = document.getElementById('btn' + btnName);
@@ -2884,20 +2923,27 @@ let activeEaKey = "Jane A. Doe";
         loadPractitionerToolTab();
     }
 
+    let lastLoadedPractitionerKey = null;
     function loadPractitionerToolTab() {
         const ea = practitioners[activeEaKey];
         if (!ea) return;
+
+        // Only clear the confirm fields when switching to a DIFFERENT practitioner's
+        // record — revisiting the same person's own tab (e.g. Practitioner Tool → Form
+        // 8554 → back) should never wipe what they just typed in.
+        const switchedPerson = lastLoadedPractitionerKey !== null && lastLoadedPractitionerKey !== activeEaKey;
+        lastLoadedPractitionerKey = activeEaKey;
 
         document.getElementById('p-first-name').value = ea.firstName || '';
         document.getElementById('p-last-name').value = ea.lastName || '';
         document.getElementById('p-suffix').value = ea.suffix || '';
         document.getElementById('p-ea-num').value = ea.eaNum || '';
-        document.getElementById('p-confirm-ea-num').value = '';
+        if (switchedPerson) document.getElementById('p-confirm-ea-num').value = '';
         document.getElementById('p-ptin').value = ea.ptin || '';
-        document.getElementById('p-confirm-ptin').value = '';
+        if (switchedPerson) document.getElementById('p-confirm-ptin').value = '';
         document.getElementById('p-caf').value = ea.caf || '';
         document.getElementById('p-ssn').value = ea.ssn || '';
-        document.getElementById('p-confirm-ssn').value = '';
+        if (switchedPerson) document.getElementById('p-confirm-ssn').value = '';
         // Keep the email field in sync with the account's actual registered login email
         // (rather than a possibly-blank or stale ea.email) whenever this profile belongs
         // to the person currently logged in — but never overwrite another EA's email when
@@ -3243,22 +3289,6 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('signature').value = `${ea.firstName || ''} ${ea.lastName || ''}`.trim();
         document.getElementById('sig-date').value = new Date().toISOString().split('T')[0];
 
-        document.getElementById('status-active').checked = ea.statusActive ?? true;
-        document.getElementById('status-inactive').checked = ea.statusInactive ?? false;
-        document.getElementById('see-exception').checked = ea.seeException ?? false;
-
-        const s = ea.suitability || {};
-        setRadioValue('tax_current', s.taxCurrent || 'Yes');
-        document.getElementById('tax_current_explanation').value = s.taxExplanation || '';
-        document.getElementById('tax-explanation-wrap').style.display = (s.taxCurrent === 'No') ? 'block' : 'none';
-
-        setRadioValue('sanctioned', s.sanctioned || 'No');
-        setRadioValue('admission_denied', s.admissionDenied || 'No');
-        setRadioValue('felony_convicted', s.felony || 'No');
-        setRadioValue('enjoined_irs', s.enjoined || 'No');
-        setRadioValue('is_cpa', s.isCpa || 'No');
-        setRadioValue('is_attorney', s.isAttorney || 'No');
-
         document.getElementById('ssn-last4').dispatchEvent(new Event('input'));
         document.getElementById('ssn-confirm-last4').dispatchEvent(new Event('input'));
         document.getElementById('enrollment-num').dispatchEvent(new Event('input'));
@@ -3564,20 +3594,21 @@ let activeEaKey = "Jane A. Doe";
             felony: radioVal('felony_convicted'),
             enjoined: radioVal('enjoined_irs'),
             isCpa: radioVal('is_cpa'),
-            cpaStates: (document.getElementById('cpa-states') || {}).value || '',
+            cpaStates: [1, 2, 3, 4, 5].map(n => ((document.getElementById('cpa-state-' + n) || {}).value || '').trim().toUpperCase()),
             isAttorney: radioVal('is_attorney'),
-            attorneyStates: (document.getElementById('attorney-states') || {}).value || '',
+            attorneyStates: [1, 2, 3, 4, 5].map(n => ((document.getElementById('attorney-state-' + n) || {}).value || '').trim().toUpperCase()),
             hasEin: radioVal('has_ein'),
-            einList: (document.getElementById('business-list') || {}).innerText
-                ? Array.from(document.querySelectorAll('.business-block')).map(block => {
-                    const ein = block.querySelector('input[name^="ein_"]');
-                    const name = block.querySelector('input[name^="business_name_"]');
-                    const addr = block.querySelector('input[name^="business_address_"]:not([name*="address2"])');
-                    const addr2 = block.querySelector('input[name*="address2"]');
-                    const parts = [ein && ein.value, name && name.value, addr && addr.value, addr2 && addr2.value].filter(Boolean);
-                    return parts.join(', ');
-                }).filter(Boolean).join(' | ')
-                : '',
+            // Each business block's EIN, name, and address are kept SEPARATE (not merged
+            // into one string) so each can be placed under its own correct column on the
+            // real form — one row (6a/6b/6c) per business entity, up to 3.
+            einBusinesses: Array.from(document.querySelectorAll('.business-block')).slice(0, 3).map(block => {
+                const ein = block.querySelector('input[name^="ein_"]');
+                const name = block.querySelector('input[name^="business_name_"]');
+                const addr = block.querySelector('input[name^="business_address_"]:not([name*="address2"])');
+                const addr2 = block.querySelector('input[name*="address2"]');
+                const addressCombined = [addr && addr.value, addr2 && addr2.value].filter(Boolean).join(', ');
+                return { ein: (ein && ein.value) || '', name: (name && name.value) || '', address: addressCombined };
+            }).filter(b => b.ein || b.name || b.address),
         };
 
         try {
@@ -3652,7 +3683,16 @@ let activeEaKey = "Jane A. Doe";
             if (ea.caf) put(p2, ea.caf, 70, H2 - 100, { size: 9 });
 
             mark(p2, s.hasEin === 'Yes' ? 360.0 : 410.4, 130.0, H2);
-            if (s.hasEin === 'Yes' && s.einList) put(p2, s.einList, 70, H2 - 172, { size: 7.5 });
+            if (s.hasEin === 'Yes' && s.einBusinesses.length) {
+                const einColX = 70, nameColX = 128, addrColX = 322;
+                const rowYs = [H2 - 172, H2 - 196, H2 - 220]; // rows 6a, 6b, 6c
+                s.einBusinesses.forEach((biz, i) => {
+                    if (i > 2) return;
+                    put(p2, biz.ein, einColX, rowYs[i], { size: 7.5 });
+                    put(p2, biz.name, nameColX, rowYs[i], { size: 7.5 });
+                    put(p2, biz.address, addrColX, rowYs[i], { size: 7.5 });
+                });
+            }
 
             ynMark(p2, s.taxCurrent || 'Yes', 360.0, 410.4, 298.0);
             if (s.taxCurrent === 'No' && s.taxExplanation) put(p2, s.taxExplanation, 118, H2 - 300.3, { size: 7.5 });
@@ -3662,9 +3702,15 @@ let activeEaKey = "Jane A. Doe";
             ynMark(p2, s.enjoined || 'No', 360.0, 410.4, 454.0);
 
             ynMark(p2, s.isCpa || 'No', 158.4, 208.8, 478.0);
-            if (s.isCpa === 'Yes' && s.cpaStates) put(p2, s.cpaStates, 70, H2 - 496, { size: 9 });
+            if (s.isCpa === 'Yes') {
+                const cpaBoxXs = [64.8, 122.4, 180, 237.6, 295.2].map(x => x + 4);
+                s.cpaStates.forEach((state, i) => { if (state) put(p2, state, cpaBoxXs[i], H2 - 496, { size: 9 }); });
+            }
             ynMark(p2, s.isAttorney || 'No', 158.4, 208.8, 526.0);
-            if (s.isAttorney === 'Yes' && s.attorneyStates) put(p2, s.attorneyStates, 70, H2 - 544, { size: 9 });
+            if (s.isAttorney === 'Yes') {
+                const attyBoxXs = [64.8, 122.4, 180, 237.6, 295.2].map(x => x + 4);
+                s.attorneyStates.forEach((state, i) => { if (state) put(p2, state, attyBoxXs[i], H2 - 544, { size: 9 }); });
+            }
 
             putInBoxes(p2, ea.ptin, [68.8, 97.6, 126.4, 155.2, 184, 212.8, 241.6, 270.4, 299.2], H2 - 640, 9);
 
@@ -3675,8 +3721,21 @@ let activeEaKey = "Jane A. Doe";
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Form_8554_${ea.ptin || 'Draft'}.pdf`;
+            const filename = `Form_8554_${ea.ptin || 'Draft'}.pdf`;
+            link.download = filename;
             link.click();
+
+            // Auto-save this generated PDF into the CPE Ledger & Engine Math tab, replacing
+            // any previously generated one — only the most recent copy is kept.
+            let pdfBase64 = '';
+            const chunkSize = 0x8000;
+            for (let i = 0; i < pdfBytes.length; i += chunkSize) {
+                pdfBase64 += String.fromCharCode.apply(null, pdfBytes.subarray(i, i + chunkSize));
+            }
+            ea.lastForm8554Pdf = { base64: btoa(pdfBase64), filename, generatedAt: new Date().toISOString() };
+            if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+            if (typeof renderForm8554PdfPanel === 'function') renderForm8554PdfPanel();
+            if (typeof syncForm8554PdfToSupabase === 'function') syncForm8554PdfToSupabase(ea);
         } catch (err) {
             console.error('Form 8554 PDF Generation Error:', err);
             alert('Failed to generate Form 8554 PDF.');
@@ -3727,6 +3786,37 @@ let activeEaKey = "Jane A. Doe";
             binary += String.fromCharCode.apply(null, pdfBytes.subarray(i, i + chunkSize));
         }
         return btoa(binary);
+    }
+
+    function renderForm8554PdfPanel() {
+        const ea = practitioners[activeEaKey];
+        const emptyEl = document.getElementById('form8554-pdf-empty');
+        const entryEl = document.getElementById('form8554-pdf-entry');
+        if (!emptyEl || !entryEl) return;
+        const saved = ea && ea.lastForm8554Pdf;
+        if (!saved) {
+            emptyEl.style.display = 'block';
+            entryEl.style.display = 'none';
+            return;
+        }
+        emptyEl.style.display = 'none';
+        entryEl.style.display = 'flex';
+        document.getElementById('form8554-pdf-filename').textContent = saved.filename;
+        document.getElementById('form8554-pdf-date').textContent = new Date(saved.generatedAt).toLocaleString();
+    }
+
+    function downloadSavedForm8554Pdf() {
+        const ea = practitioners[activeEaKey];
+        const saved = ea && ea.lastForm8554Pdf;
+        if (!saved) { alert('No saved Form 8554 PDF found.'); return; }
+        const byteChars = atob(saved.base64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+        const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = saved.filename;
+        link.click();
     }
 
     // Download-only: does NOT trigger an email. Used by the "Download Certificate" button
@@ -4341,6 +4431,76 @@ let activeEaKey = "Jane A. Doe";
             attorneyNo.addEventListener('change', () => { attorneyStatesContainer.style.display = 'none'; });
         }
 
+        // Autosave Part 1 (Enrollment Status) and Part 4 (Background & Suitability)
+        // answers the instant they change, so nothing ever resets or reverts back —
+        // these persist into ea.form8554Data, completely separate from the practitioner
+        // profile, since this tab is now the sole place these are edited.
+        const form8554AutosaveFieldIds = [
+            'status-active', 'status-inactive', 'see-exception',
+            'tax_current_explanation',
+            'cpa-state-1', 'cpa-state-2', 'cpa-state-3', 'cpa-state-4', 'cpa-state-5',
+            'attorney-state-1', 'attorney-state-2', 'attorney-state-3', 'attorney-state-4', 'attorney-state-5',
+        ];
+        const form8554AutosaveRadioNames = [
+            'tax_current', 'sanctioned', 'admission_denied', 'felony_convicted', 'enjoined_irs',
+            'is_cpa', 'is_attorney', 'has_ein',
+        ];
+        function saveForm8554PartAnswers() {
+            const ea = practitioners[activeEaKey];
+            if (!ea) return;
+            function radioVal(name) {
+                const el = document.querySelector(`input[name="${name}"]:checked`);
+                return el ? el.value : undefined;
+            }
+            ea.form8554Data = ea.form8554Data || {};
+            ea.form8554Data.statusActive = document.getElementById('status-active').checked;
+            ea.form8554Data.statusInactive = document.getElementById('status-inactive').checked;
+            ea.form8554Data.seeException = document.getElementById('see-exception').checked;
+            ea.form8554Data.taxCurrent = radioVal('tax_current');
+            ea.form8554Data.taxExplanation = document.getElementById('tax_current_explanation').value;
+            ea.form8554Data.sanctioned = radioVal('sanctioned');
+            ea.form8554Data.admissionDenied = radioVal('admission_denied');
+            ea.form8554Data.felony = radioVal('felony_convicted');
+            ea.form8554Data.enjoined = radioVal('enjoined_irs');
+            ea.form8554Data.isCpa = radioVal('is_cpa');
+            ea.form8554Data.isAttorney = radioVal('is_attorney');
+            ea.form8554Data.hasEin = radioVal('has_ein');
+            ea.form8554Data.cpaStates = [1, 2, 3, 4, 5].map(n => document.getElementById('cpa-state-' + n).value);
+            ea.form8554Data.attorneyStates = [1, 2, 3, 4, 5].map(n => document.getElementById('attorney-state-' + n).value);
+            if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+        }
+        function loadForm8554PartAnswers() {
+            const ea = practitioners[activeEaKey];
+            const d = (ea && ea.form8554Data) || {};
+            document.getElementById('status-active').checked = d.statusActive ?? true;
+            document.getElementById('status-inactive').checked = d.statusInactive ?? false;
+            document.getElementById('see-exception').checked = d.seeException ?? false;
+            setRadioValue('tax_current', d.taxCurrent || 'Yes');
+            document.getElementById('tax_current_explanation').value = d.taxExplanation || '';
+            document.getElementById('tax-explanation-wrap').style.display = (d.taxCurrent === 'No') ? 'block' : 'none';
+            setRadioValue('sanctioned', d.sanctioned || 'No');
+            setRadioValue('admission_denied', d.admissionDenied || 'No');
+            setRadioValue('felony_convicted', d.felony || 'No');
+            setRadioValue('enjoined_irs', d.enjoined || 'No');
+            setRadioValue('is_cpa', d.isCpa || 'No');
+            setRadioValue('is_attorney', d.isAttorney || 'No');
+            setRadioValue('has_ein', d.hasEin || 'No');
+            document.getElementById('cpa-states-container').style.display = (d.isCpa === 'Yes') ? 'block' : 'none';
+            document.getElementById('attorney-states-container').style.display = (d.isAttorney === 'Yes') ? 'block' : 'none';
+            document.getElementById('ein-container').style.display = (d.hasEin === 'Yes') ? 'block' : 'none';
+            (d.cpaStates || []).forEach((v, i) => { const el = document.getElementById('cpa-state-' + (i + 1)); if (el) el.value = v || ''; });
+            (d.attorneyStates || []).forEach((v, i) => { const el = document.getElementById('attorney-state-' + (i + 1)); if (el) el.value = v || ''; });
+        }
+        form8554AutosaveFieldIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', saveForm8554PartAnswers);
+        });
+        form8554AutosaveRadioNames.forEach(name => {
+            document.querySelectorAll(`input[name="${name}"]`).forEach(el => {
+                el.addEventListener('change', saveForm8554PartAnswers);
+            });
+        });
+
         addEinBtn.addEventListener('click', function () {
             businessCount++;
             const block = document.createElement('div');
@@ -4793,6 +4953,49 @@ let activeEaKey = "Jane A. Doe";
         // reliably across devices/browsers, instead of living only in this one browser's
         // local storage (which is what "not saving" actually meant: it was saving, just
         // only locally, so a different browser/device never saw it).
+        // Syncs the most recently generated Form 8554 PDF to Supabase, so it follows the
+        // practitioner across devices/browsers instead of only living in this one
+        // browser's local storage — same pattern as plans, purchases, and credits.
+        async function syncForm8554PdfToSupabase(ea) {
+            if (!ea || !ea.email || !ea.lastForm8554Pdf) return;
+            try {
+                const { error } = await window.supabase.from('form8554_pdfs').upsert({
+                    email: ea.email.toLowerCase(),
+                    filename: ea.lastForm8554Pdf.filename,
+                    pdf_base64: ea.lastForm8554Pdf.base64,
+                    generated_at: ea.lastForm8554Pdf.generatedAt,
+                });
+                if (error) console.warn('syncForm8554PdfToSupabase error:', error);
+            } catch (e) {
+                console.warn('syncForm8554PdfToSupabase exception:', e);
+            }
+        }
+
+        async function syncForm8554PdfFromSupabase(email) {
+            const ea = practitioners[activeEaKey];
+            if (!ea || !email) return;
+            try {
+                const { data, error } = await window.supabase
+                    .from('form8554_pdfs')
+                    .select('filename, pdf_base64, generated_at')
+                    .eq('email', email.toLowerCase())
+                    .maybeSingle();
+
+                if (error) { console.warn('syncForm8554PdfFromSupabase error:', error); return; }
+                if (!data) return;
+
+                const remoteIsNewer = !ea.lastForm8554Pdf ||
+                    new Date(data.generated_at) > new Date(ea.lastForm8554Pdf.generatedAt);
+                if (remoteIsNewer) {
+                    ea.lastForm8554Pdf = { base64: data.pdf_base64, filename: data.filename, generatedAt: data.generated_at };
+                    if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+                    if (typeof renderForm8554PdfPanel === 'function') renderForm8554PdfPanel();
+                }
+            } catch (e) {
+                console.warn('syncForm8554PdfFromSupabase exception:', e);
+            }
+        }
+
         async function syncFullProfileToSupabase(ea) {
             if (!ea || !ea.email) return;
             try {
@@ -4966,7 +5169,7 @@ let activeEaKey = "Jane A. Doe";
                     role: data.user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: `${fn} ${ln}`.trim() || data.user.email
                 };
-                resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email); syncPurchasedCoursesFromSupabase(data.user.email); syncCreditsFromSupabase(data.user.email); syncFullProfileFromSupabase(data.user.email);
+                resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email); syncPurchasedCoursesFromSupabase(data.user.email); syncCreditsFromSupabase(data.user.email); syncFullProfileFromSupabase(data.user.email); syncForm8554PdfFromSupabase(data.user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             } else {
@@ -5002,7 +5205,7 @@ let activeEaKey = "Jane A. Doe";
                 name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
             };
 
-            resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email); syncFullProfileFromSupabase(user.email);
+            resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email); syncFullProfileFromSupabase(user.email); syncForm8554PdfFromSupabase(user.email);
             setupLoggedInState();
             showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
         }
@@ -5017,7 +5220,7 @@ let activeEaKey = "Jane A. Doe";
                     role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
-                resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email); syncFullProfileFromSupabase(user.email);
+                resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email); syncFullProfileFromSupabase(user.email); syncForm8554PdfFromSupabase(user.email);
                 setupLoggedInState();
                 showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
             }
