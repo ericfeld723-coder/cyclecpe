@@ -928,6 +928,12 @@
 
     <!-- MAIN APP CONTAINER (HIDDEN UNTIL LOGIN) -->
     <div id="appMain" style="display: none;">
+        <div style="position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border); padding:6px 16px; text-align:center; font-size:0.72rem; color:var(--text-muted); z-index:500;">
+            © 2026 CycleCPE LLC &nbsp;·&nbsp;
+            <a href="#" onclick="showPublicPage('terms')" style="color: var(--text-muted); text-decoration: underline; cursor: pointer;">Terms of Service</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="showPublicPage('privacy')" style="color: var(--text-muted); text-decoration: underline; cursor: pointer;">Privacy Policy</a>
+        </div>
 
         <!-- SERVICE DISCLAIMER -->
         <div class="disclaimer-banner">
@@ -1270,8 +1276,8 @@
                                     <input type="text" name="business_address_1" placeholder="Street Address">
                                 </div>
                                 <div class="field">
-                                    <label>Business Address 2</label>
-                                    <input type="text" name="business_address2_1" placeholder="Suite, Unit, Building (Optional)">
+                                    <label>Business Address 2 (City, State, ZIP)</label>
+                                    <input type="text" name="business_address2_1" placeholder="City, State ZIP">
                                 </div>
                             </div>
                         </div>
@@ -1405,6 +1411,10 @@
                             <div class="radio-option"><input type="radio" id="q-cpa-yes" name="is_cpa" value="Yes"><label for="q-cpa-yes">Yes</label></div>
                             <div class="radio-option"><input type="radio" id="q-cpa-no" name="is_cpa" value="No" checked><label for="q-cpa-no">No</label></div>
                         </div>
+                        <div id="cpa-states-container" style="display:none; margin-top:10px;">
+                            <label for="cpa-states">States where you are licensed to practice</label>
+                            <input type="text" id="cpa-states" name="cpa_states" placeholder="e.g., FL, NY">
+                        </div>
                     </div>
 
                     <div class="field" style="margin-bottom: 16px;">
@@ -1412,6 +1422,10 @@
                         <div class="radio-group-inline">
                             <div class="radio-option"><input type="radio" id="q-attorney-yes" name="is_attorney" value="Yes"><label for="q-attorney-yes">Yes</label></div>
                             <div class="radio-option"><input type="radio" id="q-attorney-no" name="is_attorney" value="No" checked><label for="q-attorney-no">No</label></div>
+                        </div>
+                        <div id="attorney-states-container" style="display:none; margin-top:10px;">
+                            <label for="attorney-states">States where you are licensed to practice</label>
+                            <input type="text" id="attorney-states" name="attorney_states" placeholder="e.g., FL, NY">
                         </div>
                     </div>
 
@@ -2573,7 +2587,7 @@ let activeEaKey = "Jane A. Doe";
         if (fieldsMismatch('ptin', 'confirm-ptin')) return 'PTIN';
         if (fieldsMismatch('p-ea-num', 'p-confirm-ea-num')) return 'EA Enrollment Number';
         if (fieldsMismatch('p-ptin', 'p-confirm-ptin')) return 'PTIN';
-        if (fieldsMismatch('p-ssn', 'p-confirm-ssn')) return 'SSN (last 4)';
+        if (fieldsMismatch('p-ssn', 'p-confirm-ssn')) return 'SSN (Last 4 Digits)';
         return null;
     }
 
@@ -2594,9 +2608,20 @@ let activeEaKey = "Jane A. Doe";
         const leavingPractitioner = currentActiveTab && currentActiveTab.id === 'btnPractitioner' && tabId !== 'practitioner';
         if (leavingForm8554 || leavingPractitioner) {
             const mismatchLabel = getMismatchedConfirmFieldLabel();
-            if (!mismatchLabel && leavingPractitioner && typeof saveStandalonePractitioner === 'function') {
+            const missingLabel = leavingPractitioner ? getMissingConfirmLabel() : null;
+            if (!mismatchLabel && !missingLabel && leavingPractitioner && typeof saveStandalonePractitioner === 'function') {
                 clearTimeout(practitionerAutosaveTimer);
                 saveStandalonePractitioner(null, true);
+            }
+            if (missingLabel && !mismatchLabel) {
+                alert('Please confirm your ' + missingLabel + ' before leaving this page — since you\'ve entered a ' + missingLabel + ', the confirmation field is required.');
+                const stayOnBtn = leavingForm8554 ? 'Form8554' : 'Practitioner';
+                const tabBtns = ['Portal', 'Roster', 'Engine', 'Form8554', 'Practitioner', 'Catalog', 'Admin'];
+                tabBtns.forEach(btnName => {
+                    const btnEl = document.getElementById('btn' + btnName);
+                    if (btnEl) btnEl.className = (btnName === stayOnBtn) ? 'page-nav-btn active' : 'page-nav-btn';
+                });
+                return;
             }
             if (mismatchLabel) {
                 alert('The ' + mismatchLabel + ' confirmation field does not match. Please correct it before leaving this page.');
@@ -2916,10 +2941,33 @@ let activeEaKey = "Jane A. Doe";
         toggleStandaloneTaxExplanation();
     }
 
+    // Confirm fields (EA #, PTIN, SSN) only need to be filled in if their primary field
+    // has a value — an empty primary field has nothing to confirm.
+    function getMissingConfirmLabel() {
+        function missing(primaryId, confirmId, label) {
+            const p = document.getElementById(primaryId);
+            const c = document.getElementById(confirmId);
+            if (!p || !c) return null;
+            if (p.value.trim() && !c.value.trim()) return label;
+            return null;
+        }
+        return missing('p-ea-num', 'p-confirm-ea-num', 'EA Enrollment Number')
+            || missing('p-ptin', 'p-confirm-ptin', 'PTIN')
+            || missing('p-ssn', 'p-confirm-ssn', 'SSN (Last 4 Digits)');
+    }
+
     function saveStandalonePractitioner(e, silent) {
         if (e && e.preventDefault) e.preventDefault();
         const ea = practitioners[activeEaKey];
         if (!ea) return;
+
+        if (!silent) {
+            const missingLabel = getMissingConfirmLabel();
+            if (missingLabel) {
+                alert('Please confirm your ' + missingLabel + ' before saving — since you\'ve entered a ' + missingLabel + ', the confirmation field is required.');
+                return;
+            }
+        }
 
         ea.firstName = document.getElementById('p-first-name').value.trim();
         ea.lastName = document.getElementById('p-last-name').value.trim();
@@ -3500,7 +3548,37 @@ let activeEaKey = "Jane A. Doe";
         const cycleEndYear = cycle.endYear - 1;
         const cycleYears = [cycleEndYear - 2, cycleEndYear - 1, cycleEndYear];
         const engineResult = runEngine();
-        const s = ea.suitability || {};
+
+        // Part 4 (Background & Suitability) is now edited directly on this tab, so its
+        // answers are read live from these fields at generation time rather than from the
+        // practitioner profile (which no longer shows this section).
+        function radioVal(name) {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : 'No';
+        }
+        const s = {
+            taxCurrent: radioVal('tax_current'),
+            taxExplanation: (document.getElementById('tax_current_explanation') || {}).value || '',
+            sanctioned: radioVal('sanctioned'),
+            admissionDenied: radioVal('admission_denied'),
+            felony: radioVal('felony_convicted'),
+            enjoined: radioVal('enjoined_irs'),
+            isCpa: radioVal('is_cpa'),
+            cpaStates: (document.getElementById('cpa-states') || {}).value || '',
+            isAttorney: radioVal('is_attorney'),
+            attorneyStates: (document.getElementById('attorney-states') || {}).value || '',
+            hasEin: radioVal('has_ein'),
+            einList: (document.getElementById('business-list') || {}).innerText
+                ? Array.from(document.querySelectorAll('.business-block')).map(block => {
+                    const ein = block.querySelector('input[name^="ein_"]');
+                    const name = block.querySelector('input[name^="business_name_"]');
+                    const addr = block.querySelector('input[name^="business_address_"]:not([name*="address2"])');
+                    const addr2 = block.querySelector('input[name*="address2"]');
+                    const parts = [ein && ein.value, name && name.value, addr && addr.value, addr2 && addr2.value].filter(Boolean);
+                    return parts.join(', ');
+                }).filter(Boolean).join(' | ')
+                : '',
+        };
 
         try {
             const templateBytes = base64ToUint8Array(FORM_8554_TEMPLATE_BASE64);
@@ -4246,6 +4324,22 @@ let activeEaKey = "Jane A. Doe";
 
         einYes.addEventListener('change', () => { einContainer.style.display = 'block'; });
         einNo.addEventListener('change', () => { einContainer.style.display = 'none'; });
+
+        const cpaYes = document.getElementById('q-cpa-yes');
+        const cpaNo = document.getElementById('q-cpa-no');
+        const cpaStatesContainer = document.getElementById('cpa-states-container');
+        if (cpaYes && cpaNo && cpaStatesContainer) {
+            cpaYes.addEventListener('change', () => { cpaStatesContainer.style.display = 'block'; });
+            cpaNo.addEventListener('change', () => { cpaStatesContainer.style.display = 'none'; });
+        }
+
+        const attorneyYes = document.getElementById('q-attorney-yes');
+        const attorneyNo = document.getElementById('q-attorney-no');
+        const attorneyStatesContainer = document.getElementById('attorney-states-container');
+        if (attorneyYes && attorneyNo && attorneyStatesContainer) {
+            attorneyYes.addEventListener('change', () => { attorneyStatesContainer.style.display = 'block'; });
+            attorneyNo.addEventListener('change', () => { attorneyStatesContainer.style.display = 'none'; });
+        }
 
         addEinBtn.addEventListener('click', function () {
             businessCount++;
