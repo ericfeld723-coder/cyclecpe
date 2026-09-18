@@ -110,6 +110,24 @@ async function sendReminderEmail(to, firstName, data) {
   return true;
 }
 
+// Writes a permanent record of every reminder actually sent — separate from SendGrid's own
+// activity feed, so there's a durable log queryable straight from Supabase (e.g. "did this
+// practitioner ever get reminded, and when").
+async function logReminderSent(email, data) {
+  try {
+    const { error } = await supabase.from('cpe_reminder_log').insert({
+      email,
+      sent_at: new Date().toISOString(),
+      remaining_total: data.remainingTotal,
+      remaining_ethics: data.remainingEthics,
+      form8554_window: data.form8554Window,
+    });
+    if (error) console.warn('logReminderSent error:', error);
+  } catch (e) {
+    console.warn('logReminderSent exception:', e);
+  }
+}
+
 // Pulls SendGrid's own suppression lists — people who bounced, marked a previous email as
 // spam, got blocked, or globally unsubscribed through SendGrid's own link/process — so this
 // job also respects those signals, not just the app's own unsubscribe flag. One fetch per
@@ -172,6 +190,7 @@ export default async function handler(req, res) {
     });
 
     let sentCount = 0, skippedCount = 0, sendgridSuppressedCount = 0;
+    const sentTo = [];
     const suppressedEmails = await getSendGridSuppressedEmails();
 
     for (const profile of profiles || []) {
@@ -188,14 +207,17 @@ export default async function handler(req, res) {
       if (remainingTotal <= 0) { skippedCount++; continue; }
 
       const { windowLabel } = getForm8554NextDueDate(profile.ssn);
+      const emailData = { remainingTotal, remainingEthics, currentYear, form8554Window: windowLabel };
 
-      const sent = await sendReminderEmail(email, profile.first_name, {
-        remainingTotal, remainingEthics, currentYear, form8554Window: windowLabel,
-      });
-      if (sent) sentCount++;
+      const sent = await sendReminderEmail(email, profile.first_name, emailData);
+      if (sent) {
+        sentCount++;
+        sentTo.push(email);
+        await logReminderSent(email, emailData);
+      }
     }
 
-    return res.status(200).json({ sent: sentCount, skipped: skippedCount, sendgrid_suppressed: sendgridSuppressedCount });
+    return res.status(200).json({ sent: sentCount, skipped: skippedCount, sendgrid_suppressed: sendgridSuppressedCount, sent_to: sentTo });
   } catch (err) {
     console.error('monthly-cpe-reminder error:', err);
     return res.status(500).json({ error: err.message });
