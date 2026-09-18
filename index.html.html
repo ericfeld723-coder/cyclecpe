@@ -3892,8 +3892,12 @@ let activeEaKey = "Jane A. Doe";
     const CYCLECPE_EMAIL_ENDPOINT = 'https://cyclecpe.vercel.app/api/send-email';
 
     function sendViaSendGrid(recipients, subject, bodyText, attachment) {
+        // De-duplicate — SendGrid rejects the whole send if the same address appears twice
+        // in the "to" field, which happens naturally whenever a practitioner's own email
+        // matches the archive/admin address (e.g. testing with info@cyclecpe.com as both).
+        const uniqueRecipients = Array.from(new Set((recipients || []).filter(Boolean).map(r => r.toLowerCase())));
         try {
-            const payload = { to: recipients, subject: subject, body: bodyText };
+            const payload = { to: uniqueRecipients, subject: subject, body: bodyText };
             if (attachment && attachment.content) {
                 payload.attachments = [{
                     content: attachment.content,
@@ -4410,10 +4414,9 @@ CycleCPE`;
             }
 
             if (val1 === val2 && val1.length === 4) {
-                ssnConfirmFeedback.textContent = '✓ SSN digits match';
-                ssnConfirmFeedback.style.color = '#276749';
+                if (ssnConfirmFeedback) { ssnConfirmFeedback.textContent = '✓ SSN digits match'; ssnConfirmFeedback.style.color = '#276749'; }
             } else {
-                ssnConfirmFeedback.textContent = '';
+                if (ssnConfirmFeedback) ssnConfirmFeedback.textContent = '';
             }
         }
 
