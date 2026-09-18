@@ -3541,7 +3541,7 @@ let activeEaKey = "Jane A. Doe";
         const newCredit = { id: type.toLowerCase() + '_' + Date.now(), title, programNo, category, hours, date, type, source: provider };
         ea.credits.push(newCredit);
         if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
-        if (typeof pushCreditToSupabase === 'function' && ea.email) pushCreditToSupabase(ea.email, newCredit);
+        if (typeof pushCreditToSupabase === 'function' && ea.email) pushCreditToSupabase(ea, newCredit);
         runEngine();
     }
 
@@ -4837,7 +4837,7 @@ CycleCPE`;
                     };
                     ea.credits.push(newCredit);
                     if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
-                    if (typeof pushCreditToSupabase === 'function' && ea.email) pushCreditToSupabase(ea.email, newCredit);
+                    if (typeof pushCreditToSupabase === 'function' && ea.email) pushCreditToSupabase(ea, newCredit);
                     runEngine();
                 }
                 // Fires immediately on passing — no button click required. The certificate
@@ -4976,11 +4976,13 @@ CycleCPE`;
 
         // Writes a single credit up to Supabase the moment it's added locally, so it's
         // immediately backed up — call this right after any ea.credits.push(...).
-        async function pushCreditToSupabase(email, credit) {
-            if (!email || !credit) return;
+        async function pushCreditToSupabase(ea, credit) {
+            if (!ea || !ea.email || !credit) return;
             try {
                 const { error } = await window.supabase.from('practitioner_credits').upsert({
-                    email: email.toLowerCase(),
+                    email: ea.email.toLowerCase(),
+                    first_name: ea.firstName || '',
+                    last_name: ea.lastName || '',
                     credit_id: credit.id,
                     title: credit.title,
                     program_no: credit.programNo,
