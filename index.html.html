@@ -1553,14 +1553,26 @@
                         <div id="p-current-plan-label" style="font-size:0.9rem; color:var(--text-muted); font-weight:600;"></div>
                     </div>
                     <input type="checkbox" id="p-auto-renew" checked style="display:none;">
+
+                    <div style="background:#f0f7f5; border:1px solid var(--primary); border-radius:6px; padding:14px 16px; margin-bottom:16px;">
+                        <div style="font-weight:700; color:var(--primary); margin-bottom:6px; font-size:0.9rem;">Already subscribed? Change your plan here</div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Switching plans this way charges only the prorated difference and resets your billing date to today — this is the correct way to upgrade or downgrade. (Using the pricing table below instead would start a brand new, separate subscription.)</p>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-secondary" onclick="changeSubscriptionPlan('ESSENTIALS')">Switch to Essentials ($79/yr)</button>
+                            <button type="button" class="btn btn-secondary" onclick="changeSubscriptionPlan('PLUS')">Switch to Plus ($129/yr)</button>
+                            <button type="button" class="btn btn-primary" onclick="changeSubscriptionPlan('COMPLETE')">Switch to Complete ($179/yr)</button>
+                        </div>
+                        <div id="plan-change-status" style="margin-top:10px; font-size:0.85rem;"></div>
+                    </div>
+
                     <div style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Select or purchase a plan directly via Stripe:</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">New here? Select or purchase a plan directly via Stripe:</div>
                         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
                         <stripe-pricing-table pricing-table-id="prctbl_1UG2LVHLYDiifWD0IsiCVYsW"
                             publishable-key="pk_test_51UFyjrHLYDiifWD080BGQqXcCOTl0l1jc6ZKT58Ow2TYdKBp45hWKUlVWWwMxCgYmu5DpFlINJMFIXjXvCZBKJy700xpFP9wGZ">
                         </stripe-pricing-table>
                         <div style="margin-top:10px;">
-                            <a href="https://billing.stripe.com/p/login/test_6oU7sLcEg8Uw5bAfJG8EM00" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; color:var(--primary); font-weight:600;">🔄 Manage or change your existing plan (Stripe billing portal) →</a>
+                            <a href="https://billing.stripe.com/p/login/test_6oU7sLcEg8Uw5bAfJG8EM00" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; color:var(--primary); font-weight:600;">🔄 Manage payment method / cancel (Stripe billing portal) →</a>
                         </div>
                     </div>
                     
@@ -3890,6 +3902,41 @@ let activeEaKey = "Jane A. Doe";
     // holds the SendGrid API key server-side. The browser never sees the key — it just posts
     // {to, subject, body} to this endpoint, and the function forwards it to SendGrid.
     const CYCLECPE_EMAIL_ENDPOINT = 'https://cyclecpe.vercel.app/api/send-email';
+    const UPGRADE_SUBSCRIPTION_ENDPOINT = 'https://cyclecpe.vercel.app/api/upgrade-subscription';
+
+    async function changeSubscriptionPlan(newPlan) {
+        const ea = practitioners[activeEaKey];
+        const statusEl = document.getElementById('plan-change-status');
+        if (!ea || !ea.email) { statusEl.textContent = 'No email on file for this practitioner.'; statusEl.style.color = '#c0392b'; return; }
+
+        statusEl.textContent = 'Updating your subscription…';
+        statusEl.style.color = 'var(--text-muted)';
+
+        try {
+            const res = await fetch(UPGRADE_SUBSCRIPTION_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: ea.email, newPlan }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                statusEl.textContent = data.error || 'Something went wrong updating your plan.';
+                statusEl.style.color = '#c0392b';
+                return;
+            }
+
+            statusEl.textContent = data.message || 'Plan updated!';
+            statusEl.style.color = '#276749';
+            // The webhook (customer.subscription.updated) will sync the new plan to
+            // Supabase momentarily — pull it down once it's likely landed.
+            setTimeout(() => { if (typeof syncPlanFromSupabase === 'function') syncPlanFromSupabase(); }, 3000);
+        } catch (e) {
+            statusEl.textContent = 'Could not reach the server. Please try again in a moment.';
+            statusEl.style.color = '#c0392b';
+        }
+    }
+
 
 
     function sendViaSendGrid(recipients, subject, bodyText, attachment) {
