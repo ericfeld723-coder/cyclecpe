@@ -50,6 +50,8 @@ export default async function handler(req, res) {
       billing_cycle_anchor: 'now',
     });
 
+    await sendPlanConfirmationEmail(email, newPlan);
+
     return res.status(200).json({
       message: `Subscription updated to ${newPlan}. The prorated charge will appear on the customer's next invoice, and their billing date has reset to today.`,
       subscriptionId: updated.id,
@@ -58,5 +60,41 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('upgrade-subscription error:', err);
     return res.status(500).json({ error: err.message });
+  }
+}
+
+const PLAN_NAMES = { ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($129/year)', COMPLETE: 'EA Complete ($179/year)' };
+
+async function sendPlanConfirmationEmail(email, plan) {
+  if (!email || !PLAN_NAMES[plan]) return;
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+        <p>Hi there,</p>
+        <p>This confirms your CycleCPE membership is now on the <strong>${PLAN_NAMES[plan]}</strong> plan.</p>
+        <p>You can review or change your plan anytime from the Practitioner Tool tab in your CycleCPE account.</p>
+        <p>A separate payment receipt from Stripe will follow, if applicable, to the same email address.</p>
+        <p>Questions? Reach us anytime at info@cyclecpe.com.</p>
+        <p>— The CycleCPE Team<br>CycleCPE LLC · 7000 Palmetto Park Rd, Ste 210, Boca Raton, FL 33433</p>
+      </div>`;
+
+    const uniqueRecipients = Array.from(new Set([email.toLowerCase(), 'info@cyclecpe.com']));
+
+    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: uniqueRecipients.map((e) => ({ email: e })) }],
+        from: { email: 'info@cyclecpe.com', name: 'CycleCPE' },
+        subject: `Your CycleCPE Plan Confirmation — ${PLAN_NAMES[plan]}`,
+        content: [{ type: 'text/html', value: html }],
+      }),
+    });
+    if (!res.ok) console.error('sendPlanConfirmationEmail SendGrid error:', await res.text());
+  } catch (err) {
+    console.error('sendPlanConfirmationEmail exception:', err);
   }
 }
