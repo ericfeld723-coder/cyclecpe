@@ -1585,7 +1585,7 @@
                     <div id="new-subscriber-pricing-box" style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
                         <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Select or purchase a plan directly via Stripe:</div>
                         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-                        <stripe-pricing-table pricing-table-id="prctbl_1UG2LVHLYDiifWD0IsiCVYsW"
+                        <stripe-pricing-table id="stripe-pricing-table-el" pricing-table-id="prctbl_1UG2LVHLYDiifWD0IsiCVYsW"
                             publishable-key="pk_test_51UFyjrHLYDiifWD080BGQqXcCOTl0l1jc6ZKT58Ow2TYdKBp45hWKUlVWWwMxCgYmu5DpFlINJMFIXjXvCZBKJy700xpFP9wGZ">
                         </stripe-pricing-table>
                     </div>
@@ -3897,6 +3897,14 @@ let activeEaKey = "Jane A. Doe";
         if (changeBox) changeBox.style.display = isRegistered ? 'block' : 'none';
         if (newSubBox) newSubBox.style.display = isRegistered ? 'none' : 'block';
         if (manageLink) manageLink.style.display = isRegistered ? 'block' : 'none';
+
+        // Lock the Stripe pricing table's checkout to the practitioner's actual account
+        // email, so whatever email they'd otherwise type into Stripe can't drift from the
+        // account the webhook needs to match back to.
+        const pricingTableEl = document.getElementById('stripe-pricing-table-el');
+        if (pricingTableEl && ea && ea.email) {
+            pricingTableEl.setAttribute('customer-email', ea.email);
+        }
     }
 
     const PLAN_CHANGE_LABELS = { ESSENTIALS: 'EA Essentials ($79/yr)', PLUS: 'EA Plus ($129/yr)', COMPLETE: 'EA Complete ($179/yr)' };
