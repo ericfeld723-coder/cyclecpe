@@ -4023,6 +4023,7 @@ CycleCPE`;
         ea.surveyLog = ea.surveyLog || [];
         ea.surveyLog.push(surveyResult);
         if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
+        if (typeof saveSurveyToSupabase === 'function') saveSurveyToSupabase(ea.email, surveyResult);
 
         const subject = `CycleCPE Course Evaluation: ${title}`;
         const body = JSON.stringify(surveyResult, null, 2);
@@ -5055,6 +5056,32 @@ CycleCPE`;
                 }
             } catch (e) {
                 console.warn('syncForm8554PdfFromSupabase exception:', e);
+            }
+        }
+
+        // Saves a completed end-of-course evaluation to Supabase — a permanent record
+        // alongside (not instead of) the email that's already sent to info@cyclecpe.com.
+        async function saveSurveyToSupabase(email, surveyResult) {
+            if (!surveyResult) return;
+            try {
+                const { error } = await window.supabase.from('course_surveys').insert({
+                    email: (email || '').toLowerCase(),
+                    slug: surveyResult.slug,
+                    title: surveyResult.title,
+                    practitioner: surveyResult.practitioner,
+                    ptin: surveyResult.ptin,
+                    objectives_met: surveyResult.objectivesMet,
+                    materials_accuracy: surveyResult.materialsAccuracy,
+                    time_adequacy: surveyResult.timeAdequacy,
+                    content_effectiveness: surveyResult.contentEffectiveness,
+                    handouts_quality: surveyResult.handoutsQuality,
+                    av_quality: surveyResult.avQuality,
+                    comments: surveyResult.comments,
+                    submitted_at: surveyResult.submittedAt,
+                });
+                if (error) console.warn('saveSurveyToSupabase error:', error);
+            } catch (e) {
+                console.warn('saveSurveyToSupabase exception:', e);
             }
         }
 
