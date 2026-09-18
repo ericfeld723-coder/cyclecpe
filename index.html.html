@@ -1554,26 +1554,31 @@
                     </div>
                     <input type="checkbox" id="p-auto-renew" checked style="display:none;">
 
-                    <div style="background:#f0f7f5; border:1px solid var(--primary); border-radius:6px; padding:14px 16px; margin-bottom:16px;">
-                        <div style="font-weight:700; color:var(--primary); margin-bottom:6px; font-size:0.9rem;">Already subscribed? Change your plan here</div>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Switching plans this way charges only the prorated difference and resets your billing date to today — this is the correct way to upgrade or downgrade. (Using the pricing table below instead would start a brand new, separate subscription.)</p>
+                    <div id="plan-change-box" style="display:none; background:#f0f7f5; border:1px solid var(--primary); border-radius:6px; padding:14px 16px; margin-bottom:16px;">
+                        <div style="font-weight:700; color:var(--primary); margin-bottom:6px; font-size:0.9rem;">Change your plan</div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Switching plans here charges only the prorated difference and resets your billing date to today.</p>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <button type="button" class="btn btn-secondary" onclick="changeSubscriptionPlan('ESSENTIALS')">Switch to Essentials ($79/yr)</button>
-                            <button type="button" class="btn btn-secondary" onclick="changeSubscriptionPlan('PLUS')">Switch to Plus ($129/yr)</button>
-                            <button type="button" class="btn btn-primary" onclick="changeSubscriptionPlan('COMPLETE')">Switch to Complete ($179/yr)</button>
+                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="ESSENTIALS" onclick="selectPlanToChange('ESSENTIALS', this)">Essentials ($79/yr)</button>
+                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="PLUS" onclick="selectPlanToChange('PLUS', this)">Plus ($129/yr)</button>
+                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="COMPLETE" onclick="selectPlanToChange('COMPLETE', this)">Complete ($179/yr)</button>
+                        </div>
+                        <div id="plan-confirm-row" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); align-items:center; gap:10px;">
+                            <span style="font-size:0.85rem;">Confirm switch to <strong id="plan-confirm-label"></strong>?</span>
+                            <button type="button" class="btn btn-success" style="padding:6px 14px; font-size:13px;" onclick="confirmPlanChange()">✓ Confirm Change</button>
+                            <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:13px;" onclick="cancelPlanChange()">Cancel</button>
                         </div>
                         <div id="plan-change-status" style="margin-top:10px; font-size:0.85rem;"></div>
                     </div>
 
-                    <div style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">New here? Select or purchase a plan directly via Stripe:</div>
+                    <div id="new-subscriber-pricing-box" style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Select or purchase a plan directly via Stripe:</div>
                         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
                         <stripe-pricing-table pricing-table-id="prctbl_1UG2LVHLYDiifWD0IsiCVYsW"
                             publishable-key="pk_test_51UFyjrHLYDiifWD080BGQqXcCOTl0l1jc6ZKT58Ow2TYdKBp45hWKUlVWWwMxCgYmu5DpFlINJMFIXjXvCZBKJy700xpFP9wGZ">
                         </stripe-pricing-table>
-                        <div style="margin-top:10px;">
-                            <a href="https://billing.stripe.com/p/login/test_6oU7sLcEg8Uw5bAfJG8EM00" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; color:var(--primary); font-weight:600;">🔄 Manage payment method / cancel (Stripe billing portal) →</a>
-                        </div>
+                    </div>
+                    <div id="manage-billing-link-row" style="display:none; margin-top:10px;">
+                        <a href="https://billing.stripe.com/p/login/test_6oU7sLcEg8Uw5bAfJG8EM00" target="_blank" rel="noopener noreferrer" style="font-size:0.85rem; color:var(--primary); font-weight:600;">🔄 Manage payment method / cancel (Stripe billing portal) →</a>
                     </div>
                     
 
@@ -3904,7 +3909,45 @@ let activeEaKey = "Jane A. Doe";
     const CYCLECPE_EMAIL_ENDPOINT = 'https://cyclecpe.vercel.app/api/send-email';
     const UPGRADE_SUBSCRIPTION_ENDPOINT = 'https://cyclecpe.vercel.app/api/upgrade-subscription';
 
-    async function changeSubscriptionPlan(newPlan) {
+    let pendingPlanChange = null;
+
+    // Shows the "Change your plan" (select + confirm) box for practitioners who already
+    // have a real paid subscription, and the "new subscriber" pricing table for everyone
+    // else — so an already-registered practitioner never sees the option that would
+    // accidentally start a second, duplicate subscription.
+    function refreshPlanChangeVisibility() {
+        const ea = practitioners[activeEaKey];
+        const isRegistered = !!(ea && ea.membershipPlan && ea.membershipPlan !== 'FREE');
+        const changeBox = document.getElementById('plan-change-box');
+        const newSubBox = document.getElementById('new-subscriber-pricing-box');
+        const manageLink = document.getElementById('manage-billing-link-row');
+        if (changeBox) changeBox.style.display = isRegistered ? 'block' : 'none';
+        if (newSubBox) newSubBox.style.display = isRegistered ? 'none' : 'block';
+        if (manageLink) manageLink.style.display = isRegistered ? 'block' : 'none';
+    }
+
+    const PLAN_CHANGE_LABELS = { ESSENTIALS: 'EA Essentials ($79/yr)', PLUS: 'EA Plus ($129/yr)', COMPLETE: 'EA Complete ($179/yr)' };
+
+    function selectPlanToChange(plan, btnEl) {
+        pendingPlanChange = plan;
+        document.querySelectorAll('.plan-select-btn').forEach(b => b.classList.remove('btn-primary'));
+        document.querySelectorAll('.plan-select-btn').forEach(b => b.classList.add('btn-secondary'));
+        btnEl.classList.remove('btn-secondary');
+        btnEl.classList.add('btn-primary');
+        document.getElementById('plan-confirm-label').textContent = PLAN_CHANGE_LABELS[plan];
+        document.getElementById('plan-confirm-row').style.display = 'flex';
+        document.getElementById('plan-change-status').textContent = '';
+    }
+
+    function cancelPlanChange() {
+        pendingPlanChange = null;
+        document.querySelectorAll('.plan-select-btn').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-secondary'); });
+        document.getElementById('plan-confirm-row').style.display = 'none';
+    }
+
+    async function confirmPlanChange() {
+        if (!pendingPlanChange) return;
+        const newPlan = pendingPlanChange;
         const ea = practitioners[activeEaKey];
         const statusEl = document.getElementById('plan-change-status');
         if (!ea || !ea.email) { statusEl.textContent = 'No email on file for this practitioner.'; statusEl.style.color = '#c0392b'; return; }
@@ -3928,8 +3971,7 @@ let activeEaKey = "Jane A. Doe";
 
             statusEl.textContent = data.message || 'Plan updated!';
             statusEl.style.color = '#276749';
-            // The webhook (customer.subscription.updated) will sync the new plan to
-            // Supabase momentarily — pull it down once it's likely landed.
+            cancelPlanChange();
             setTimeout(() => { if (typeof syncPlanFromSupabase === 'function') syncPlanFromSupabase(); }, 3000);
         } catch (e) {
             statusEl.textContent = 'Could not reach the server. Please try again in a moment.';
@@ -4187,7 +4229,7 @@ CycleCPE`;
             const el = document.getElementById('p-plan-card-' + k);
             if (el) el.classList.remove('selected');
         });
-        if (!ea) { if (label) label.innerHTML = ''; refreshForm8554TabAccess(); return; }
+        if (!ea) { if (label) label.innerHTML = ''; refreshForm8554TabAccess(); refreshPlanChangeVisibility(); return; }
         const current = ea.membershipPlan || 'FREE';
         const el = document.getElementById('p-plan-card-' + current);
         if (el) el.classList.add('selected');
@@ -4200,6 +4242,7 @@ CycleCPE`;
             </span><span style="font-size:0.8rem; color:var(--text-muted); margin-left:8px;">${renewLabel}</span>`;
         }
         refreshForm8554TabAccess();
+        refreshPlanChangeVisibility();
     }
 
     // Shows/hides the Form 8554 nav tab based on the active practitioner's plan —
