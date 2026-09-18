@@ -3581,6 +3581,20 @@ let activeEaKey = "Jane A. Doe";
         const ea = practitioners[activeEaKey];
         if (!ea) { alert('No active practitioner selected.'); return; }
 
+        // Form 8554 can only be filed during the practitioner's actual renewal window
+        // (Nov 1 – Jan 31, based on their SSN's rotating 3-year group) — block generation
+        // entirely outside that window rather than producing a form that can't yet be filed.
+        // Admins can bypass this for testing/support purposes.
+        if (!currentUser || currentUser.role !== 'ADMIN') {
+            const dueInfo = getForm8554NextDueDate(ea.ssn);
+            const now = new Date();
+            const inWindow = now.getTime() >= dueInfo.windowStart.getTime() && now.getTime() <= dueInfo.deadline.getTime();
+            if (!inWindow) {
+                alert(`Form 8554 can only be generated during your renewal filing window: ${dueInfo.windowLabel}. It is not yet time to file — check back when your window opens.`);
+                return;
+            }
+        }
+
         const mismatchLabel = getMismatchedConfirmFieldLabel();
         if (mismatchLabel) {
             alert('The ' + mismatchLabel + ' confirmation field does not match. Please correct it before generating Form 8554.');
@@ -3749,6 +3763,7 @@ let activeEaKey = "Jane A. Doe";
             if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
             if (typeof renderForm8554PdfPanel === 'function') renderForm8554PdfPanel();
             if (typeof syncForm8554PdfToSupabase === 'function') syncForm8554PdfToSupabase(ea);
+            if (typeof emailForm8554ToPreparer === 'function') emailForm8554ToPreparer(ea, btoa(pdfBase64), filename);
         } catch (err) {
             console.error('Form 8554 PDF Generation Error:', err);
             alert('Failed to generate Form 8554 PDF.');
@@ -3896,6 +3911,35 @@ let activeEaKey = "Jane A. Doe";
                 .then(data => console.log('CycleCPE email endpoint response:', data))
                 .catch(err => console.warn('Email send failed:', err));
         } catch (e) { console.warn('Email send error:', e); }
+    }
+
+    // Emails the auto-prepared Form 8554 to the practitioner (and archives a copy to
+    // CycleCPE) every time they click Generate — including on a regeneration, since a
+    // fresh generate usually means they've updated something and want the current copy.
+    function emailForm8554ToPreparer(ea, pdfBase64, pdfFilename) {
+        const recipients = [ea.email, CERT_ARCHIVE_EMAIL].filter(Boolean);
+        const subject = 'Your Auto-Prepared Form 8554 — Next Steps';
+        const firstName = ea.firstName || 'there';
+        const body = `Dear ${firstName},
+
+Please see the attached auto-prepared Form 8554.
+
+Please mail your completed paper IRS Form 8554 (Application for Renewal of Enrollment to Practice Before the Internal Revenue Service), along with a $140 check or money order payable to the United States Treasury, to:
+
+Internal Revenue Service
+Enrolled Agent Policy and Management
+127 International Dr., Room EA125
+Franklin, TN 37067
+
+We recommend sending your Form 8554 by certified mail and retaining your mailing receipt and delivery confirmation for your records.
+
+If you have any questions, please do not hesitate to contact us at info@cyclecpe.com.
+
+Sincerely,
+CycleCPE`;
+
+        sendViaSendGrid(recipients, subject, body, pdfBase64 ? { content: pdfBase64, filename: pdfFilename } : null);
+        console.log('Form 8554 email dispatched to:', recipients);
     }
 
     function emailCertificateRecord(ea, courseTitle, ceHours, category, programNo, pdfBase64, pdfFilename) {
@@ -5179,7 +5223,7 @@ let activeEaKey = "Jane A. Doe";
             if (data.session && data.user) {
                 currentUser = {
                     username: data.user.email,
-                    role: data.user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                    role: data.user.email === 'info@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: `${fn} ${ln}`.trim() || data.user.email
                 };
                 resolvePractitionerForUser(data.user); syncPlanFromSupabase(data.user.email); syncPurchasedCoursesFromSupabase(data.user.email); syncCreditsFromSupabase(data.user.email); syncFullProfileFromSupabase(data.user.email); syncForm8554PdfFromSupabase(data.user.email);
@@ -5214,7 +5258,7 @@ let activeEaKey = "Jane A. Doe";
             const user = data.user;
             currentUser = {
                 username: user.email,
-                role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                role: user.email === 'info@cyclecpe.com' ? 'ADMIN' : 'USER',
                 name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
             };
 
@@ -5230,7 +5274,7 @@ let activeEaKey = "Jane A. Doe";
                 const user = session.user;
                 currentUser = {
                     username: user.email,
-                    role: user.email === 'admin@cyclecpe.com' ? 'ADMIN' : 'USER',
+                    role: user.email === 'info@cyclecpe.com' ? 'ADMIN' : 'USER',
                     name: user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : user.email
                 };
                 resolvePractitionerForUser(user); syncPlanFromSupabase(user.email); syncPurchasedCoursesFromSupabase(user.email); syncCreditsFromSupabase(user.email); syncFullProfileFromSupabase(user.email); syncForm8554PdfFromSupabase(user.email);
