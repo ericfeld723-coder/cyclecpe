@@ -110,6 +110,38 @@ async function sendReminderEmail(to, firstName, data) {
   return true;
 }
 
+// Pulls SendGrid's own suppression lists — people who bounced, marked a previous email as
+// spam, got blocked, or globally unsubscribed through SendGrid's own link/process — so this
+// job also respects those signals, not just the app's own unsubscribe flag. One fetch per
+// list per run (not per recipient), then checked in memory.
+async function getSendGridSuppressedEmails() {
+  const suppressed = new Set();
+  const endpoints = [
+    'https://api.sendgrid.com/v3/suppression/bounces',
+    'https://api.sendgrid.com/v3/suppression/spam_reports',
+    'https://api.sendgrid.com/v3/suppression/blocks',
+    'https://api.sendgrid.com/v3/asm/suppressions/global',
+  ];
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${SENDGRID_API_KEY}` },
+      });
+      if (!res.ok) {
+        console.warn(`SendGrid suppression fetch failed (${url}):`, await res.text());
+        continue;
+      }
+      const list = await res.json();
+      (list || []).forEach((entry) => {
+        if (entry.email) suppressed.add(entry.email.toLowerCase());
+      });
+    } catch (e) {
+      console.warn(`SendGrid suppression fetch exception (${url}):`, e);
+    }
+  }
+  return suppressed;
+}
+
 export default async function handler(req, res) {
   // Vercel Cron requests are authenticated automatically; this guard blocks stray public hits.
   const authHeader = req.headers['authorization'];
@@ -139,12 +171,14 @@ export default async function handler(req, res) {
       if (c.category === 'Ethics') creditsByEmail[email].ethics += Number(c.hours) || 0;
     });
 
-    let sentCount = 0, skippedCount = 0;
+    let sentCount = 0, skippedCount = 0, sendgridSuppressedCount = 0;
+    const suppressedEmails = await getSendGridSuppressedEmails();
 
     for (const profile of profiles || []) {
       if (profile.unsubscribed) { skippedCount++; continue; }
       const email = (profile.email || '').toLowerCase();
       if (!email) { skippedCount++; continue; }
+      if (suppressedEmails.has(email)) { sendgridSuppressedCount++; continue; }
 
       const { requiredTotal, requiredEthics } = getCurrentYearRequirement(profile.enrollment_date);
       const earned = creditsByEmail[email] || { total: 0, ethics: 0 };
@@ -161,7 +195,7 @@ export default async function handler(req, res) {
       if (sent) sentCount++;
     }
 
-    return res.status(200).json({ sent: sentCount, skipped: skippedCount });
+    return res.status(200).json({ sent: sentCount, skipped: skippedCount, sendgrid_suppressed: sendgridSuppressedCount });
   } catch (err) {
     console.error('monthly-cpe-reminder error:', err);
     return res.status(500).json({ error: err.message });
