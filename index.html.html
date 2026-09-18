@@ -1514,19 +1514,19 @@
                     </div>
 
                     <div class="grid grid-2">
-                        <div class="field"><label>EA Enrollment Number</label><input type="text" id="p-ea-num" placeholder="00098412-EA"></div>
-                        <div class="field"><label>Confirm EA Enrollment Number</label><input type="text" id="p-confirm-ea-num" placeholder="00098412-EA"><span id="p-confirm-ea-feedback" class="field-feedback"></span></div>
-                    </div>
-
-                    <div class="grid grid-3">
-                        <div class="field"><label>PTIN</label><input type="text" id="p-ptin" placeholder=""></div>
-                        <div class="field"><label>Confirm PTIN</label><input type="text" id="p-confirm-ptin" placeholder=""><span id="p-confirm-ptin-feedback" class="field-feedback"></span></div>
+                        <div class="field">
+                            <label>EA Enrollment Number</label>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <input type="text" id="p-ea-num" placeholder="00098412" style="flex:1;">
+                                <span style="font-weight:600; color:var(--text-muted);">-EA</span>
+                            </div>
+                        </div>
                         <div class="field"><label>CAF Number</label><input type="text" id="p-caf" placeholder="0300-12345R"></div>
                     </div>
 
                     <div class="grid grid-2">
+                        <div class="field"><label>PTIN</label><input type="text" id="p-ptin" placeholder="P00098412" maxlength="9"></div>
                         <div class="field"><label>SSN (Last 4 Digits)</label><input type="text" id="p-ssn" maxlength="4" placeholder="4321"></div>
-                        <div class="field"><label>Confirm SSN (Last 4 Digits)</label><input type="text" id="p-confirm-ssn" maxlength="4" placeholder="4321"><span id="p-confirm-ssn-feedback" class="field-feedback"></span></div>
                     </div>
 
                     <div class="grid grid-2">
@@ -2404,7 +2404,7 @@
     let practitioners = {
         "Jane A. Doe": {
             username: "jane.doe@example.com",
-            firstName: "Jane A.", lastName: "Doe", suffix: "", eaNum: "00098412-EA", ptin: "P01234567", caf: "0300-12345R", ssn: "4321",
+            firstName: "Jane A.", lastName: "Doe", suffix: "", eaNum: "00098412", ptin: "P01234567", caf: "0300-12345R", ssn: "4321",
             email: "jane.doe@example.com", phone: "(555) 234-5678", address1: "100 Boca Center Blvd", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2025-05-15",
             membershipPlan: null, // "FREE", "ESSENTIALS", "PLUS", "COMPLETE"
@@ -2424,7 +2424,7 @@
         },
         "Robert M. Smith": {
             username: "rsmith@apextax.com",
-            firstName: "Robert M.", lastName: "Smith", suffix: "Jr.", eaNum: "00041120-EA", ptin: "P09876543", caf: "0305-98765R", ssn: "8812",
+            firstName: "Robert M.", lastName: "Smith", suffix: "Jr.", eaNum: "00041120", ptin: "P09876543", caf: "0305-98765R", ssn: "8812",
             email: "rsmith@apextax.com", phone: "(555) 987-6543", address1: "450 Glades Road", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2024-01-10",
             membershipPlan: "COMPLETE",
@@ -2633,9 +2633,6 @@ let activeEaKey = "Jane A. Doe";
         if (fieldsMismatch('ssn-last4', 'ssn-confirm-last4')) return 'SSN (last 4)';
         if (fieldsMismatch('enrollment-num', 'confirm-enrollment-num')) return 'Enrollment Number';
         if (fieldsMismatch('ptin', 'confirm-ptin')) return 'PTIN';
-        if (fieldsMismatch('p-ea-num', 'p-confirm-ea-num')) return 'EA Enrollment Number';
-        if (fieldsMismatch('p-ptin', 'p-confirm-ptin')) return 'PTIN';
-        if (fieldsMismatch('p-ssn', 'p-confirm-ssn')) return 'SSN (Last 4 Digits)';
         return null;
     }
 
@@ -2656,7 +2653,7 @@ let activeEaKey = "Jane A. Doe";
         const leavingPractitioner = currentActiveTab && currentActiveTab.id === 'btnPractitioner' && tabId !== 'practitioner';
         if (leavingForm8554 || leavingPractitioner) {
             const mismatchLabel = getMismatchedConfirmFieldLabel();
-            const missingLabel = leavingPractitioner ? getMissingConfirmLabel() : null;
+            const missingLabel = null; // confirm fields removed
             if (!mismatchLabel && !missingLabel && leavingPractitioner && typeof saveStandalonePractitioner === 'function') {
                 clearTimeout(practitionerAutosaveTimer);
                 saveStandalonePractitioner(null, true);
@@ -2872,7 +2869,7 @@ let activeEaKey = "Jane A. Doe";
                     <a class="practitioner-link" onclick="openPractitionerModal('${key}')">${ea.firstName || 'Unnamed'} ${ea.lastName || ''} ${ea.suffix || ''}</a><br>
                     <small style="color: var(--text-muted);">${ea.email || 'No email'} | ${ea.city || 'City'}, ${ea.state || 'ST'}</small>
                 </td>
-                <td>${ea.eaNum || 'N/A'}</td>
+                <td>${ea.eaNum ? ea.eaNum + '-EA' : 'N/A'}</td>
                 <td>${ea.ptin || 'N/A'}</td>
                 <td>${planDisplayHtml}</td>
                 <td>${cycle.groupName}</td>
@@ -2888,7 +2885,7 @@ let activeEaKey = "Jane A. Doe";
 
             const opt = document.createElement('option');
             opt.value = key;
-            opt.textContent = `${ea.firstName || 'Unnamed'} ${ea.lastName || ''} (${ea.eaNum || 'No EA#'})`;
+            opt.textContent = `${ea.firstName || 'Unnamed'} ${ea.lastName || ''} (${ea.eaNum ? ea.eaNum + '-EA' : 'No EA#'})`;
             if (key === activeEaKey) opt.selected = true;
             dropdown.appendChild(opt);
         });
@@ -2952,7 +2949,7 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('p-first-name').value = ea.firstName || '';
         document.getElementById('p-last-name').value = ea.lastName || '';
         document.getElementById('p-suffix').value = ea.suffix || '';
-        document.getElementById('p-ea-num').value = ea.eaNum || '';
+        document.getElementById('p-ea-num').value = (ea.eaNum || '').replace(/-EA$/i, '');
         document.getElementById('p-ptin').value = ea.ptin || '';
         document.getElementById('p-caf').value = ea.caf || '';
         document.getElementById('p-ssn').value = ea.ssn || '';
@@ -3000,58 +2997,23 @@ let activeEaKey = "Jane A. Doe";
     }
 
     // Confirm fields (EA #, PTIN, SSN) only need to be filled in if their primary field
-    // has a value — an empty primary field has nothing to confirm.
-    function getMissingConfirmLabel() {
-        const ea = practitioners[activeEaKey];
-        function missing(primaryId, confirmId, label, confirmedKey) {
-            const p = document.getElementById(primaryId);
-            const c = document.getElementById(confirmId);
-            if (!p || !c) return null;
-            const currentVal = p.value.trim();
-            if (!currentVal) return null;
-            // Only require re-confirmation when this value has actually changed since it
-            // was last confirmed & saved — not just because of a fresh login/navigation.
-            const lastConfirmed = ea ? ea[confirmedKey] : undefined;
-            const alreadyConfirmed = lastConfirmed !== undefined && lastConfirmed === currentVal;
-            if (alreadyConfirmed) return null;
-            if (!c.value.trim()) return label;
-            return null;
-        }
-        return missing('p-ea-num', 'p-confirm-ea-num', 'EA Enrollment Number', 'confirmedEaNum')
-            || missing('p-ptin', 'p-confirm-ptin', 'PTIN', 'confirmedPtin')
-            || missing('p-ssn', 'p-confirm-ssn', 'SSN (Last 4 Digits)', 'confirmedSsn');
-    }
-
     function saveStandalonePractitioner(e, silent) {
         if (e && e.preventDefault) e.preventDefault();
         const ea = practitioners[activeEaKey];
         if (!ea) return;
 
-        if (!silent) {
-            const missingLabel = getMissingConfirmLabel();
-            if (missingLabel) {
-                alert('Please confirm your ' + missingLabel + ' before saving — since you\'ve entered a ' + missingLabel + ', the confirmation field is required.');
-                return;
-            }
-        }
-
         ea.firstName = document.getElementById('p-first-name').value.trim();
         ea.lastName = document.getElementById('p-last-name').value.trim();
         ea.suffix = document.getElementById('p-suffix').value.trim();
-        ea.eaNum = document.getElementById('p-ea-num').value.trim();
-        ea.ptin = document.getElementById('p-ptin').value.trim();
+        // Strip any "-EA" the user might still type — the suffix is now shown as a fixed,
+        // non-editable label next to the field, not part of the stored value.
+        ea.eaNum = document.getElementById('p-ea-num').value.trim().replace(/-EA$/i, '');
+        // PTIN always starts with "P" — auto-prepend it if someone typed just the digits.
+        let ptinVal = document.getElementById('p-ptin').value.trim().toUpperCase();
+        if (ptinVal && !ptinVal.startsWith('P')) ptinVal = 'P' + ptinVal;
+        ea.ptin = ptinVal;
         ea.caf = document.getElementById('p-caf').value.trim();
         ea.ssn = document.getElementById('p-ssn').value.trim();
-
-        // Snapshot a field as "confirmed" only when its confirm field genuinely matches
-        // right now — this is what lets an unchanged value skip re-confirmation on future
-        // logins, while a real edit still requires confirming again.
-        const confirmEaNumVal = document.getElementById('p-confirm-ea-num').value.trim();
-        if (ea.eaNum && confirmEaNumVal === ea.eaNum) ea.confirmedEaNum = ea.eaNum;
-        const confirmPtinVal = document.getElementById('p-confirm-ptin').value.trim();
-        if (ea.ptin && confirmPtinVal === ea.ptin) ea.confirmedPtin = ea.ptin;
-        const confirmSsnVal = document.getElementById('p-confirm-ssn').value.trim();
-        if (ea.ssn && confirmSsnVal === ea.ssn) ea.confirmedSsn = ea.ssn;
         ea.email = document.getElementById('p-email').value.trim();
         ea.phone = document.getElementById('p-phone').value.trim();
         ea.enrollmentDate = document.getElementById('p-enrollment-date').value;
@@ -3106,7 +3068,6 @@ let activeEaKey = "Jane A. Doe";
         const form = document.getElementById('standalone-practitioner-form');
         if (!form) return;
         form.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.id === 'p-confirm-ea-num' || el.id === 'p-confirm-ptin' || el.id === 'p-confirm-ssn') return;
             const evt = (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio' || el.type === 'date') ? 'change' : 'input';
             el.addEventListener(evt, autosavePractitionerTool);
         });
@@ -4553,9 +4514,6 @@ CycleCPE`;
         }
         wireConfirmPairFeedback('enrollment-num', 'confirm-enrollment-num', 'confirm-ea-feedback');
         wireConfirmPairFeedback('ptin', 'confirm-ptin', 'confirm-ptin-feedback');
-        wireConfirmPairFeedback('p-ea-num', 'p-confirm-ea-num', 'p-confirm-ea-feedback');
-        wireConfirmPairFeedback('p-ptin', 'p-confirm-ptin', 'p-confirm-ptin-feedback');
-        wireConfirmPairFeedback('p-ssn', 'p-confirm-ssn', 'p-confirm-ssn-feedback');
         wirePractitionerToolAutosave();
 
         const einYes = document.getElementById('ein-yes');
