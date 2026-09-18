@@ -35,6 +35,44 @@ async function setPlanForEmail(email, plan) {
   else console.log(`Plan updated: ${email} -> ${plan}`);
 }
 
+const PLAN_NAMES = { ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($129/year)', COMPLETE: 'EA Complete ($179/year)' };
+
+// Sends a plan confirmation email — separate from Stripe's own payment receipt — covering
+// any path that lands on a paid plan (new subscription, upgrade, or downgrade).
+async function sendPlanConfirmationEmail(email, plan) {
+  if (!email || !PLAN_NAMES[plan]) return;
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+        <p>Hi there,</p>
+        <p>This confirms your CycleCPE membership is now active on the <strong>${PLAN_NAMES[plan]}</strong> plan.</p>
+        <p>You can review or change your plan anytime from the Practitioner Tool tab in your CycleCPE account.</p>
+        <p>A separate payment receipt from Stripe will follow, if applicable, to the same email address.</p>
+        <p>Questions? Reach us anytime at info@cyclecpe.com.</p>
+        <p>— The CycleCPE Team<br>CycleCPE LLC · 7000 Palmetto Park Rd, Ste 210, Boca Raton, FL 33433</p>
+      </div>`;
+
+    const uniqueRecipients = Array.from(new Set([email.toLowerCase(), 'info@cyclecpe.com']));
+
+    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: uniqueRecipients.map((e) => ({ email: e })) }],
+        from: { email: 'info@cyclecpe.com', name: 'CycleCPE' },
+        subject: `Your CycleCPE Plan Confirmation — ${PLAN_NAMES[plan]}`,
+        content: [{ type: 'text/html', value: html }],
+      }),
+    });
+    if (!res.ok) console.error('sendPlanConfirmationEmail SendGrid error:', await res.text());
+  } catch (err) {
+    console.error('sendPlanConfirmationEmail exception:', err);
+  }
+}
+
 async function recordCoursePurchase(email, slug) {
   if (!email || !slug) return;
   const { error } = await supabase.from('course_purchases').upsert({
@@ -99,6 +137,7 @@ export default async function handler(req, res) {
           await enforceSingleSubscriptionPerCustomer(session.customer, session.subscription);
         }
         await setPlanForEmail(email, plan);
+        await sendPlanConfirmationEmail(email, plan);
       } else if (session.client_reference_id) {
         await recordCoursePurchase(email, session.client_reference_id);
       }
