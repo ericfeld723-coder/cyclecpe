@@ -3891,6 +3891,7 @@ let activeEaKey = "Jane A. Doe";
     // {to, subject, body} to this endpoint, and the function forwards it to SendGrid.
     const CYCLECPE_EMAIL_ENDPOINT = 'https://cyclecpe.vercel.app/api/send-email';
 
+
     function sendViaSendGrid(recipients, subject, bodyText, attachment) {
         // De-duplicate — SendGrid rejects the whole send if the same address appears twice
         // in the "to" field, which happens naturally whenever a practitioner's own email
@@ -4323,6 +4324,7 @@ CycleCPE`;
                    `As your CycleCPE Assistant, I can guide you through IRS Pub 5186 renewal cycles, CPE tracking, Form 8554 preparation, and platform features. To speak with a person or get agent support, please email us at <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a>!`;
         }
     }
+
 
     let calculateForm8554CETotals = function() {};
 
