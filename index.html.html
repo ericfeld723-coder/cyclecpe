@@ -1513,7 +1513,7 @@
                         <div class="field"><label>Suffix</label><input type="text" id="p-suffix"></div>
                     </div>
 
-                    <div class="grid grid-2">
+                    <div class="grid grid-1">
                         <div class="field">
                             <label>EA Enrollment Number</label>
                             <div style="display:flex; align-items:center; gap:6px;">
@@ -1521,12 +1521,24 @@
                                 <span style="font-weight:600; color:var(--text-muted);">-EA</span>
                             </div>
                         </div>
-                        <div class="field"><label>CAF Number</label><input type="text" id="p-caf" placeholder="0300-12345R"></div>
                     </div>
 
-                    <div class="grid grid-2">
-                        <div class="field"><label>PTIN</label><input type="text" id="p-ptin" placeholder="P00098412" maxlength="9"></div>
+                    <div class="grid grid-1">
+                        <div class="field">
+                            <label>PTIN</label>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="font-weight:600; color:var(--text-muted); background:#f1f3f5; border:1px solid var(--border); border-radius:4px; padding:8px 10px;">P</span>
+                                <input type="text" id="p-ptin" placeholder="00098412" maxlength="8" style="flex:1;" oninput="this.value=this.value.replace(/\D/g,'')">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-1">
                         <div class="field"><label>SSN (Last 4 Digits)</label><input type="text" id="p-ssn" maxlength="4" placeholder="4321"></div>
+                    </div>
+
+                    <div class="grid grid-1">
+                        <div class="field"><label>CAF Number (If obtained)</label><input type="text" id="p-caf" placeholder="0300-12345R"></div>
                     </div>
 
                     <div class="grid grid-2">
@@ -2950,7 +2962,7 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('p-last-name').value = ea.lastName || '';
         document.getElementById('p-suffix').value = ea.suffix || '';
         document.getElementById('p-ea-num').value = (ea.eaNum || '').replace(/-EA$/i, '');
-        document.getElementById('p-ptin').value = ea.ptin || '';
+        document.getElementById('p-ptin').value = (ea.ptin || '').replace(/^P/i, '');
         document.getElementById('p-caf').value = ea.caf || '';
         document.getElementById('p-ssn').value = ea.ssn || '';
         // Keep the email field in sync with the account's actual registered login email
@@ -3008,10 +3020,10 @@ let activeEaKey = "Jane A. Doe";
         // Strip any "-EA" the user might still type — the suffix is now shown as a fixed,
         // non-editable label next to the field, not part of the stored value.
         ea.eaNum = document.getElementById('p-ea-num').value.trim().replace(/-EA$/i, '');
-        // PTIN always starts with "P" — auto-prepend it if someone typed just the digits.
-        let ptinVal = document.getElementById('p-ptin').value.trim().toUpperCase();
-        if (ptinVal && !ptinVal.startsWith('P')) ptinVal = 'P' + ptinVal;
-        ea.ptin = ptinVal;
+        // The "P" is a fixed, non-editable part of the field now — the input only ever
+        // holds the digits, so the stored value always gets "P" prepended here.
+        const ptinDigits = document.getElementById('p-ptin').value.trim().replace(/\D/g, '');
+        ea.ptin = ptinDigits ? 'P' + ptinDigits : '';
         ea.caf = document.getElementById('p-caf').value.trim();
         ea.ssn = document.getElementById('p-ssn').value.trim();
         ea.email = document.getElementById('p-email').value.trim();
