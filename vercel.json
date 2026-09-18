@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/monthly-cpe-reminder",
+      "schedule": "0 16 18 * *"
+    }
+  ]
+}
