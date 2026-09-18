@@ -1543,7 +1543,7 @@
                     </div>
 
                     <div class="grid grid-1">
-                        <div class="field"><label>SSN (Last 4 Digits)</label><input type="text" id="p-ssn" maxlength="4" placeholder="4321" style="width:25%;"></div>
+                        <div class="field"><label>SSN (Last 4 Digits) <span style="font-weight:400; font-size:0.78em; color:var(--text-muted);">— Needed to determine Form 8554 Filing Cycle</span></label><input type="text" id="p-ssn" maxlength="4" placeholder="4321" style="width:25%;"></div>
                     </div>
 
                     <div class="grid grid-1">
@@ -2425,7 +2425,7 @@
     let practitioners = {
         "Jane A. Doe": {
             username: "jane.doe@example.com",
-            firstName: "Jane A.", lastName: "Doe", suffix: "", eaNum: "00098412", ptin: "P01234567", caf: "0300-12345R", ssn: "4321",
+            firstName: "Jane A.", lastName: "Doe", suffix: "", eaNum: "00098412", ptin: "P01234567", caf: "", ssn: "4321",
             email: "jane.doe@example.com", phone: "(555) 234-5678", address1: "100 Boca Center Blvd", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2025-05-15",
             membershipPlan: null, // "FREE", "ESSENTIALS", "PLUS", "COMPLETE"
@@ -2445,7 +2445,7 @@
         },
         "Robert M. Smith": {
             username: "rsmith@apextax.com",
-            firstName: "Robert M.", lastName: "Smith", suffix: "Jr.", eaNum: "00041120", ptin: "P09876543", caf: "0305-98765R", ssn: "8812",
+            firstName: "Robert M.", lastName: "Smith", suffix: "Jr.", eaNum: "00041120", ptin: "P09876543", caf: "", ssn: "8812",
             email: "rsmith@apextax.com", phone: "(555) 987-6543", address1: "450 Glades Road", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2024-01-10",
             membershipPlan: "COMPLETE",
@@ -2655,6 +2655,63 @@ let activeEaKey = "Jane A. Doe";
         if (fieldsMismatch('enrollment-num', 'confirm-enrollment-num')) return 'Enrollment Number';
         if (fieldsMismatch('ptin', 'confirm-ptin')) return 'PTIN';
         return null;
+    }
+
+    // Every Practitioner Tool field must be filled in before a course can be opened or
+    // Form 8554 can be generated — except CAF Number, always optional, and SSN, which is
+    // only required for Form 8554 (it determines the filing cycle; the course catalog has
+    // no need for it). Returns a list of missing field labels (empty = complete).
+    const REQUIRED_PRACTITIONER_FIELDS = [
+        { id: 'p-first-name', label: 'First Name & MI' },
+        { id: 'p-last-name', label: 'Last Name' },
+        { id: 'p-suffix', label: 'Suffix' },
+        { id: 'p-ea-num', label: 'EA Enrollment Number' },
+        { id: 'p-ptin', label: 'PTIN' },
+        { id: 'p-email', label: 'Email Address' },
+        { id: 'p-phone', label: 'Phone Number' },
+        { id: 'p-enrollment-date', label: 'Original Enrollment Date' },
+        { id: 'p-address1', label: 'Street Address' },
+        { id: 'p-city', label: 'City' },
+        { id: 'p-state', label: 'State' },
+        { id: 'p-zip', label: 'Zip Code' },
+    ];
+    const SSN_FIELD = { id: 'p-ssn', label: 'SSN (Last 4 Digits)' };
+
+    function getMissingPractitionerFields(includeSsn) {
+        const ea = practitioners[activeEaKey];
+        if (!ea) return ['Practitioner Profile'];
+        const fields = includeSsn ? REQUIRED_PRACTITIONER_FIELDS.concat([SSN_FIELD]) : REQUIRED_PRACTITIONER_FIELDS;
+        const missing = [];
+        fields.forEach(f => {
+            const val = (ea[fieldKeyFromInputId(f.id)] || '').toString().trim();
+            if (!val) missing.push(f.label);
+        });
+        return missing;
+    }
+
+    // Maps a Practitioner Tool input id to its corresponding key on the ea object.
+    function fieldKeyFromInputId(id) {
+        const map = {
+            'p-first-name': 'firstName', 'p-last-name': 'lastName', 'p-suffix': 'suffix',
+            'p-ea-num': 'eaNum', 'p-ptin': 'ptin', 'p-ssn': 'ssn', 'p-email': 'email',
+            'p-phone': 'phone', 'p-enrollment-date': 'enrollmentDate', 'p-address1': 'address1',
+            'p-city': 'city', 'p-state': 'state', 'p-zip': 'zip',
+        };
+        return map[id] || id;
+    }
+
+    function blockIfPractitionerProfileIncomplete(actionLabel, includeSsn) {
+        const missing = getMissingPractitionerFields(includeSsn);
+        if (!missing.length) return false;
+        const optionalNote = includeSsn ? '(CAF Number is the only optional field.)' : '(CAF Number and SSN are not required for this action.)';
+        alert(
+            `Please complete your Practitioner Profile before ${actionLabel}.\n\n` +
+            `Missing: ${missing.join(', ')}\n\n` +
+            `${optionalNote}\n\n` +
+            `Go to the Practitioner Tool tab to fill these in.`
+        );
+        showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
+        return true;
     }
 
     function showAppTab(tabId) {
@@ -3579,6 +3636,10 @@ let activeEaKey = "Jane A. Doe";
     async function generateForm8554PDF() {
         const ea = practitioners[activeEaKey];
         if (!ea) { alert('No active practitioner selected.'); return; }
+
+        if (currentUser && currentUser.role !== 'ADMIN') {
+            if (blockIfPractitionerProfileIncomplete('generating Form 8554', true)) return;
+        }
 
         // Form 8554 can only be filed during the practitioner's actual renewal window
         // (Nov 1 – Jan 31, based on their SSN's rotating 3-year group) — block generation
@@ -4802,6 +4863,7 @@ CycleCPE`;
     function openCourseView(slug){
         const ea = practitioners[activeEaKey];
         if (currentUser && currentUser.role !== 'ADMIN') {
+            if (blockIfPractitionerProfileIncomplete('accessing a course', false)) return;
             if (!ea) { promptMembershipPaywall(slug); return; }
             if (!ea.membershipPlan) ea.membershipPlan = 'FREE';
             const planInfo = PLAN_INFO[ea.membershipPlan] || PLAN_INFO.FREE;
