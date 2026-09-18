@@ -46,6 +46,30 @@ async function recordCoursePurchase(email, slug) {
   else console.log(`Course purchase recorded: ${email} -> ${slug}`);
 }
 
+// Ensures one email never ends up with more than one active subscription. Only called
+// right after a brand-new subscription is created via checkout — this does NOT touch
+// upgrades/downgrades/cancels/resumes on an existing subscription, since those modify the
+// same subscription object rather than creating a new one, so they're never affected.
+async function enforceSingleSubscriptionPerCustomer(customerId, newSubscriptionId) {
+  try {
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'active',
+      limit: 100,
+    });
+
+    const others = subscriptions.data.filter((s) => s.id !== newSubscriptionId);
+    if (!others.length) return;
+
+    for (const old of others) {
+      await stripe.subscriptions.cancel(old.id);
+      console.log(`Canceled duplicate subscription ${old.id} for customer ${customerId} (kept ${newSubscriptionId})`);
+    }
+  } catch (err) {
+    console.error('enforceSingleSubscriptionPerCustomer error:', err);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -69,11 +93,13 @@ export default async function handler(req, res) {
       const plan = PRICE_TO_PLAN[priceId];
 
       if (plan) {
-        // A membership plan purchase.
+        // A membership plan purchase — make sure this is now the ONLY active
+        // subscription for this customer before recording the plan.
+        if (session.subscription && session.customer) {
+          await enforceSingleSubscriptionPerCustomer(session.customer, session.subscription);
+        }
         await setPlanForEmail(email, plan);
       } else if (session.client_reference_id) {
-        // Not a plan price — client_reference_id carries the specific course slug
-        // for an individual course purchase.
         await recordCoursePurchase(email, session.client_reference_id);
       }
     }
