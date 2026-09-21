@@ -39,6 +39,30 @@ const PLAN_NAMES = { ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($12
 
 // Sends a plan confirmation email — separate from Stripe's own payment receipt — covering
 // any path that lands on a paid plan (new subscription, upgrade, or downgrade).
+// Sends a quick internal alert straight to info@cyclecpe.com for events that need human
+// attention — a failed payment or an issued refund — rather than leaving these to be
+// discovered only by someone happening to check Stripe or Supabase later.
+async function sendAdminAlertEmail(subject, message) {
+  try {
+    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: 'info@cyclecpe.com' }] }],
+        from: { email: 'info@cyclecpe.com', name: 'CycleCPE Alerts' },
+        subject: `⚠️ CycleCPE Alert: ${subject}`,
+        content: [{ type: 'text/html', value: `<p>${message}</p>` }],
+      }),
+    });
+    if (!res.ok) console.error('sendAdminAlertEmail SendGrid error:', await res.text());
+  } catch (err) {
+    console.error('sendAdminAlertEmail exception:', err);
+  }
+}
+
 async function sendPlanConfirmationEmail(email, plan) {
   if (!email || !PLAN_NAMES[plan]) return;
   try {
@@ -157,6 +181,50 @@ export default async function handler(req, res) {
       const subscription = event.data.object;
       const customer = await stripe.customers.retrieve(subscription.customer);
       await setPlanForEmail(customer.email, 'FREE');
+    }
+
+    // A charge failed to renew — flag it so it's visible in Supabase, and alert
+    // info@cyclecpe.com directly rather than leaving this to be discovered later.
+    if (event.type === 'invoice.payment_failed') {
+      const invoice = event.data.object;
+      const customer = await stripe.customers.retrieve(invoice.customer);
+      await supabase.from('practitioner_plans').upsert({
+        email: (customer.email || '').toLowerCase(),
+        past_due: true,
+        updated_at: new Date().toISOString(),
+      });
+      await sendAdminAlertEmail(
+        'Payment Failed',
+        `A payment failed for ${customer.email}. Amount: $${(invoice.amount_due / 100).toFixed(2)}. Stripe will retry automatically per your dunning settings; if it continues failing, this subscription may become past_due or eventually cancel.`
+      );
+    }
+
+    // Clears the past_due flag once a retried payment actually succeeds.
+    if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object;
+      if (invoice.billing_reason === 'subscription_cycle' || invoice.billing_reason === 'subscription_update') {
+        const customer = await stripe.customers.retrieve(invoice.customer);
+        await supabase.from('practitioner_plans').upsert({
+          email: (customer.email || '').toLowerCase(),
+          past_due: false,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    // A charge was refunded — revert plan access to FREE and alert the team, since a
+    // refund isn't automatically reflected by any other subscription event.
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object;
+      const customerId = charge.customer;
+      if (customerId) {
+        const customer = await stripe.customers.retrieve(customerId);
+        await setPlanForEmail(customer.email, 'FREE');
+        await sendAdminAlertEmail(
+          'Refund Issued',
+          `A refund of $${(charge.amount_refunded / 100).toFixed(2)} was issued for ${customer.email}. Their plan has been automatically reverted to FREE.`
+        );
+      }
     }
   } catch (err) {
     console.error('Webhook handler error:', err);
