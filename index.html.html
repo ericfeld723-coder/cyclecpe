@@ -1970,7 +1970,7 @@
                 <div class="metrics-grid" style="margin-top: 20px;">
                     <div class="metric-card">
                         <div class="title">Total Users</div>
-                        <div class="value">2</div>
+                        <div class="value" id="metric-total-users">2</div>
                     </div>
                     <div class="metric-card">
                         <div class="title">Completed CE Hours</div>
@@ -2034,35 +2034,12 @@
                             <th>Role</th>
                             <th>Associated Practitioner</th>
                             <th>PTIN</th>
-                            <th>Status</th>
+                            <th>Current Plan</th>
                             <th>Admin Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>admin</strong></td>
-                            <td><span class="tag tag-ethics">System Administrator</span></td>
-                            <td>N/A (Firm Console)</td>
-                            <td>N/A</td>
-                            <td><span class="status-badge badge-ready">Active</span></td>
-                            <td><button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" disabled>System Account</button></td>
-                        </tr>
-                        <tr>
-                            <td><strong>jane</strong></td>
-                            <td><span class="tag tag-tax">Practitioner</span></td>
-                            <td>Jane A. Doe</td>
-                            <td>P01234567</td>
-                            <td><span class="status-badge badge-ready">Active</span></td>
-                            <td><button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="alert('Password reset link sent.')">Reset Password</button></td>
-                        </tr>
-                        <tr>
-                            <td><strong>robert</strong></td>
-                            <td><span class="tag tag-tax">Practitioner</span></td>
-                            <td>Robert M. Smith</td>
-                            <td>P09876543</td>
-                            <td><span class="status-badge badge-ready">Active</span></td>
-                            <td><button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="alert('Password reset link sent.')">Reset Password</button></td>
-                        </tr>
+                    <tbody id="admin-user-accounts-body">
+                        <tr><td colspan="6" style="color:var(--text-muted);">Loading users…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2821,6 +2798,7 @@ let activeEaKey = "Jane A. Doe";
 
         if (tabId === 'admin' && typeof loadAdminBusinessMetrics === 'function') {
             loadAdminBusinessMetrics();
+            if (typeof loadAdminUserAccountsTable === 'function') loadAdminUserAccountsTable();
         }
 
         const tabBtns = ['Portal', 'Roster', 'Engine', 'Form8554', 'Practitioner', 'Catalog', 'Admin'];
@@ -5331,6 +5309,52 @@ CycleCPE`;
             } catch (err) {
                 console.warn('loadAdminBusinessMetrics error:', err);
                 loadingEl.textContent = 'Could not load live metrics. Check Supabase connection.';
+            }
+        }
+
+        // Populates the System User Accounts table with every real registered
+        // practitioner, joined against their current plan — requires the admin
+        // full-read RLS policy on practitioner_profiles and practitioner_plans.
+        async function loadAdminUserAccountsTable() {
+            const tbody = document.getElementById('admin-user-accounts-body');
+            if (!tbody) return;
+            try {
+                const [profilesRes, plansRes] = await Promise.all([
+                    window.supabase.from('practitioner_profiles').select('email, first_name, last_name, ptin'),
+                    window.supabase.from('practitioner_plans').select('email, plan'),
+                ]);
+
+                const profiles = profilesRes.data || [];
+                const plans = plansRes.data || [];
+                const planByEmail = {};
+                plans.forEach(p => { planByEmail[(p.email || '').toLowerCase()] = p.plan || 'FREE'; });
+
+                if (!profiles.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted);">No registered users found.</td></tr>';
+                    return;
+                }
+
+                const totalUsersEl = document.getElementById('metric-total-users');
+                if (totalUsersEl) totalUsersEl.textContent = profiles.length;
+
+                tbody.innerHTML = profiles.map(p => {
+                    const email = (p.email || '').toLowerCase();
+                    const isAdmin = email === 'info@cyclecpe.com';
+                    const plan = planByEmail[email] || 'FREE';
+                    const planLabel = PLAN_DISPLAY_NAMES[plan.toUpperCase()] || plan;
+                    const fullName = `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'N/A';
+                    return `<tr>
+                        <td><strong>${p.email || ''}</strong></td>
+                        <td><span class="tag ${isAdmin ? 'tag-ethics' : 'tag-tax'}">${isAdmin ? 'System Administrator' : 'Practitioner'}</span></td>
+                        <td>${fullName}</td>
+                        <td>${p.ptin || 'N/A'}</td>
+                        <td><span class="status-badge badge-ready">${planLabel}</span></td>
+                        <td>${isAdmin ? '<button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" disabled>System Account</button>' : `<button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="alert('Password reset link sent.')">Reset Password</button>`}</td>
+                    </tr>`;
+                }).join('');
+            } catch (err) {
+                console.warn('loadAdminUserAccountsTable error:', err);
+                tbody.innerHTML = '<tr><td colspan="6" style="color:var(--warning);">Could not load users — check Supabase admin read policies.</td></tr>';
             }
         }
 
