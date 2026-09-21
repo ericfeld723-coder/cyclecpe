@@ -1986,6 +1986,46 @@
                     </div>
                 </div>
 
+                <div class="section-header">Business Metrics (Live from Stripe/Supabase)</div>
+                <div id="admin-business-metrics-loading" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px;">Loading live metrics…</div>
+                <div class="metrics-grid" id="admin-business-metrics-grid" style="display:none; margin-bottom: 20px;">
+                    <div class="metric-card">
+                        <div class="title">Active Paid Subscriptions</div>
+                        <div class="value" id="metric-active-subs">—</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="title">Estimated MRR</div>
+                        <div class="value" style="color: var(--success);" id="metric-mrr">—</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="title">Past-Due Payments</div>
+                        <div class="value" style="color: var(--warning);" id="metric-past-due">—</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="title">Total Practitioner Profiles</div>
+                        <div class="value" id="metric-total-profiles">—</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="title">Individual Course Purchases</div>
+                        <div class="value" id="metric-course-purchases">—</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="title">CPE Reminders Sent (All-Time)</div>
+                        <div class="value" id="metric-reminders-sent">—</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="title">Unsubscribed from Reminders</div>
+                        <div class="value" id="metric-unsubscribed">—</div>
+                    </div>
+                </div>
+                <div class="section-subtitle" style="margin-top:8px;">Plan Breakdown</div>
+                <table class="ea-table" style="max-width: 500px;">
+                    <thead><tr><th>Plan</th><th>Active Subscribers</th><th>Monthly Value</th></tr></thead>
+                    <tbody id="admin-plan-breakdown-body">
+                        <tr><td colspan="3" style="color:var(--text-muted);">Loading…</td></tr>
+                    </tbody>
+                </table>
+
                 <div class="section-header">System User Accounts</div>
                 <table class="ea-table">
                     <thead>
@@ -2664,7 +2704,6 @@ let activeEaKey = "Jane A. Doe";
     const REQUIRED_PRACTITIONER_FIELDS = [
         { id: 'p-first-name', label: 'First Name & MI' },
         { id: 'p-last-name', label: 'Last Name' },
-        { id: 'p-suffix', label: 'Suffix' },
         { id: 'p-ea-num', label: 'EA Enrollment Number' },
         { id: 'p-ptin', label: 'PTIN' },
         { id: 'p-email', label: 'Email Address' },
@@ -2778,6 +2817,10 @@ let activeEaKey = "Jane A. Doe";
 
         if (tabId === 'engine' && activeEaKey && typeof renderForm8554PdfPanel === 'function') {
             renderForm8554PdfPanel();
+        }
+
+        if (tabId === 'admin' && typeof loadAdminBusinessMetrics === 'function') {
+            loadAdminBusinessMetrics();
         }
 
         const tabBtns = ['Portal', 'Roster', 'Engine', 'Form8554', 'Practitioner', 'Catalog', 'Admin'];
@@ -5223,6 +5266,71 @@ CycleCPE`;
                 if (error) console.warn('saveSurveyToSupabase error:', error);
             } catch (e) {
                 console.warn('saveSurveyToSupabase exception:', e);
+            }
+        }
+
+        // Pulls a live business-metrics snapshot for the Admin Panel — plan breakdown,
+        // estimated MRR, past-due count, and a few other totals — straight from Supabase.
+        const PLAN_MONTHLY_VALUE = { ESSENTIALS: 79 / 12, PLUS: 129 / 12, COMPLETE: 179 / 12 };
+        const PLAN_DISPLAY_NAMES = { FREE: 'Free', ESSENTIALS: 'EA Essentials', PLUS: 'EA Plus', COMPLETE: 'EA Complete' };
+
+        async function loadAdminBusinessMetrics() {
+            const loadingEl = document.getElementById('admin-business-metrics-loading');
+            const gridEl = document.getElementById('admin-business-metrics-grid');
+            if (!loadingEl || !gridEl) return;
+
+            try {
+                const [plansRes, profilesRes, purchasesRes, remindersRes] = await Promise.all([
+                    window.supabase.from('practitioner_plans').select('plan, past_due'),
+                    window.supabase.from('practitioner_profiles').select('email'),
+                    window.supabase.from('course_purchases').select('slug'),
+                    window.supabase.from('cpe_reminder_log').select('email'),
+                ]);
+
+                const plans = plansRes.data || [];
+                const profiles = profilesRes.data || [];
+                const purchases = purchasesRes.data || [];
+                const reminders = remindersRes.data || [];
+
+                const planCounts = { FREE: 0, ESSENTIALS: 0, PLUS: 0, COMPLETE: 0 };
+                let pastDueCount = 0;
+                plans.forEach(p => {
+                    const key = (p.plan || 'FREE').toUpperCase();
+                    if (planCounts[key] !== undefined) planCounts[key]++;
+                    if (p.past_due) pastDueCount++;
+                });
+
+                const activeSubs = planCounts.ESSENTIALS + planCounts.PLUS + planCounts.COMPLETE;
+                const mrr = (planCounts.ESSENTIALS * PLAN_MONTHLY_VALUE.ESSENTIALS)
+                    + (planCounts.PLUS * PLAN_MONTHLY_VALUE.PLUS)
+                    + (planCounts.COMPLETE * PLAN_MONTHLY_VALUE.COMPLETE);
+
+                document.getElementById('metric-active-subs').textContent = activeSubs;
+                document.getElementById('metric-mrr').textContent = '$' + mrr.toFixed(2);
+                document.getElementById('metric-past-due').textContent = pastDueCount;
+                document.getElementById('metric-total-profiles').textContent = profiles.length;
+                document.getElementById('metric-course-purchases').textContent = purchases.length;
+                document.getElementById('metric-reminders-sent').textContent = reminders.length;
+
+                let unsubCount = 0;
+                try {
+                    const unsubRes = await window.supabase.from('practitioner_profiles').select('email').eq('unsubscribed', true);
+                    unsubCount = (unsubRes.data || []).length;
+                } catch (e) { /* unsubscribed column may not exist yet — leave at 0 */ }
+                document.getElementById('metric-unsubscribed').textContent = unsubCount;
+
+                const breakdownBody = document.getElementById('admin-plan-breakdown-body');
+                breakdownBody.innerHTML = Object.keys(planCounts).map(key => {
+                    const monthlyEach = PLAN_MONTHLY_VALUE[key] || 0;
+                    const totalMonthly = monthlyEach * planCounts[key];
+                    return `<tr><td>${PLAN_DISPLAY_NAMES[key]}</td><td>${planCounts[key]}</td><td>${totalMonthly > 0 ? '$' + totalMonthly.toFixed(2) : '—'}</td></tr>`;
+                }).join('');
+
+                loadingEl.style.display = 'none';
+                gridEl.style.display = 'grid';
+            } catch (err) {
+                console.warn('loadAdminBusinessMetrics error:', err);
+                loadingEl.textContent = 'Could not load live metrics. Check Supabase connection.';
             }
         }
 
