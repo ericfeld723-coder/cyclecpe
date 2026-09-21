@@ -922,8 +922,12 @@
                 <div class="field">
                     <label for="password">Password</label>
                     <input type="password" id="password" placeholder="••••••••">
+                    <div style="text-align: right; margin-top: 4px;">
+                        <a href="#" onclick="handleForgotPassword(event)" style="font-size: 0.8rem; color: var(--accent); text-decoration: none;">Forgot password?</a>
+                    </div>
                 </div>
                 <div id="login-error" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display: none;">Invalid email or password.</div>
+                <div id="login-info" style="color: var(--success); font-size: 0.85rem; margin-bottom: 12px; display: none;"></div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
             </form>
 
@@ -2442,7 +2446,7 @@
     let practitioners = {
         "Jane A. Doe": {
             username: "jane.doe@example.com",
-            firstName: "Jane A.", lastName: "Doe", suffix: "", eaNum: "00098412", ptin: "P01234567", caf: "", ssn: "4321",
+            firstName: "Jane A.", lastName: "Doe", suffix: "", eaNum: "", ptin: "", caf: "", ssn: "",
             email: "jane.doe@example.com", phone: "(555) 234-5678", address1: "100 Boca Center Blvd", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2025-05-15",
             membershipPlan: null, // "FREE", "ESSENTIALS", "PLUS", "COMPLETE"
@@ -2462,7 +2466,7 @@
         },
         "Robert M. Smith": {
             username: "rsmith@apextax.com",
-            firstName: "Robert M.", lastName: "Smith", suffix: "Jr.", eaNum: "00041120", ptin: "P09876543", caf: "", ssn: "8812",
+            firstName: "Robert M.", lastName: "Smith", suffix: "Jr.", eaNum: "", ptin: "", caf: "", ssn: "",
             email: "rsmith@apextax.com", phone: "(555) 987-6543", address1: "450 Glades Road", city: "Boca Raton", state: "FL", zip: "33431",
             enrollmentDate: "2024-01-10",
             membershipPlan: "COMPLETE",
@@ -2563,7 +2567,7 @@ let activeEaKey = "Jane A. Doe";
 
         practitioners[fullName] = {
             username: assignedUsername,
-            firstName: fn, lastName: ln, suffix: "", eaNum: "", ptin: "", caf: "", ssn: "9999",
+            firstName: fn, lastName: ln, suffix: "", eaNum: "", ptin: "", caf: "", ssn: "",
             email, phone: "", address1: "", city: "", state: "", zip: "",
             enrollmentDate: new Date().toISOString().split('T')[0],
             membershipPlan: null,
@@ -5540,6 +5544,37 @@ CycleCPE`;
         }
 
         // --- LOGIN FUNCTION ---
+        async function handleForgotPassword(e) {
+            e.preventDefault();
+            const errorEl = document.getElementById('login-error');
+            const infoEl = document.getElementById('login-info');
+            errorEl.style.display = 'none';
+            infoEl.style.display = 'none';
+
+            const email = document.getElementById('username').value.trim();
+            if (!email) {
+                errorEl.textContent = 'Enter your email address above first, then click "Forgot password?" again.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin,
+                });
+                if (error) {
+                    errorEl.textContent = error.message || 'Could not send reset email. Please try again.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                infoEl.textContent = `A password reset link has been sent to ${email}. Check your inbox (and spam folder).`;
+                infoEl.style.display = 'block';
+            } catch (err) {
+                errorEl.textContent = 'Something went wrong sending the reset email. Please try again.';
+                errorEl.style.display = 'block';
+            }
+        }
+
         async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('username').value.trim(); 
