@@ -944,6 +944,24 @@
         </div>
     </div>
 
+    <!-- SET NEW PASSWORD MODAL — shown automatically when arriving via a password reset link -->
+    <div id="setNewPasswordModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:8px; padding:28px; max-width:380px; width:90%;">
+            <h3 style="margin-top:0;">Set a New Password</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">You're resetting your password. Enter a new one below.</p>
+            <div class="field">
+                <label for="new-password-1">New Password</label>
+                <input type="password" id="new-password-1" placeholder="••••••••">
+            </div>
+            <div class="field">
+                <label for="new-password-2">Confirm New Password</label>
+                <input type="password" id="new-password-2" placeholder="••••••••">
+            </div>
+            <div id="new-password-error" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display: none;"></div>
+            <button type="button" class="btn btn-primary" style="width:100%;" onclick="submitNewPassword()">Set New Password</button>
+        </div>
+    </div>
+
     <!-- MAIN APP CONTAINER (HIDDEN UNTIL LOGIN) -->
     <div id="appMain" style="display: none;">
         <div style="position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border); padding:6px 16px; text-align:center; font-size:0.72rem; color:var(--text-muted); z-index:500;">
@@ -5044,6 +5062,48 @@ CycleCPE`;
         
         // Explicitly attach supabase to the window object so it's globally accessible
         window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        // Detects when someone arrives via a password-reset email link and shows the
+        // "Set New Password" modal — without this, the reset email would send them back
+        // to the site with no actual way to set a new password.
+        window.supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                document.getElementById('setNewPasswordModal').style.display = 'flex';
+            }
+        });
+
+        async function submitNewPassword() {
+            const errorEl = document.getElementById('new-password-error');
+            errorEl.style.display = 'none';
+            const pw1 = document.getElementById('new-password-1').value;
+            const pw2 = document.getElementById('new-password-2').value;
+
+            if (!pw1 || pw1.length < 6) {
+                errorEl.textContent = 'Password must be at least 6 characters.';
+                errorEl.style.display = 'block';
+                return;
+            }
+            if (pw1 !== pw2) {
+                errorEl.textContent = 'Passwords do not match.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const { error } = await window.supabase.auth.updateUser({ password: pw1 });
+                if (error) {
+                    errorEl.textContent = error.message || 'Could not update password. Please try again.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                document.getElementById('setNewPasswordModal').style.display = 'none';
+                alert('Your password has been updated. Please log in with your new password.');
+                window.location.reload();
+            } catch (err) {
+                errorEl.textContent = 'Something went wrong. Please try again.';
+                errorEl.style.display = 'block';
+            }
+        }
 
         // Links a Supabase-authenticated user to a practitioner record in the app's data
         // model (the `practitioners` object every other tab reads from via activeEaKey).
