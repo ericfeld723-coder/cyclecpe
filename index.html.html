@@ -657,10 +657,10 @@
                 <h2>CycleCPE Membership Plans & Pricing</h2>
             </div>
             <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 1.05rem;">
-                Free and EA Essentials members can purchase self-study courses individually at checkout ($9 / $15 / $25 / $35 depending on course length). EA Plus and EA Complete include unlimited course access.
+                Free members can purchase self-study courses individually at checkout ($9 / $15 / $25 / $35 depending on course length). EA Plus and EA Complete include unlimited course access.
             </p>
 
-            <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                 <div class="plan-card" style="cursor: default;">
                     <div style="font-weight:700; font-size:1.15rem; color:var(--primary);">Free</div>
                     <div class="plan-price">$0</div>
@@ -678,29 +678,13 @@
                     <button class="btn btn-secondary pricing-subscribe-btn" style="display:none; width:100%;" onclick="goToPortalAndScrollToMembership()">Subscribe</button>
                 </div>
 
-                <div class="plan-card" style="cursor: default;">
-                    <div style="font-weight:700; font-size:1.15rem; color:var(--primary);">EA Essentials</div>
-                    <div class="plan-price">$79 <span>/ year</span></div>
-                    <p style="font-size:0.85rem; color:var(--text-muted); margin: 8px 0 14px;">Everything in Free, plus organization tools.</p>
-                    <ul style="font-size:0.82rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0 0 14px;">
-                        <li>Everything in Free</li>
-                        <li>Unlimited certificate storage</li>
-                        <li>Certificate organization</li>
-                        <li>CE history</li>
-                        <li>Automated reminders</li>
-                        <li>Renewal countdown</li>
-                        <li>Purchase CPE courses individually</li>
-                    </ul>
-                    <button class="btn btn-secondary pricing-subscribe-btn" style="display:none; width:100%;" onclick="goToPortalAndScrollToMembership()">Subscribe</button>
-                </div>
-
                 <div class="plan-card selected" style="cursor: default;">
                     <div class="plan-badge">Most Popular</div>
                     <div style="font-weight:700; font-size:1.15rem; color:var(--primary);">EA Plus</div>
-                    <div class="plan-price">$129 <span>/ year</span></div>
+                    <div class="plan-price">$99 <span>/ year</span></div>
                     <p style="font-size:0.85rem; color:var(--text-muted); margin: 8px 0 14px;">Unlimited course access for active renewal cycles.</p>
                     <ul style="font-size:0.82rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0 0 14px;">
-                        <li>Everything in Essentials</li>
+                        <li>Everything in Free</li>
                         <li>Unlimited access to all CycleCPE courses</li>
                         <li>Ethics courses</li>
                         <li>Tax updates</li>
@@ -726,7 +710,7 @@
 
             <div style="background:#fff; border:2px solid var(--primary); border-radius:8px; padding:20px 24px; margin-bottom:20px;">
                 <div style="font-weight:700; color:var(--primary); font-size:1.05rem; margin-bottom:4px;">💳 Individual Course Pricing</div>
-                <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">CPE courses can be purchased individually with the Free or EA Essentials plan at the following rates:</p>
+                <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">CPE courses can be purchased individually with the Free plan at the following rates:</p>
                 <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 12px;">
                     <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
                         <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$9</div>
@@ -1601,8 +1585,7 @@
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Switching plans here charges only the prorated difference and resets your billing date to today.</p>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button type="button" class="btn btn-secondary plan-select-btn" data-plan="FREE" onclick="selectPlanToChange('FREE', this)">Free ($0)</button>
-                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="ESSENTIALS" onclick="selectPlanToChange('ESSENTIALS', this)">Essentials ($79/yr)</button>
-                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="PLUS" onclick="selectPlanToChange('PLUS', this)">Plus ($129/yr)</button>
+                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="PLUS" onclick="selectPlanToChange('PLUS', this)">Plus ($99/yr)</button>
                             <button type="button" class="btn btn-secondary plan-select-btn" data-plan="COMPLETE" onclick="selectPlanToChange('COMPLETE', this)">Complete ($179/yr)</button>
                         </div>
                         <div id="plan-confirm-row" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); align-items:center; gap:10px;">
@@ -2123,10 +2106,10 @@
             <span class="close-modal" onclick="closeMembershipModal()">&times;</span>
         </div>
         <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">
-            Free and EA Essentials members can purchase courses individually at checkout. EA Plus and EA Complete include unlimited course access.
+            Free members can purchase courses individually at checkout. EA Plus and EA Complete include unlimited course access.
         </p>
 
-        <div class="grid grid-4" style="gap: 14px; margin-bottom: 20px; grid-template-columns: repeat(4, 1fr);">
+        <div class="grid grid-4" style="gap: 14px; margin-bottom: 20px; grid-template-columns: repeat(3, 1fr);">
             <div class="plan-card" id="plan-card-FREE" onclick="selectMembershipPlan('FREE')">
                 <div style="font-weight:700; font-size:1.05rem; color:var(--primary);">Free</div>
                 <div class="plan-price">$0</div>
@@ -2140,26 +2123,12 @@
                 </ul>
             </div>
 
-            <div class="plan-card" id="plan-card-ESSENTIALS" onclick="selectMembershipPlan('ESSENTIALS')">
-                <div style="font-weight:700; font-size:1.05rem; color:var(--primary);">EA Essentials</div>
-                <div class="plan-price">$79 <span>/ year</span></div>
-                <ul style="font-size:0.78rem; padding-left:16px; color:var(--text-muted); margin:10px 0 0;">
-                    <li>Everything in Free</li>
-                    <li>Unlimited certificate storage</li>
-                    <li>Certificate organization</li>
-                    <li>CE history</li>
-                    <li>Automated reminders</li>
-                    <li>Renewal countdown</li>
-                    <li>Purchase CPE courses individually</li>
-                </ul>
-            </div>
-
             <div class="plan-card" id="plan-card-PLUS" onclick="selectMembershipPlan('PLUS')">
                 <div class="plan-badge">Most Popular</div>
                 <div style="font-weight:700; font-size:1.05rem; color:var(--primary);">EA Plus</div>
-                <div class="plan-price">$129 <span>/ year</span></div>
+                <div class="plan-price">$99 <span>/ year</span></div>
                 <ul style="font-size:0.78rem; padding-left:16px; color:var(--text-muted); margin:10px 0 0;">
-                    <li>Everything in Essentials</li>
+                    <li>Everything in Free</li>
                     <li>Unlimited access to all CycleCPE courses</li>
                     <li>Ethics courses</li>
                     <li>Tax updates</li>
@@ -2199,7 +2168,7 @@
         </div>
 </div>
 
-<!-- MODAL: SINGLE COURSE CHECKOUT (Free / Essentials plans) -->
+<!-- MODAL: SINGLE COURSE CHECKOUT (Free plan) -->
 <div class="modal-overlay" id="course-checkout-modal">
     <div class="modal-card" style="max-width: 480px;">
         <div class="modal-header">
@@ -4020,7 +3989,7 @@ let activeEaKey = "Jane A. Doe";
         }
     }
 
-    const PLAN_CHANGE_LABELS = { FREE: 'Free ($0) — your paid plan ends at the end of your current billing period', ESSENTIALS: 'EA Essentials ($79/yr)', PLUS: 'EA Plus ($129/yr)', COMPLETE: 'EA Complete ($179/yr)' };
+    const PLAN_CHANGE_LABELS = { FREE: 'Free ($0) — your paid plan ends at the end of your current billing period', PLUS: 'EA Plus ($99/yr)', COMPLETE: 'EA Complete ($179/yr)' };
 
     function selectPlanToChange(plan, btnEl) {
         pendingPlanChange = plan;
@@ -4243,7 +4212,7 @@ CycleCPE`;
     const PLAN_INFO = {
         FREE: { name: 'Free', price: 0, unlimitedCourses: false, form8554: false },
         ESSENTIALS: { name: 'EA Essentials', price: 79, unlimitedCourses: false, form8554: false },
-        PLUS: { name: 'EA Plus', price: 129, unlimitedCourses: true, form8554: false },
+        PLUS: { name: 'EA Plus', price: 99, unlimitedCourses: true, form8554: false },
         COMPLETE: { name: 'EA Complete', price: 179, unlimitedCourses: true, form8554: true }
     };
     const COURSE_PRICE_BY_HOURS = { 1: 9, 2: 15, 4: 25, 6: 35 };
@@ -4263,7 +4232,7 @@ CycleCPE`;
 
     function selectMembershipPlan(planKey) {
         selectedPlanOption = planKey;
-        ['FREE', 'ESSENTIALS', 'PLUS', 'COMPLETE'].forEach(k => {
+        ['FREE', 'PLUS', 'COMPLETE'].forEach(k => {
             const el = document.getElementById(`plan-card-${k}`);
             if (el) el.classList.remove('selected');
         });
@@ -4319,7 +4288,7 @@ CycleCPE`;
     function renderPractitionerPlanSelector() {
         const ea = practitioners[activeEaKey];
         const label = document.getElementById('p-current-plan-label');
-        ['FREE', 'ESSENTIALS', 'PLUS', 'COMPLETE'].forEach(k => {
+        ['FREE', 'PLUS', 'COMPLETE'].forEach(k => {
             const el = document.getElementById('p-plan-card-' + k);
             if (el) el.classList.remove('selected');
         });
@@ -4349,7 +4318,7 @@ CycleCPE`;
         btn.style.display = 'block';
     }
 
-    // SINGLE-COURSE CHECKOUT (Free / Essentials plan holders)
+    // SINGLE-COURSE CHECKOUT (Free plan holders)
     const STRIPE_PAYMENT_LINKS_BY_HOURS = {
         1: 'https://buy.stripe.com/test_6oU7sLcEg8Uw5bAfJG8EM00',
         2: 'https://buy.stripe.com/test_6oU6oH8o09YA47w9li8EM01',
@@ -5313,7 +5282,7 @@ CycleCPE`;
 
         // Pulls a live business-metrics snapshot for the Admin Panel — plan breakdown,
         // estimated MRR, past-due count, and a few other totals — straight from Supabase.
-        const PLAN_MONTHLY_VALUE = { ESSENTIALS: 79 / 12, PLUS: 129 / 12, COMPLETE: 179 / 12 };
+        const PLAN_MONTHLY_VALUE = { ESSENTIALS: 79 / 12, PLUS: 99 / 12, COMPLETE: 179 / 12 };
         const PLAN_DISPLAY_NAMES = { FREE: 'Free', ESSENTIALS: 'EA Essentials', PLUS: 'EA Plus', COMPLETE: 'EA Complete' };
 
         async function loadAdminBusinessMetrics() {
