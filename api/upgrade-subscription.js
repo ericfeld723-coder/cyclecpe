@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Same price IDs already used in the webhook — kept in sync with your 3 paid plans.
 const PLAN_TO_PRICE = {
   ESSENTIALS: 'price_1UG2LzHLYDiifWD02VO6IRh5',
-  PLUS: 'price_1UG2KVHLYDiifWD0WY1Pc06G',
+  PLUS: process.env.PLUS_PRICE_ID || 'price_1UG2KVHLYDiifWD0WY1Pc06G', // set PLUS_PRICE_ID in Vercel to the new $99 price
   COMPLETE: 'price_1UG2L4HLYDiifWD089k4TUxW',
 };
 
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
   const { email, newPlan } = req.body;
   if (!email || !newPlan || (newPlan !== 'FREE' && !PLAN_TO_PRICE[newPlan])) {
-    return res.status(400).json({ error: 'A valid email and newPlan (FREE, ESSENTIALS, PLUS, or COMPLETE) are required.' });
+    return res.status(400).json({ error: 'A valid email and newPlan (FREE, PLUS, or COMPLETE) are required.' });
   }
 
   try {
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
   }
 }
 
-const PLAN_NAMES = { FREE: 'Free ($0)', ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($129/year)', COMPLETE: 'EA Complete ($179/year)' };
+const PLAN_NAMES = { FREE: 'Free ($0)', ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($99/year)', COMPLETE: 'EA Complete ($179/year)' };
 
 async function sendPlanConfirmationEmail(email, plan, endDate) {
   if (!email || !PLAN_NAMES[plan]) return;
