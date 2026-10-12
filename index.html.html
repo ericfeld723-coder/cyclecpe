@@ -678,8 +678,7 @@
                     <button class="btn btn-secondary pricing-subscribe-btn" style="display:none; width:100%;" onclick="goToPortalAndScrollToMembership()">Subscribe</button>
                 </div>
 
-                <div class="plan-card selected" style="cursor: default;">
-                    <div class="plan-badge">Most Popular</div>
+                <div class="plan-card" style="cursor: default;">
                     <div style="font-weight:700; font-size:1.15rem; color:var(--primary);">EA Plus</div>
                     <div class="plan-price">$99 <span>/ year</span></div>
                     <p style="font-size:0.85rem; color:var(--text-muted); margin: 8px 0 14px;">Unlimited course access for active renewal cycles.</p>
@@ -694,10 +693,10 @@
                     <button class="btn btn-primary pricing-subscribe-btn" style="display:none; width:100%;" onclick="goToPortalAndScrollToMembership()">Subscribe</button>
                 </div>
 
-                <div class="plan-card" style="cursor: default;">
-                    <div class="plan-badge" style="background:var(--accent);">Premium</div>
+                <div class="plan-card selected" style="cursor: default;">
+                    <div class="plan-badge">Most Popular</div>
                     <div style="font-weight:700; font-size:1.15rem; color:var(--primary);">EA Complete</div>
-                    <div class="plan-price">$179 <span>/ year</span></div>
+                    <div class="plan-price">$129 <span>/ year</span></div>
                     <p style="font-size:0.85rem; color:var(--text-muted); margin: 8px 0 14px;">Our full-service renewal package.</p>
                     <ul style="font-size:0.82rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0 0 14px;">
                         <li>Everything in Plus</li>
@@ -1586,7 +1585,7 @@
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button type="button" class="btn btn-secondary plan-select-btn" data-plan="FREE" onclick="selectPlanToChange('FREE', this)">Free ($0)</button>
                             <button type="button" class="btn btn-secondary plan-select-btn" data-plan="PLUS" onclick="selectPlanToChange('PLUS', this)">Plus ($99/yr)</button>
-                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="COMPLETE" onclick="selectPlanToChange('COMPLETE', this)">Complete ($179/yr)</button>
+                            <button type="button" class="btn btn-secondary plan-select-btn" data-plan="COMPLETE" onclick="selectPlanToChange('COMPLETE', this)">Complete ($129/yr)</button>
                         </div>
                         <div id="plan-confirm-row" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); align-items:center; gap:10px;">
                             <span style="font-size:0.85rem;">Confirm switch to <strong id="plan-confirm-label"></strong>?</span>
@@ -1599,7 +1598,7 @@
                     <div id="new-subscriber-pricing-box" style="margin-top:0; padding-top:14px; border-top:1px dashed var(--border);">
                         <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Select or purchase a plan directly via Stripe:</div>
                         <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-                        <stripe-pricing-table id="stripe-pricing-table-el" pricing-table-id="prctbl_1UG2LVHLYDiifWD0IsiCVYsW"
+                        <stripe-pricing-table id="stripe-pricing-table-el" pricing-table-id="prctbl_1UPkOUHLYDiifWD08FPEoIoA"
                             publishable-key="pk_test_51UFyjrHLYDiifWD080BGQqXcCOTl0l1jc6ZKT58Ow2TYdKBp45hWKUlVWWwMxCgYmu5DpFlINJMFIXjXvCZBKJy700xpFP9wGZ">
                         </stripe-pricing-table>
                     </div>
@@ -2124,7 +2123,6 @@
             </div>
 
             <div class="plan-card" id="plan-card-PLUS" onclick="selectMembershipPlan('PLUS')">
-                <div class="plan-badge">Most Popular</div>
                 <div style="font-weight:700; font-size:1.05rem; color:var(--primary);">EA Plus</div>
                 <div class="plan-price">$99 <span>/ year</span></div>
                 <ul style="font-size:0.78rem; padding-left:16px; color:var(--text-muted); margin:10px 0 0;">
@@ -2138,9 +2136,9 @@
             </div>
 
             <div class="plan-card" id="plan-card-COMPLETE" onclick="selectMembershipPlan('COMPLETE')">
-                <div class="plan-badge" style="background:var(--accent);">Premium</div>
+                <div class="plan-badge">Most Popular</div>
                 <div style="font-weight:700; font-size:1.05rem; color:var(--primary);">EA Complete</div>
-                <div class="plan-price">$179 <span>/ year</span></div>
+                <div class="plan-price">$129 <span>/ year</span></div>
                 <ul style="font-size:0.78rem; padding-left:16px; color:var(--text-muted); margin:10px 0 0;">
                     <li>Everything in Plus</li>
                     <li>Form 8554 preparation</li>
@@ -3989,7 +3987,7 @@ let activeEaKey = "Jane A. Doe";
         }
     }
 
-    const PLAN_CHANGE_LABELS = { FREE: 'Free ($0) — your paid plan ends at the end of your current billing period', PLUS: 'EA Plus ($99/yr)', COMPLETE: 'EA Complete ($179/yr)' };
+    const PLAN_CHANGE_LABELS = { FREE: 'Free ($0) — your paid plan ends at the end of your current billing period', PLUS: 'EA Plus ($99/yr)', COMPLETE: 'EA Complete ($129/yr)' };
 
     function selectPlanToChange(plan, btnEl) {
         pendingPlanChange = plan;
@@ -4213,7 +4211,7 @@ CycleCPE`;
         FREE: { name: 'Free', price: 0, unlimitedCourses: false, form8554: false },
         ESSENTIALS: { name: 'EA Essentials', price: 79, unlimitedCourses: false, form8554: false },
         PLUS: { name: 'EA Plus', price: 99, unlimitedCourses: true, form8554: false },
-        COMPLETE: { name: 'EA Complete', price: 179, unlimitedCourses: true, form8554: true }
+        COMPLETE: { name: 'EA Complete', price: 129, unlimitedCourses: true, form8554: true }
     };
     const COURSE_PRICE_BY_HOURS = { 1: 9, 2: 15, 4: 25, 6: 35 };
     let pendingCheckoutSlug = null;
@@ -5282,7 +5280,7 @@ CycleCPE`;
 
         // Pulls a live business-metrics snapshot for the Admin Panel — plan breakdown,
         // estimated MRR, past-due count, and a few other totals — straight from Supabase.
-        const PLAN_MONTHLY_VALUE = { ESSENTIALS: 79 / 12, PLUS: 99 / 12, COMPLETE: 179 / 12 };
+        const PLAN_MONTHLY_VALUE = { ESSENTIALS: 79 / 12, PLUS: 99 / 12, COMPLETE: 129 / 12 };
         const PLAN_DISPLAY_NAMES = { FREE: 'Free', ESSENTIALS: 'EA Essentials', PLUS: 'EA Plus', COMPLETE: 'EA Complete' };
 
         async function loadAdminBusinessMetrics() {
