@@ -701,7 +701,7 @@
                     <ul style="font-size:0.82rem; padding-left:18px; color:var(--text); line-height: 1.6; margin:0 0 14px;">
                         <li>Everything in Plus</li>
                         <li>Form 8554 preparation</li>
-                        <li>Renewal-readiness review</li>
+                        <li>Unlimited Customer Support</li>
                     </ul>
                     <button class="btn btn-secondary pricing-subscribe-btn" style="display:none; width:100%;" onclick="goToPortalAndScrollToMembership()">Subscribe</button>
                 </div>
@@ -4486,29 +4486,106 @@ CycleCPE`;
         }, 600);
     }
 
+    // ---- Assistant knowledge: site facts + every FAQ item on the FAQ page ----
+    const ASSISTANT_SITE_KB = [
+        { q: 'What does CycleCPE cost? What are the plans?', k: 'price pricing cost plan plans membership how much subscribe subscription free plus complete annual year',
+          a: 'CycleCPE has three plans: <strong>Free ($0)</strong> – 72-hour cycle tracker, ethics tracking, outside CE entry, dashboard, and you can buy courses individually; <strong>EA Plus ($99/year)</strong> – everything in Free plus unlimited access to all CycleCPE courses; and <strong>EA Complete ($129/year)</strong> – everything in Plus plus Form 8554 preparation and unlimited customer support. See the Pricing page for details.' },
+        { q: 'How much do individual courses cost?', k: 'individual course price buy purchase single one-time hour cost $9 $15 $25 $35 pay per course',
+          a: 'Free-plan members can buy courses one at a time at checkout: <strong>$9</strong> for a 1-hour course, <strong>$15</strong> for 2 hours, <strong>$25</strong> for 4 hours, and <strong>$35</strong> for 6 hours. EA Plus and EA Complete include unlimited course access.' },
+        { q: 'How do I take a course and get my certificate?', k: 'take course exam pass passing score certificate certificates complete completion download how',
+          a: 'Open the Course Catalog, choose a course, read the material, and take the final exam (<strong>70% required to pass</strong>). When you pass, your certificate is emailed to you automatically and added to your CPE Ledger, where you can download it again any time.' },
+        { q: 'What is the CPE Ledger?', k: 'ledger cpe tracker track credits hours dashboard record history progress',
+          a: 'The CPE Ledger tracks every credit you earn toward the EA requirement: <strong>72 hours per 3-year cycle</strong>, a minimum of <strong>16 per year</strong>, and at least <strong>2 ethics hours each year</strong>. It includes CycleCPE courses and outside CE you enter yourself, and it shows a 3-year total.' },
+        { q: 'How do I add CE I took somewhere else?', k: 'outside external other provider add upload enter log credit ce another',
+          a: 'Use the <strong>Add Outside CE</strong> option in your ledger to enter the course title, provider, program number, category, hours and date. It counts toward the same 72/16/2 requirements as CycleCPE courses.' },
+        { q: 'How does the Form 8554 renewal form work?', k: 'form 8554 renewal pdf generate download fill auto prepare irs application filing',
+          a: 'In the <strong>Form 8554</strong> tab, review your profile and CE hours, then click Generate. The platform fills in the IRS Form 8554 for you and emails you a copy with mailing instructions. Your SSN last 4 digits are needed to determine your filing window. Print, sign, and mail it to the IRS with the fee.' },
+        { q: 'When can I file my Form 8554?', k: 'filing window when file renew renewal due date ssn last 4 digits cycle blocked',
+          a: 'Your renewal window depends on the last digit of your SSN (IRS Publication 5186). The Form 8554 generator checks your SSN last 4 digits and only lets you generate the form inside your filing window (Nov 1 – Jan 31 of your renewal year).' },
+        { q: 'How do I change or cancel my plan?', k: 'change cancel switch downgrade upgrade plan free unsubscribe stop subscription billing',
+          a: 'Go to the <strong>Practitioner</strong> tab, Part 2 (Subscription &amp; Membership Management), and choose a plan under "Change your plan." Switching to <strong>Free</strong> ends your paid plan at the end of the period you already paid for, and you keep access until then. Moving to a paid plan charges only the prorated difference.' },
+        { q: 'Do you send CE reminders?', k: 'reminder reminders email monthly notify notification unsubscribe alert deadline',
+          a: 'Yes. CycleCPE sends a monthly CPE reminder email showing your progress toward the annual and 3-year requirements. Every reminder has an unsubscribe link.' },
+        { q: 'Are CycleCPE courses IRS approved?', k: 'irs approved approval provider program number testing mode legitimate accredited',
+          a: 'The site is currently in <strong>testing mode</strong>: the courses on this platform have not yet been approved by the IRS, so please do not use them for credit right now. Once approved, certificates will show the IRS program approval number.' },
+        { q: 'How do I register or log in?', k: 'register login log sign account password reset forgot create email',
+          a: 'Click <strong>Portal</strong> to log in or register with your email. If you forgot your password, use the "Forgot password" link on the login page and we will email you a reset link.' },
+        { q: 'How do I update my profile (PTIN, EA number, address)?', k: 'profile practitioner update edit ptin ea number enrollment address ssn caf information save',
+          a: 'Open the <strong>Practitioner</strong> tab, update your details (name, PTIN, EA enrollment number, enrollment date, address, and SSN last 4 if you will prepare Form 8554), and click Save Practitioner Profile. Your information saves to your account and follows you across devices.' },
+        { q: 'Can I get a refund?', k: 'refund refunds money back return charge charged billing dispute cancel payment policy',
+          a: 'For refund or billing questions, please email <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a> with the email on your account and the purchase in question, and our team will review it.' },
+        { q: 'Is there a phone number or person I can talk to?', k: 'phone number call telephone person talk speak human representative agent customer service support live chat contact reach someone',
+          a: 'Please contact <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a> and a customer representative will respond shortly.' },
+        { q: 'Is my information secure?', k: 'privacy security secure data safe terms policy personal information stripe payment card',
+          a: 'We do not sell your personal information. Payments are handled by Stripe, so CycleCPE never sees or stores your card number. See the Privacy Policy and Terms of Service links in the page footer for details.' },
+        { q: 'What courses does CycleCPE offer?', k: 'courses catalog offer topics ethics tax update s corp aftr retirement estate list available subjects',
+          a: 'The Course Catalog has self-study courses in ethics and federal tax law, including Circular 230 ethics, S corporation taxation, retirement plans, estate and gift taxation, and annual tax updates. Open the catalog from the portal to see the full list with hours.' }
+    ];
+
+    const ASSISTANT_STOPWORDS = new Set('a an the and or of to in on for is are was be do does did can could i my me you your we our it its this that what how when where which who why with at as by from if about have has had will would should not no yes get got any'.split(' '));
+
+    function assistantTokens(text) {
+        return String(text || '').toLowerCase().replace(/[^a-z0-9$.\s-]/g, ' ').split(/\s+/)
+            .map(w => w.replace(/^[.-]+|[.-]+$/g, '')).filter(w => w && !ASSISTANT_STOPWORDS.has(w));
+    }
+    function assistantStem(w) { return w.replace(/(ing|ed|es|s)$/, ''); }
+
+    function assistantEntries() {
+        const entries = ASSISTANT_SITE_KB.map(e => ({ q: e.q, a: e.a, k: e.k, weight: 1.3 }));
+        document.querySelectorAll('#faqListContainer .faq-item').forEach(item => {
+            const qEl = item.querySelector('.faq-question');
+            const aEl = item.querySelector('.faq-answer');
+            if (!qEl || !aEl) return;
+            const q = qEl.textContent.replace('▼', '').replace(/^\s*\d+\.\s*/, '').trim();
+            entries.push({ q, a: aEl.innerHTML.trim(), k: (item.dataset.keywords || ''), weight: 1 });
+        });
+        return entries;
+    }
+
+    function assistantScore(queryTokens, entry) {
+        const qStems = new Set(queryTokens.map(assistantStem));
+        if (!qStems.size) return 0;
+        const qText = new Set(assistantTokens(entry.q).map(assistantStem));
+        const kText = new Set(assistantTokens(entry.k).map(assistantStem));
+        const aText = new Set(assistantTokens(String(entry.a).replace(/<[^>]*>/g, ' ')).map(assistantStem));
+        let score = 0;
+        qStems.forEach(t => {
+            if (qText.has(t)) score += 3;
+            if (kText.has(t)) score += 2.5;
+            if (aText.has(t)) score += 0.7;
+        });
+        return score * entry.weight;
+    }
+
     function generateComprehensiveAiResponse(query) {
         const q = query.toLowerCase();
+        const mail = '<a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a>';
 
-        if (q.includes('agent') || q.includes('person') || q.includes('talk') || q.includes('support') || q.includes('human') || q.includes('help')) {
-            return `<strong>📞 Speak with a Support Representative:</strong><br>` +
-                   `If you need to talk to a person or have questions regarding your Enrolled Agent profile, please contact us directly at <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a>. Our support team is ready to assist you!`;
-        } else if (q.includes('deadline') || q.includes('miss') || q.includes('late') || q.includes('expire') || q.includes('march 31')) {
-            return `<strong>⚠️ Missed Deadlines & Status Expiration:</strong><br>` +
-                   `• <strong>Renewal Deadlines:</strong> EA renewal cycles run every 3 years based on your SSN ending digit under IRS Pub 5186.<br>` +
-                   `• <strong>Consequences:</strong> If you fail to renew or meet CE requirements by March 31, your credential becomes <strong>inactive</strong>.<br>` +
-                   `• <strong>Support:</strong> Reach out to us at <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a> for reinstatement guidance.`;
-        } else if (q.includes('ce') || q.includes('hour') || q.includes('ethics') || q.includes('72')) {
-            return `<strong>📚 Continuing Education (CE) Rules:</strong><br>` +
-                   `• EAs must earn <strong>72 total CE hours</strong> every 3-year renewal cycle.<br>` +
-                   `• Minimum 16 hours per year, including 2 hours of ethics each year.<br>` +
-                   `• For additional questions, contact our team at <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a>.`;
-        } else if (q.includes('contact') || q.includes('email')) {
-            return `<strong>✉️ Contact Support:</strong><br>` +
-                   `You can reach our support team anytime at <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a> for fast assistance with technical inquiries, course certificates, or account management.`;
-        } else {
-            return `<strong>🤖 Enrolled Agent Compliance Guidance:</strong><br>` +
-                   `As your CycleCPE Assistant, I can guide you through IRS Pub 5186 renewal cycles, CPE tracking, Form 8554 preparation, and platform features. To speak with a person or get agent support, please email us at <a href="mailto:info@cyclecpe.com" style="color:var(--primary); font-weight:bold;">info@cyclecpe.com</a>!`;
+        if (/^(hi|hello|hey|good (morning|afternoon|evening)|thanks|thank you)\b/.test(q.trim())) {
+            return 'Hello! Ask me anything about EA renewal requirements, CE hours, Form 8554, plans and pricing, or how to use CycleCPE.';
         }
+
+        const tokens = assistantTokens(query);
+        const scored = assistantEntries().map(e => ({ e, s: assistantScore(tokens, e) })).sort((x, y) => y.s - x.s);
+        const best = scored[0];
+
+        if (best && best.s >= (tokens.length <= 2 ? 3 : 4)) {
+            let html = `<strong>${best.e.q}</strong><br>${best.e.a}`;
+            const next = scored[1];
+            if (next && next.s >= best.s * 0.7 && next.s >= 4) {
+                html += `<br><br><em>Related:</em> <a href="#" onclick="sendSuggestedQuery(${JSON.stringify(next.e.q).replace(/"/g, '&quot;')}); return false;" style="color:var(--primary);">${next.e.q}</a>`;
+            }
+            return html;
+        }
+
+        const picks = scored.filter(x => x.s > 0).slice(0, 3);
+        let html = `I'm not sure I understood that. ${picks.length ? 'Did you mean one of these?' : 'Here are some things I can help with:'}<div class="ai-suggestions" style="margin-top:8px;">`;
+        const list = picks.length ? picks.map(x => x.e.q) : ['What are the plans and pricing?', 'What are the CE requirements for enrolled agents?', 'How does the Form 8554 renewal form work?'];
+        list.forEach(t => {
+            html += `<div class="ai-suggestion-chip" onclick="sendSuggestedQuery(${JSON.stringify(t).replace(/"/g, '&quot;')})">${t}</div>`;
+        });
+        html += `</div><br>You can also reach a person at ${mail}.`;
+        return html;
     }
 
 
