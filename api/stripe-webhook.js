@@ -9,7 +9,8 @@ const supabase = createClient(
 
 const PRICE_TO_PLAN = {
   'price_1UG2LzHLYDiifWD02VO6IRh5': 'ESSENTIALS',
-  'price_1UG2KVHLYDiifWD0WY1Pc06G': 'PLUS',
+  'price_1UG2KVHLYDiifWD0WY1Pc06G': 'PLUS', // old $129 price (legacy subscribers)
+  ...(process.env.PLUS_PRICE_ID ? { [process.env.PLUS_PRICE_ID]: 'PLUS' } : {}), // new $99 price
   'price_1UG2L4HLYDiifWD089k4TUxW': 'COMPLETE',
 };
 
@@ -35,7 +36,7 @@ async function setPlanForEmail(email, plan) {
   else console.log(`Plan updated: ${email} -> ${plan}`);
 }
 
-const PLAN_NAMES = { ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($129/year)', COMPLETE: 'EA Complete ($179/year)' };
+const PLAN_NAMES = { ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($99/year)', COMPLETE: 'EA Complete ($179/year)' };
 
 // Sends a plan confirmation email — separate from Stripe's own payment receipt — covering
 // any path that lands on a paid plan (new subscription, upgrade, or downgrade).
