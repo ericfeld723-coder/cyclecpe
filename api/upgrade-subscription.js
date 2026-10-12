@@ -17,8 +17,8 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { email, newPlan } = req.body;
-  if (!email || !newPlan || !PLAN_TO_PRICE[newPlan]) {
-    return res.status(400).json({ error: 'A valid email and newPlan (ESSENTIALS, PLUS, or COMPLETE) are required.' });
+  if (!email || !newPlan || (newPlan !== 'FREE' && !PLAN_TO_PRICE[newPlan])) {
+    return res.status(400).json({ error: 'A valid email and newPlan (FREE, ESSENTIALS, PLUS, or COMPLETE) are required.' });
   }
 
   try {
@@ -36,6 +36,20 @@ export default async function handler(req, res) {
     }
     const subscription = subscriptions.data[0];
     const currentItem = subscription.items.data[0];
+
+    // Switching to FREE = cancel the paid subscription at the end of the period they
+    // already paid for. The webhook's customer.subscription.deleted event then sets the
+    // plan to FREE in Supabase when that date arrives.
+    if (newPlan === 'FREE') {
+      const updatedFree = await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: true });
+      const endDate = new Date(updatedFree.current_period_end * 1000);
+      await sendPlanConfirmationEmail(email, 'FREE', endDate);
+      return res.status(200).json({
+        message: `Your paid plan will end on ${endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} and your account will switch to Free. You keep full access until then.`,
+        endsAt: endDate.toISOString(),
+      });
+    }
+
     const newPriceId = PLAN_TO_PRICE[newPlan];
 
     if (currentItem.price.id === newPriceId) {
@@ -48,6 +62,7 @@ export default async function handler(req, res) {
       items: [{ id: currentItem.id, price: newPriceId }],
       proration_behavior: 'create_prorations',
       billing_cycle_anchor: 'now',
+      cancel_at_period_end: false, // also reverses a pending switch-to-Free
     });
 
     await sendPlanConfirmationEmail(email, newPlan);
@@ -63,15 +78,15 @@ export default async function handler(req, res) {
   }
 }
 
-const PLAN_NAMES = { ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($129/year)', COMPLETE: 'EA Complete ($179/year)' };
+const PLAN_NAMES = { FREE: 'Free ($0)', ESSENTIALS: 'EA Essentials ($79/year)', PLUS: 'EA Plus ($129/year)', COMPLETE: 'EA Complete ($179/year)' };
 
-async function sendPlanConfirmationEmail(email, plan) {
+async function sendPlanConfirmationEmail(email, plan, endDate) {
   if (!email || !PLAN_NAMES[plan]) return;
   try {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
         <p>Hi there,</p>
-        <p>This confirms your CycleCPE membership is now on the <strong>${PLAN_NAMES[plan]}</strong> plan.</p>
+        <p>${plan === 'FREE' && endDate ? `This confirms your CycleCPE paid plan will end on <strong>${endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>, after which your account switches to the <strong>Free</strong> plan. You keep full access until then, and your certificates and ledger remain available. You will not be charged again.` : `This confirms your CycleCPE membership is now on the <strong>${PLAN_NAMES[plan]}</strong> plan.`}</p>
         <p>You can review or change your plan anytime from the Practitioner Tool tab in your CycleCPE account.</p>
         <p>A separate payment receipt from Stripe will follow, if applicable, to the same email address.</p>
         <p>Questions? Reach us anytime at info@cyclecpe.com.</p>
