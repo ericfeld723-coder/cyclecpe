@@ -719,7 +719,6 @@
                         <li>Everything in Plus</li>
                         <li>Form 8554 preparation</li>
                         <li>Renewal-readiness review</li>
-                        <li>Human support</li>
                     </ul>
                     <button class="btn btn-secondary pricing-subscribe-btn" style="display:none; width:100%;" onclick="goToPortalAndScrollToMembership()">Subscribe</button>
                 </div>
@@ -3873,8 +3872,8 @@ let activeEaKey = "Jane A. Doe";
         }
     }
 
-    async function buildCertificatePdfBytes(courseTitle, ceHours, category, programNo) {
-        const ea = practitioners[activeEaKey];
+    async function buildCertificatePdfBytes(courseTitle, ceHours, category, programNo, eaOverride, dateOverride) {
+        const ea = eaOverride || practitioners[activeEaKey];
         {
             const pdfDoc = await PDFLib.PDFDocument.create();
             const page = pdfDoc.addPage([792, 612]); 
@@ -3899,7 +3898,7 @@ let activeEaKey = "Jane A. Doe";
             page.drawText(`Subject Category: ${category}`, { x: 290, y: height - 370, size: 11, font });
             page.drawText(`IRS Program Approval #: ${programNo}`, { x: 280, y: height - 390, size: 11, font });
 
-            const completionDate = new Date().toLocaleDateString();
+            const completionDate = dateOverride ? new Date(dateOverride + (/^\d{4}-\d{2}-\d{2}$/.test(dateOverride) ? 'T12:00:00' : '')).toLocaleDateString() : new Date().toLocaleDateString();
             page.drawText(`Completion Date: ${completionDate}`, { x: 100, y: 80, size: 10, font: boldFont });
             
             page.drawText('Eric T Feld, CPA', { x: 520, y: 100, size: 11, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
@@ -5413,13 +5412,51 @@ CycleCPE`;
                         <td>${fullName}</td>
                         <td>${p.ptin || 'N/A'}</td>
                         <td><span class="status-badge badge-ready">${planLabel}</span></td>
-                        <td>${isAdmin ? '<button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" disabled>System Account</button>' : `<button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="alert('Password reset link sent.')">Reset Password</button>`}</td>
+                        <td>${isAdmin ? '<button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" disabled>System Account</button>' : `<button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="alert('Password reset link sent.')">Reset Password</button>`}${isAdmin ? '' : ` <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="adminViewCertificates('${email}')">Certificates</button>`}</td>
                     </tr>`;
                 }).join('');
             } catch (err) {
                 console.warn('loadAdminUserAccountsTable error:', err);
                 tbody.innerHTML = '<tr><td colspan="6" style="color:var(--warning);">Could not load users — check Supabase admin read policies.</td></tr>';
             }
+        }
+
+        // Admin: list a practitioner's completed courses and regenerate any certificate PDF.
+        async function adminViewCertificates(email) {
+            let box = document.getElementById('admin-cert-modal');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'admin-cert-modal';
+                box.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+                box.onclick = e => { if (e.target === box) box.style.display = 'none'; };
+                document.body.appendChild(box);
+            }
+            box.style.display = 'flex';
+            box.innerHTML = '<div style="background:#fff;border-radius:10px;max-width:760px;width:100%;max-height:85vh;overflow:auto;padding:20px;"><p>Loading…</p></div>';
+            const [credRes, profRes] = await Promise.all([
+                window.supabase.from('practitioner_credits').select('credit_id, title, program_no, category, hours, date, type, source').eq('email', email).order('date', { ascending: false }),
+                window.supabase.from('practitioner_profiles').select('first_name, last_name, ea_num, ptin').eq('email', email).maybeSingle()
+            ]);
+            const rows = credRes.data || [];
+            window._adminCertCtx = { rows, ea: { firstName: (profRes.data||{}).first_name, lastName: (profRes.data||{}).last_name, eaNum: (profRes.data||{}).ea_num, ptin: (profRes.data||{}).ptin } };
+            const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+            const body = credRes.error ? '<p style="color:var(--warning);">Could not load credits — check admin read policy on practitioner_credits.</p>'
+                : !rows.length ? '<p>No completed courses on file.</p>'
+                : '<table class="ea-table"><thead><tr><th>Course</th><th>Hours</th><th>Category</th><th>Date</th><th></th></tr></thead><tbody>' +
+                  rows.map((r, i) => `<tr><td>${esc(r.title)}</td><td>${esc(r.hours)}</td><td>${esc(r.category)}</td><td>${esc(r.date)}</td><td><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="adminDownloadCertificate(${i})">Certificate</button></td></tr>`).join('') + '</tbody></table>';
+            box.firstElementChild.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>Certificates — ${esc(email)}</strong><button class="btn btn-secondary" style="padding:2px 10px;" onclick="document.getElementById('admin-cert-modal').style.display='none'">Close</button></div>${body}`;
+        }
+
+        async function adminDownloadCertificate(i) {
+            const ctx = window._adminCertCtx; const r = ctx && ctx.rows[i];
+            if (!r) return;
+            try {
+                const bytes = await buildCertificatePdfBytes(r.title, r.hours, r.category, r.program_no || 'N/A', ctx.ea, r.date);
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+                link.download = `CE_Certificate_${(ctx.ea.ptin || 'Draft')}_${String(r.title).replace(/\s+/g, '_')}.pdf`;
+                link.click();
+            } catch (e) { console.error(e); alert('Failed to generate certificate.'); }
         }
 
         async function syncFullProfileToSupabase(ea) {
