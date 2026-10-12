@@ -97,6 +97,42 @@ async function sendPlanConfirmationEmail(email, plan) {
   }
 }
 
+const COURSE_TITLES = {"ethics": {"t": "Practicing Under Circular 230", "h": 1}, "s-corp": {"t": "S Corporation Taxation: Elections, Compensation, and Basis", "h": 1}, "estate-gift": {"t": "Estate & Gift Tax Planning Under OBBBA", "h": 1}, "biz-incentives": {"t": "Business Cost Recovery & Investment Incentives", "h": 1}, "qrp": {"t": "Qualified Retirement Plan Matters", "h": 1}, "partnership-tax": {"t": "Partnership Taxation Fundamentals", "h": 1}, "like-kind-exchanges": {"t": "Like-Kind Exchanges & Real Estate Taxation", "h": 1}, "digital-assets": {"t": "2026 Digital Assets & Information Reporting Update", "h": 1}, "simple-sep-design": {"t": "SIMPLE & SEP Plan Design for Small Business", "h": 1}, "tax-update": {"t": "2026 Federal Tax Law Update", "h": 2}, "see-prep": {"t": "Special Enrollment Examination Prep", "h": 2}, "aftr": {"t": "Annual Federal Tax Refresher", "h": 6}, "individual-credits-deep-dive": {"t": "2026 Individual Credits & Provisions Deep Dive", "h": 4}, "business-depreciation-update": {"t": "Business Entity & Depreciation Law Update", "h": 4}, "circular-230-case-studies": {"t": "Circular 230 in Practice: Case Studies & Scenarios", "h": 4}, "preparer-penalties-enforcement": {"t": "Preparer Penalties & IRS Enforcement Priorities", "h": 4}, "trust-estate-income-tax": {"t": "Trust & Estate Income Taxation (Form 1041)", "h": 4}, "multistate-nexus": {"t": "Multistate Taxation & Nexus Fundamentals", "h": 4}, "fbar-fatca-reporting": {"t": "International Information Reporting: FBAR & FATCA", "h": 4}, "defined-benefit-plans": {"t": "Defined Benefit & Cash Balance Plan Design", "h": 4}, "ira-rollovers-conversions": {"t": "IRA Rollovers, Conversions, and Beneficiary Planning", "h": 4}, "data-security-safeguards": {"t": "Data Security & Safeguards Obligations for Tax Practices", "h": 4}};
+
+async function sendCoursePurchaseEmail(email, slug, amountCents) {
+  if (!email || !slug) return;
+  try {
+    const course = COURSE_TITLES[slug];
+    const title = course ? course.t : slug;
+    const hours = course ? `${course.h} CE hour${course.h === 1 ? '' : 's'}` : '';
+    const amount = typeof amountCents === 'number' ? `$${(amountCents / 100).toFixed(2)}` : '';
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+        <p>Hi there,</p>
+        <p>Thank you for your purchase. This confirms you now have access to the following CycleCPE course:</p>
+        <p style="margin:12px 0;"><strong>${title}</strong>${hours ? `<br>${hours}` : ''}${amount ? `<br>Amount paid: ${amount}` : ''}</p>
+        <p>Log in to your CycleCPE account and open the course from the catalog to begin. Once you pass the exam, your certificate is emailed to you automatically and added to your CPE ledger.</p>
+        <p>A separate payment receipt from Stripe will follow, if applicable, to the same email address.</p>
+        <p>Questions? Reach us anytime at info@cyclecpe.com.</p>
+        <p>— The CycleCPE Team<br>CycleCPE LLC · 7000 Palmetto Park Rd, Ste 210, Boca Raton, FL 33433</p>
+      </div>`;
+    const uniqueRecipients = Array.from(new Set([email.toLowerCase(), 'info@cyclecpe.com']));
+    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: uniqueRecipients.map((e) => ({ email: e })) }],
+        from: { email: 'info@cyclecpe.com', name: 'CycleCPE' },
+        subject: `Your CycleCPE Course Purchase — ${title}`,
+        content: [{ type: 'text/html', value: html }],
+      }),
+    });
+    if (!res.ok) console.error('sendCoursePurchaseEmail SendGrid error:', await res.text());
+  } catch (err) {
+    console.error('sendCoursePurchaseEmail exception:', err);
+  }
+}
+
 async function recordCoursePurchase(email, slug) {
   if (!email || !slug) return;
   const { error } = await supabase.from('course_purchases').upsert({
@@ -164,6 +200,7 @@ export default async function handler(req, res) {
         await sendPlanConfirmationEmail(email, plan);
       } else if (session.client_reference_id) {
         await recordCoursePurchase(email, session.client_reference_id);
+        await sendCoursePurchaseEmail(email, session.client_reference_id, session.amount_total);
       }
     }
 
