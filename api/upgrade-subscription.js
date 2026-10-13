@@ -96,7 +96,6 @@ async function sendPlanConfirmationEmail(email, plan, endDate) {
         <p>Hi there,</p>
         <p>${plan === 'FREE' && endDate ? `This confirms your CycleCPE paid plan will end on <strong>${endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>, after which your account switches to the <strong>Free</strong> plan. You keep full access until then, and your certificates and ledger remain available. You will not be charged again.` : `This confirms your CycleCPE membership is now on the <strong>${PLAN_NAMES[plan]}</strong> plan.`}</p>
         <p>You can review or change your plan anytime from the Practitioner Tool tab in your CycleCPE account.</p>
-        <p>A separate payment receipt from Stripe will follow, if applicable, to the same email address.</p>
         <p>Questions? Reach us anytime at info@cyclecpe.com.</p>
         <p>— The CycleCPE Team<br>CycleCPE LLC · 7000 Palmetto Park Rd, Ste 210, Boca Raton, FL 33433</p>
       </div>`;
