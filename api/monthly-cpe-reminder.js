@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { decryptValue } from './_crypto.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -206,7 +207,7 @@ export default async function handler(req, res) {
 
       if (remainingTotal <= 0) { skippedCount++; continue; }
 
-      const { windowLabel } = getForm8554NextDueDate(profile.ssn);
+      const { windowLabel } = getForm8554NextDueDate((() => { try { return decryptValue(profile.ssn); } catch (e) { return ''; } })());
       const emailData = { remainingTotal, remainingEthics, currentYear, form8554Window: windowLabel };
 
       const sent = await sendReminderEmail(email, profile.first_name, emailData);
