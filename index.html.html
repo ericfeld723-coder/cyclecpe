@@ -2554,7 +2554,7 @@ let activeEaKey = "Jane A. Doe";
             username: assignedUsername,
             firstName: fn, lastName: ln, suffix: "", eaNum: "", ptin: "", caf: "", ssn: "",
             email, phone: "", address1: "", city: "", state: "", zip: "",
-            enrollmentDate: new Date().toISOString().split('T')[0],
+            enrollmentDate: '',
             membershipPlan: null,
             hasForm8554Addon: false,
             autoRenew: true,
@@ -3088,7 +3088,7 @@ ${message}
         }
         document.getElementById('p-email').value = ea.email || '';
         document.getElementById('p-phone').value = ea.phone || '';
-        document.getElementById('p-enrollment-date').value = ea.enrollmentDate || new Date().toISOString().split('T')[0];
+        document.getElementById('p-enrollment-date').value = ea.enrollmentDate || '';
         document.getElementById('p-address1').value = ea.address1 || '';
         document.getElementById('p-city').value = ea.city || '';
         document.getElementById('p-state').value = ea.state || '';
@@ -3233,7 +3233,7 @@ ${message}
             document.getElementById('m-ssn').value = ea.ssn || '';
             document.getElementById('m-email').value = ea.email || '';
             document.getElementById('m-phone').value = ea.phone || '';
-            document.getElementById('m-enrollment-date').value = ea.enrollmentDate || new Date().toISOString().split('T')[0];
+            document.getElementById('m-enrollment-date').value = ea.enrollmentDate || '';
             document.getElementById('m-address1').value = ea.address1 || '';
             document.getElementById('m-city').value = ea.city || '';
             document.getElementById('m-state').value = ea.state || '';
@@ -5668,7 +5668,7 @@ CycleCPE`;
                 username: emailLower,
                 firstName: fn, lastName: ln, suffix: "", eaNum: "", ptin: "", caf: "", ssn: "",
                 email: user.email, phone: "", address1: "", city: "", state: "", zip: "",
-                enrollmentDate: new Date().toISOString().split('T')[0],
+                enrollmentDate: '',
                 membershipPlan: null,
                 hasForm8554Addon: false,
                 autoRenew: true,
