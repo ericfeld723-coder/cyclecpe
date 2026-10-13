@@ -12,7 +12,9 @@ const PRICE_TO_PLAN = {
   'price_1UG2KVHLYDiifWD0WY1Pc06G': 'PLUS', // old $129 price (legacy subscribers)
   'price_1UPkG8HLYDiifWD0pUkgcorp': 'PLUS', // new $99 price
   'price_1UG2L4HLYDiifWD089k4TUxW': 'COMPLETE', // old $179 price (legacy subscribers)
-  'price_1UPkKXHLYDiifWD01rgtclTB': 'COMPLETE', // new $129 price
+  'price_1UPkKXHLYDiifWD01rgtclTB': 'COMPLETE', // new $129 price (test mode)
+  'price_1UQ4iyHLYDiifWD0nUD0UD0b': 'PLUS', // LIVE $99 price
+  'price_1UQ4isHLYDiifWD0gECGf3UV': 'COMPLETE', // LIVE $129 price
 };
 
 export const config = { api: { bodyParser: false } };
