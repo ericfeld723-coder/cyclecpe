@@ -75,7 +75,6 @@ async function sendPlanConfirmationEmail(email, plan) {
         <p>Hi there,</p>
         <p>This confirms your CycleCPE membership is now active on the <strong>${PLAN_NAMES[plan]}</strong> plan.</p>
         <p>You can review or change your plan anytime from the Practitioner Tool tab in your CycleCPE account.</p>
-        <p>A separate payment receipt from Stripe will follow, if applicable, to the same email address.</p>
         <p>Questions? Reach us anytime at info@cyclecpe.com.</p>
         <p>— The CycleCPE Team<br>CycleCPE LLC · 7000 Palmetto Park Rd, Ste 210, Boca Raton, FL 33433</p>
       </div>`;
@@ -116,7 +115,6 @@ async function sendCoursePurchaseEmail(email, slug, amountCents) {
         <p>Thank you for your purchase. This confirms you now have access to the following CycleCPE course:</p>
         <p style="margin:12px 0;"><strong>${title}</strong>${hours ? `<br>${hours}` : ''}${amount ? `<br>Amount paid: ${amount}` : ''}</p>
         <p>Log in to your CycleCPE account and open the course from the catalog to begin. Once you pass the exam, your certificate is emailed to you automatically and added to your CPE ledger.</p>
-        <p>A separate payment receipt from Stripe will follow, if applicable, to the same email address.</p>
         <p>Questions? Reach us anytime at info@cyclecpe.com.</p>
         <p>— The CycleCPE Team<br>CycleCPE LLC · 7000 Palmetto Park Rd, Ste 210, Boca Raton, FL 33433</p>
       </div>`;
