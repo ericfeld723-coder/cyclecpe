@@ -325,7 +325,7 @@
 <div class="navbar">
     <div class="navbar-brand-area">
         <div>
-            <h1>Cycle<span>CPE</span></h1>
+            <h1>Cycle<span>CPE</span> LLC</h1>
             <div style="font-size: 12px; opacity: 0.8;">Enrolled Agent CE & Renewal Hub</div>
         </div>
     </div>
@@ -2572,6 +2572,7 @@ let activeEaKey = "Jane A. Doe";
     }
 
     function setupLoggedInState() {
+        resetIdleTimer();
         document.getElementById('pageLogin').style.display = 'none';
         hideAllPublicPages();
         document.getElementById('appMain').style.display = 'block';
@@ -2601,7 +2602,16 @@ let activeEaKey = "Jane A. Doe";
         if (typeof refreshForm8554TabAccess === 'function') refreshForm8554TabAccess();
     }
 
+    // Escapes user-supplied text before it is placed into innerHTML (prevents injected markup/scripts).
+    function escHtml(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
     function logout() {
+        // Actually end the Supabase session (previously only the screen was reset, so a page
+        // refresh could silently log the user back in).
+        try { if (window.supabase && window.supabase.auth) window.supabase.auth.signOut(); } catch (e) {}
+        stopIdleTimer();
         currentUser = null;
         document.getElementById('appMain').style.display = 'none';
         document.getElementById('navbar-user-area').style.display = 'none';
@@ -2610,6 +2620,23 @@ let activeEaKey = "Jane A. Doe";
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
     }
+
+    // ---- Idle session timeout: logs out after 60 minutes with no activity ----
+    const IDLE_LIMIT_MS = 60 * 60 * 1000;
+    let idleTimerId = null;
+    function resetIdleTimer() {
+        if (!currentUser) return;
+        clearTimeout(idleTimerId);
+        idleTimerId = setTimeout(() => {
+            if (currentUser) {
+                logout();
+                alert('You were logged out after 60 minutes of inactivity. Please log in again.');
+            }
+        }, IDLE_LIMIT_MS);
+    }
+    function stopIdleTimer() { clearTimeout(idleTimerId); idleTimerId = null; }
+    ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evt =>
+        window.addEventListener(evt, resetIdleTimer, { passive: true }));
 
     function hideAllPublicPages() {
         const publicPages = ['howitworks', 'faq', 'about', 'pricing', 'contact', 'resources', 'terms', 'privacy'];
@@ -2887,6 +2914,14 @@ let activeEaKey = "Jane A. Doe";
         const message = msgEl ? msgEl.value.trim() : '';
         const form = e.target;
 
+        // Simple anti-spam: one message per 60 seconds from this browser.
+        const nowTs = Date.now();
+        if (window._lastContactSend && nowTs - window._lastContactSend < 60000) {
+            alert('Please wait a minute before sending another message.');
+            return;
+        }
+        window._lastContactSend = nowTs;
+
         const body = `New message from the CycleCPE contact form.
 
 Name: ${name}
@@ -2989,11 +3024,11 @@ ${message}
             tr.innerHTML = `
                 <td><input type="checkbox" class="ea-select" onchange="updateSelectedCount()"></td>
                 <td>
-                    <a class="practitioner-link" onclick="openPractitionerModal('${key}')">${ea.firstName || 'Unnamed'} ${ea.lastName || ''} ${ea.suffix || ''}</a><br>
-                    <small style="color: var(--text-muted);">${ea.email || 'No email'} | ${ea.city || 'City'}, ${ea.state || 'ST'}</small>
+                    <a class="practitioner-link" onclick="openPractitionerModal('${escHtml(key)}')">${escHtml(ea.firstName || 'Unnamed')} ${escHtml(ea.lastName || '')} ${escHtml(ea.suffix || '')}</a><br>
+                    <small style="color: var(--text-muted);">${escHtml(ea.email || 'No email')} | ${escHtml(ea.city || 'City')}, ${escHtml(ea.state || 'ST')}</small>
                 </td>
-                <td>${ea.eaNum ? ea.eaNum + '-EA' : 'N/A'}</td>
-                <td>${ea.ptin || 'N/A'}</td>
+                <td>${ea.eaNum ? escHtml(ea.eaNum) + '-EA' : 'N/A'}</td>
+                <td>${escHtml(ea.ptin || 'N/A')}</td>
                 <td>${planDisplayHtml}</td>
                 <td>${cycle.groupName}</td>
                 <td><strong>${cycle.startYear} – ${cycle.endYear}</strong></td>
@@ -3547,8 +3582,8 @@ ${message}
             const sourceTag = c.type === 'EXTERNAL' ? '<span class="tag tag-external">External OCR</span>' : '';
             item.innerHTML = `
                 <div class="course-info">
-                    <h3>${c.title} <span class="tag ${tagClass}">${c.category}</span> ${sourceTag}</h3>
-                    <div class="course-meta">Provider: <strong>${c.source}</strong> | Program #: ${c.programNo} | Date Completed: ${c.date}</div>
+                    <h3>${escHtml(c.title)} <span class="tag ${tagClass}">${escHtml(c.category)}</span> ${sourceTag}</h3>
+                    <div class="course-meta">Provider: <strong>${escHtml(c.source)}</strong> | Program #: ${escHtml(c.programNo)} | Date Completed: ${escHtml(c.date)}</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px;">
                     <div style="font-weight: bold; font-size: 1.05rem; color: var(--primary);">
@@ -4052,9 +4087,10 @@ ${message}
         statusEl.style.color = 'var(--text-muted)';
 
         try {
+            const { data: { session: authSession } } = await window.supabase.auth.getSession();
             const res = await fetch(UPGRADE_SUBSCRIPTION_ENDPOINT, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (authSession ? authSession.access_token : '') },
                 body: JSON.stringify({ email: ea.email, newPlan }),
             });
             const data = await res.json();
@@ -4092,11 +4128,16 @@ ${message}
                     disposition: 'attachment'
                 }];
             }
-            fetch(CYCLECPE_EMAIL_ENDPOINT, {
+            // The email endpoint now requires the logged-in user's token (only the public contact
+            // form is allowed without one).
+            const getToken = (window.supabase && window.supabase.auth)
+                ? window.supabase.auth.getSession().then(r => (r.data && r.data.session) ? r.data.session.access_token : '').catch(() => '')
+                : Promise.resolve('');
+            getToken.then(token => fetch(CYCLECPE_EMAIL_ENDPOINT, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { 'Authorization': 'Bearer ' + token } : {}),
                 body: JSON.stringify(payload)
-            })
+            }))
                 .then(r => r.json())
                 .then(data => console.log('CycleCPE email endpoint response:', data))
                 .catch(err => console.warn('Email send failed:', err));
@@ -5487,12 +5528,12 @@ CycleCPE`;
                     const planLabel = PLAN_DISPLAY_NAMES[plan.toUpperCase()] || plan;
                     const fullName = `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'N/A';
                     return `<tr>
-                        <td><strong>${p.email || ''}</strong></td>
+                        <td><strong>${escHtml(p.email || '')}</strong></td>
                         <td><span class="tag ${isAdmin ? 'tag-ethics' : 'tag-tax'}">${isAdmin ? 'System Administrator' : 'Practitioner'}</span></td>
-                        <td>${fullName}</td>
-                        <td>${p.ptin || 'N/A'}</td>
+                        <td>${escHtml(fullName)}</td>
+                        <td>${escHtml(p.ptin || 'N/A')}</td>
                         <td><span class="status-badge badge-ready">${planLabel}</span></td>
-                        <td>${isAdmin ? '<button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" disabled>System Account</button>' : `<button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="alert('Password reset link sent.')">Reset Password</button>`}${isAdmin ? '' : ` <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="adminViewCertificates('${email}')">Certificates</button>`}</td>
+                        <td>${isAdmin ? '<button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" disabled>System Account</button>' : `<button class="btn btn-danger" style="padding: 2px 8px; font-size: 11px;" onclick="alert('Password reset link sent.')">Reset Password</button>`}${isAdmin ? '' : ` <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" data-email="${escHtml(email)}" onclick="adminViewCertificates(this.dataset.email)">Certificates</button>`}</td>
                     </tr>`;
                 }).join('');
             } catch (err) {
@@ -5539,9 +5580,28 @@ CycleCPE`;
             } catch (e) { console.error(e); alert('Failed to generate certificate.'); }
         }
 
+        // Encrypts/decrypts the sensitive profile fields (SSN last 4, CAF) via the server, so the
+        // database never holds them as readable text. Returns null if the service is unavailable.
+        async function profileCrypto(action, values) {
+            try {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (!session) return null;
+                const res = await fetch('https://cyclecpe.vercel.app/api/profile-crypto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+                    body: JSON.stringify({ action, values })
+                });
+                if (!res.ok) return null;
+                const out = await res.json();
+                return out.values || null;
+            } catch (e) { return null; }
+        }
+
         async function syncFullProfileToSupabase(ea) {
             if (!ea || !ea.email) return;
             try {
+                const sens = await profileCrypto('encrypt', { ssn: ea.ssn || '', caf: ea.caf || '' });
+                const sensitive = sens ? { ssn: sens.ssn, caf: sens.caf } : {}; // if unavailable, leave stored values untouched
                 const { error } = await window.supabase.from('practitioner_profiles').upsert({
                     email: ea.email.toLowerCase(),
                     first_name: ea.firstName || '',
@@ -5549,8 +5609,7 @@ CycleCPE`;
                     suffix: ea.suffix || '',
                     ea_num: ea.eaNum || '',
                     ptin: ea.ptin || '',
-                    caf: ea.caf || '',
-                    ssn: ea.ssn || '',
+                    ...sensitive,
                     phone: ea.phone || '',
                     address1: ea.address1 || '',
                     city: ea.city || '',
@@ -5590,8 +5649,17 @@ CycleCPE`;
                 ea.suffix = data.suffix || ea.suffix;
                 ea.eaNum = data.ea_num || ea.eaNum;
                 ea.ptin = data.ptin || ea.ptin;
-                ea.caf = data.caf || ea.caf;
-                ea.ssn = data.ssn || ea.ssn;
+                let needsMigration = false;
+                const encIn = {};
+                ['ssn', 'caf'].forEach(k => {
+                    const v = data[k];
+                    if (typeof v === 'string' && v.startsWith('enc:v1:')) encIn[k] = v;
+                    else if (v) { ea[k] = v; needsMigration = true; } // legacy plaintext — re-saved encrypted below
+                });
+                if (Object.keys(encIn).length) {
+                    const dec = await profileCrypto('decrypt', encIn);
+                    if (dec) { if (dec.ssn) ea.ssn = dec.ssn; if (dec.caf) ea.caf = dec.caf; }
+                }
                 ea.phone = data.phone || ea.phone;
                 ea.address1 = data.address1 || ea.address1;
                 ea.city = data.city || ea.city;
@@ -5608,6 +5676,7 @@ CycleCPE`;
                 if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
                 if (typeof loadPractitionerToolTab === 'function') loadPractitionerToolTab();
                 if (typeof renderRosterTable === 'function') renderRosterTable();
+                if (needsMigration) syncFullProfileToSupabase(ea);
             } catch (e) {
                 console.warn('syncFullProfileFromSupabase exception:', e);
             }
