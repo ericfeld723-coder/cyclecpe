@@ -3,11 +3,19 @@ import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Same price IDs already used in the webhook — kept in sync with your 3 paid plans.
-const PLAN_TO_PRICE = {
-  ESSENTIALS: 'price_1UG2LzHLYDiifWD02VO6IRh5',
-  PLUS: 'price_1UPkG8HLYDiifWD0pUkgcorp', // $99/yr
-  COMPLETE: 'price_1UPkKXHLYDiifWD01rgtclTB', // $129/yr
-};
+// Live-mode and test-mode price IDs are different. The right set is chosen automatically
+// from the Stripe secret key in use (sk_live_... = live, sk_test_... = test).
+const IS_LIVE = (process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live');
+const PLAN_TO_PRICE = IS_LIVE
+  ? {
+      PLUS: 'price_1UQ4iyHLYDiifWD0nUD0UD0b', // $99/yr (live)
+      COMPLETE: 'price_1UQ4isHLYDiifWD0gECGf3UV', // $129/yr (live)
+    }
+  : {
+      ESSENTIALS: 'price_1UG2LzHLYDiifWD02VO6IRh5',
+      PLUS: 'price_1UPkG8HLYDiifWD0pUkgcorp', // $99/yr (test)
+      COMPLETE: 'price_1UPkKXHLYDiifWD01rgtclTB', // $129/yr (test)
+    };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
