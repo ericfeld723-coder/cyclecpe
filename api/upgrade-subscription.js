@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { getAuthedEmail, rateLimit, clientIp, ADMIN_EMAIL } from './_auth.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -20,11 +21,21 @@ const PLAN_TO_PRICE = IS_LIVE
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { email, newPlan } = req.body;
+  // Only a logged-in user may change a plan, and only their own (the admin may change any).
+  const authedEmail = await getAuthedEmail(req);
+  if (!authedEmail) return res.status(401).json({ error: 'Please log in again to change your plan.' });
+  if (!rateLimit('plan:' + authedEmail, 10, 60 * 60 * 1000) || !rateLimit('planip:' + clientIp(req), 30, 60 * 60 * 1000)) {
+    return res.status(429).json({ error: 'Too many plan changes. Please try again later.' });
+  }
+
+  const { email, newPlan } = req.body || {};
+  if (email && authedEmail !== String(email).toLowerCase() && authedEmail !== ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'You can only change your own plan.' });
+  }
   if (!email || !newPlan || (newPlan !== 'FREE' && !PLAN_TO_PRICE[newPlan])) {
     return res.status(400).json({ error: 'A valid email and newPlan (FREE, PLUS, or COMPLETE) are required.' });
   }
