@@ -5250,7 +5250,12 @@ CycleCPE`;
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bfAwbMAnUJ7ZHx227fnctQ_RhYaFLjZ';
         
         // Explicitly attach supabase to the window object so it's globally accessible
-        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        // Keep the login session in sessionStorage (not localStorage) so closing the tab/browser
+        // signs the user out instead of auto-logging them back in on the next visit.
+        let authStorage;
+        try { sessionStorage.setItem('_t', '1'); sessionStorage.removeItem('_t'); authStorage = sessionStorage; } catch (e) { authStorage = undefined; }
+        try { Object.keys(localStorage).filter(k => /^sb-.*-auth-token/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, authStorage ? { auth: { storage: authStorage } } : undefined);
 
         // Detects when someone arrives via a password-reset email link and shows the
         // "Set New Password" modal — without this, the reset email would send them back
