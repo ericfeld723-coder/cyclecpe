@@ -1044,11 +1044,11 @@
                     <div class="value" style="color: var(--success);" id="status-completed-hours">0</div>
                 </div>
                 <div class="metric-card" style="cursor:pointer;" onclick="showAppTab('engine')" title="View in CPE Ledger & Engine Math">
-                    <div class="title">Remaining Ethics Hours</div>
+                    <div class="title">Remaining <span class="status-year">2026</span> Minimum Ethics Hours</div>
                     <div class="value" style="color: var(--warning);" id="status-remaining-ethics">0</div>
                 </div>
                 <div class="metric-card" style="cursor:pointer;" onclick="showAppTab('engine')" title="View in CPE Ledger & Engine Math">
-                    <div class="title">Remaining Federal Tax Law</div>
+                    <div class="title">Remaining <span class="status-year">2026</span> Minimum Federal Tax Law Hours</div>
                     <div class="value" style="color: var(--warning);" id="status-remaining-fedtax">0</div>
                 </div>
                 <div class="metric-card">
@@ -2441,6 +2441,7 @@
         const ethicsEl = document.getElementById('status-remaining-ethics');
         const fedtaxEl = document.getElementById('status-remaining-fedtax');
         const dueEl = document.getElementById('status-8554-due');
+        document.querySelectorAll('.status-year').forEach(el => { el.textContent = new Date().getFullYear(); });
         if (!completedEl) return;
 
         if (!ea) {
