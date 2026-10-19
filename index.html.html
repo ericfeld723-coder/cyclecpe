@@ -12,6 +12,12 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" href="/icon-192.png">
     <title>CycleCPE - Enrolled Agent Management & Form 8554 Hub</title>
+    <meta name="description" content="CycleCPE helps Enrolled Agents track their 72-hour CE cycle, ethics hours and Form 8554 renewal. Start a free compliance tracker with automatic reminders.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="CycleCPE">
+    <meta property="og:title" content="CycleCPE - Enrolled Agent CE Tracker & Form 8554 Hub">
+    <meta property="og:description" content="Track your Enrolled Agent CE hours and renewal window for free, with automatic reminders.">
+    <meta property="og:url" content="https://www.cyclecpe.com/">
     <!-- pdf-lib for client-side Form 8554 & Certificate PDF generation -->
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2140,6 +2146,7 @@
             </div>
             <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="jane@example.com"></div>
             <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="••••••••"></div>
+            <label style="display:flex; gap:8px; align-items:flex-start; font-size:0.82rem; color:var(--text-muted); margin:6px 0 12px; cursor:pointer;"><input type="checkbox" id="reg-agree" style="width:auto; margin-top:3px;"> <span>I agree to the <a href="#" onclick="showPublicPage('terms'); return false;">Terms of Service</a> and <a href="#" onclick="showPublicPage('privacy'); return false;">Privacy Policy</a>.</span></label>
             
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Complete Registration & Log In</button>
         </form>
@@ -2525,7 +2532,11 @@
     const CYCLECPE_STORAGE_KEY = 'cyclecpe_practitioners_v1';
     function savePractitionersToStorage() {
         try {
-            localStorage.setItem(CYCLECPE_STORAGE_KEY, JSON.stringify(practitioners));
+            // Never write SSN/CAF to browser storage; they live (encrypted) in the database and are
+            // loaded into memory at login.
+            const safe = JSON.parse(JSON.stringify(practitioners));
+            Object.keys(safe).forEach(k => { if (safe[k]) { delete safe[k].ssn; delete safe[k].caf; } });
+            localStorage.setItem(CYCLECPE_STORAGE_KEY, JSON.stringify(safe));
         } catch (e) { console.warn('CycleCPE: could not save to localStorage', e); }
     }
     function loadPractitionersFromStorage() {
@@ -2543,39 +2554,13 @@
         } catch (e) { console.warn('CycleCPE: could not load from localStorage', e); }
     }
     loadPractitionersFromStorage();
+    savePractitionersToStorage(); // one-time scrub of any SSN/CAF stored by earlier versions
 
 let activeEaKey = "Jane A. Doe";
     let selectedPlanOption = 1;
     let pendingCourseSlug = null;
 
-    function handleLogin(e) {
-        e.preventDefault();
-        const u = document.getElementById('username').value.trim().toLowerCase();
-        const p = document.getElementById('password').value.trim();
-        const err = document.getElementById('login-error');
-
-        if (u === 'admin' && p === 'admin') {
-            currentUser = { username: 'admin', role: 'ADMIN', name: 'System Administrator' };
-            err.style.display = 'none';
-            setupLoggedInState();
-            showAppTab('admin');
-        } else {
-            let matchedKey = null;
-            Object.keys(practitioners).forEach(k => {
-                if (practitioners[k].username === u) matchedKey = k;
-            });
-
-            if (matchedKey && p === 'user') {
-                currentUser = { username: u, role: 'USER', name: matchedKey };
-                activeEaKey = matchedKey;
-                err.style.display = 'none';
-                setupLoggedInState();
-                showAppTab('practitioner'); applyPlanSuccessFromUrl(); applyCoursePurchaseSuccessFromUrl();
-            } else {
-                err.style.display = 'block';
-            }
-        }
-    }
+    // (The real login handler, which authenticates against Supabase, is defined near the end of this file.)
 
     function openRegisterModal(e) {
         e.preventDefault();
@@ -5924,6 +5909,8 @@ CycleCPE`;
             const ln = document.getElementById('reg-last-name').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value.trim();
+            if (!document.getElementById('reg-agree').checked) { alert('Please agree to the Terms of Service and Privacy Policy to create an account.'); return; }
+            if (password.length < 8) { alert('Please choose a password of at least 8 characters.'); return; }
 
             const { data, error } = await window.supabase.auth.signUp({
                 email: email,
