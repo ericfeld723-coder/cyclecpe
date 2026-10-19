@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#1a365d">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="CycleCPE">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="/icon-192.png">
     <title>CycleCPE - Enrolled Agent Management & Form 8554 Hub</title>
     <!-- pdf-lib for client-side Form 8554 & Certificate PDF generation -->
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -940,6 +948,7 @@
                 </div>
                 <div id="login-error" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display: none;">Invalid email or password.</div>
                 <div id="login-info" style="color: var(--success); font-size: 0.85rem; margin-bottom: 12px; display: none;"></div>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:12px; cursor:pointer;"><input type="checkbox" id="keep-signed-in" style="width:auto; margin:0;"> Keep me signed in on this device</label>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
             </form>
 
@@ -2653,6 +2662,7 @@ let activeEaKey = "Jane A. Doe";
         // refresh could silently log the user back in).
         try { if (window.supabase && window.supabase.auth) window.supabase.auth.signOut(); } catch (e) {}
         stopIdleTimer();
+        try { localStorage.removeItem('cyclecpe_keep_signed_in'); } catch (e) {}
         currentUser = null;
         document.getElementById('appMain').style.display = 'none';
         document.getElementById('navbar-user-area').style.display = 'none';
@@ -5250,12 +5260,18 @@ CycleCPE`;
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_bfAwbMAnUJ7ZHx227fnctQ_RhYaFLjZ';
         
         // Explicitly attach supabase to the window object so it's globally accessible
-        // Keep the login session in sessionStorage (not localStorage) so closing the tab/browser
-        // signs the user out instead of auto-logging them back in on the next visit.
-        let authStorage;
-        try { sessionStorage.setItem('_t', '1'); sessionStorage.removeItem('_t'); authStorage = sessionStorage; } catch (e) { authStorage = undefined; }
-        try { Object.keys(localStorage).filter(k => /^sb-.*-auth-token/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
-        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, authStorage ? { auth: { storage: authStorage } } : undefined);
+        // Login persistence: by default the session lives in sessionStorage (closing the tab/browser
+        // signs the user out). If the user ticked "Keep me signed in" (always on in the installed
+        // app), the session lives in localStorage instead.
+        const KEEP_KEY = 'cyclecpe_keep_signed_in';
+        const keepSignedIn = () => { try { return localStorage.getItem(KEEP_KEY) === '1'; } catch (e) { return false; } };
+        const authStorage = {
+            getItem: k => { try { return (keepSignedIn() ? localStorage : sessionStorage).getItem(k); } catch (e) { return null; } },
+            setItem: (k, v) => { try { (keepSignedIn() ? localStorage : sessionStorage).setItem(k, v); } catch (e) {} },
+            removeItem: k => { try { localStorage.removeItem(k); } catch (e) {} try { sessionStorage.removeItem(k); } catch (e) {} }
+        };
+        if (!keepSignedIn()) { try { Object.keys(localStorage).filter(k => /^sb-.*-auth-token/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {} }
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: authStorage } });
 
         // Detects when someone arrives via a password-reset email link and shows the
         // "Set New Password" modal — without this, the reset email would send them back
@@ -5976,6 +5992,7 @@ CycleCPE`;
             const password = document.getElementById('password').value.trim();
             const err = document.getElementById('login-error');
 
+            try { const k = document.getElementById('keep-signed-in'); if (k && k.checked) localStorage.setItem('cyclecpe_keep_signed_in', '1'); else localStorage.removeItem('cyclecpe_keep_signed_in'); } catch (e) {}
             const { data, error } = await window.supabase.auth.signInWithPassword({
                 email: email,
                 password: password,
@@ -6020,6 +6037,15 @@ CycleCPE`;
 
         // Run session check when script loads
         checkInitialSession();
+
+        // Installed-app support: tick "Keep me signed in" by default when running as an installed app,
+        // and register the service worker that makes the site installable.
+        try {
+            const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+            const kb = document.getElementById('keep-signed-in');
+            if (standalone && kb) kb.checked = true;
+            if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+        } catch (e) {}
     </script>
 </body>
 </html>
