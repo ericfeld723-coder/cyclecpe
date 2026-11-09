@@ -100,7 +100,7 @@ async function sendPlanConfirmationEmail(email, plan) {
   }
 }
 
-const COURSE_TITLES = {"ethics": {"t": "Practicing Under Circular 230", "h": 1}, "s-corp": {"t": "S Corporation Taxation: Elections, Compensation, and Basis", "h": 1}, "estate-gift": {"t": "Estate & Gift Tax Planning Under OBBBA", "h": 1}, "biz-incentives": {"t": "Business Cost Recovery & Investment Incentives", "h": 1}, "qrp": {"t": "Qualified Retirement Plan Matters", "h": 1}, "partnership-tax": {"t": "Partnership Taxation Fundamentals", "h": 1}, "like-kind-exchanges": {"t": "Like-Kind Exchanges & Real Estate Taxation", "h": 1}, "digital-assets": {"t": "2026 Digital Assets & Information Reporting Update", "h": 1}, "simple-sep-design": {"t": "SIMPLE & SEP Plan Design for Small Business", "h": 1}, "tax-update": {"t": "2026 Federal Tax Law Update", "h": 2}, "see-prep": {"t": "Special Enrollment Examination Prep", "h": 2}, "aftr": {"t": "Annual Federal Tax Refresher", "h": 6}, "individual-credits-deep-dive": {"t": "2026 Individual Credits & Provisions Deep Dive", "h": 4}, "business-depreciation-update": {"t": "Business Entity & Depreciation Law Update", "h": 4}, "circular-230-case-studies": {"t": "Circular 230 in Practice: Case Studies & Scenarios", "h": 4}, "preparer-penalties-enforcement": {"t": "Preparer Penalties & IRS Enforcement Priorities", "h": 4}, "trust-estate-income-tax": {"t": "Trust & Estate Income Taxation (Form 1041)", "h": 4}, "multistate-nexus": {"t": "Multistate Taxation & Nexus Fundamentals", "h": 4}, "fbar-fatca-reporting": {"t": "International Information Reporting: FBAR & FATCA", "h": 4}, "defined-benefit-plans": {"t": "Defined Benefit & Cash Balance Plan Design", "h": 4}, "ira-rollovers-conversions": {"t": "IRA Rollovers, Conversions, and Beneficiary Planning", "h": 4}, "data-security-safeguards": {"t": "Data Security & Safeguards Obligations for Tax Practices", "h": 4}};
+const COURSE_TITLES = {"ethics": {"t": "Practicing Under Circular 230", "h": 1}, "s-corp": {"t": "S Corporation Elections, Reasonable Compensation, and Shareholder Basis", "h": 2}, "estate-gift": {"t": "Estate & Gift Tax Planning Under OBBBA", "h": 1}, "biz-incentives": {"t": "Business Cost Recovery & Investment Incentives", "h": 1}, "qrp": {"t": "Qualified Retirement Plan Matters", "h": 1}, "partnership-tax": {"t": "Partnership Taxation Fundamentals", "h": 1}, "like-kind-exchanges": {"t": "Like-Kind Exchanges & Real Estate Taxation", "h": 1}, "digital-assets": {"t": "2026 Digital Assets & Information Reporting Update", "h": 1}, "simple-sep-design": {"t": "SIMPLE & SEP Plan Design for Small Business", "h": 1}, "tax-update": {"t": "2026 Federal Tax Law Update", "h": 2}, "see-prep": {"t": "Special Enrollment Examination Prep", "h": 2}, "aftr": {"t": "Annual Federal Tax Refresher", "h": 6}, "individual-credits-deep-dive": {"t": "2026 Individual Credits & Provisions Deep Dive", "h": 4}, "business-depreciation-update": {"t": "Business Entity & Depreciation Law Update", "h": 4}, "circular-230-case-studies": {"t": "Circular 230 in Practice: Case Studies & Scenarios", "h": 4}, "preparer-penalties-enforcement": {"t": "Preparer Penalties & IRS Enforcement Priorities", "h": 4}, "trust-estate-income-tax": {"t": "Trust & Estate Income Taxation (Form 1041)", "h": 4}, "multistate-nexus": {"t": "Multistate Taxation & Nexus Fundamentals", "h": 4}, "fbar-fatca-reporting": {"t": "International Information Reporting: FBAR & FATCA", "h": 4}, "defined-benefit-plans": {"t": "Defined Benefit & Cash Balance Plan Design", "h": 4}, "ira-rollovers-conversions": {"t": "IRA Rollovers, Conversions, and Beneficiary Planning", "h": 4}, "data-security-safeguards": {"t": "Data Security & Safeguards Obligations for Tax Practices", "h": 4}};
 
 async function sendCoursePurchaseEmail(email, slug, amountCents) {
   if (!email || !slug) return;
@@ -170,6 +170,12 @@ async function enforceSingleSubscriptionPerCustomer(customerId, newSubscriptionI
   }
 }
 
+
+// Course price (in cents) by credit hours; the amount actually paid (before any promo code) must cover the
+// course being unlocked, so someone cannot pay for a 1-hour course and unlock a 6-hour one by editing the link.
+const COURSE_HOURS = {"ethics": 1, "s-corp": 2, "estate-gift": 1, "biz-incentives": 1, "qrp": 1, "partnership-tax": 1, "like-kind-exchanges": 1, "digital-assets": 1, "simple-sep-design": 1, "tax-update": 2, "see-prep": 2, "aftr": 6, "individual-credits-deep-dive": 4, "business-depreciation-update": 4, "circular-230-case-studies": 4, "preparer-penalties-enforcement": 4, "trust-estate-income-tax": 4, "multistate-nexus": 4, "fbar-fatca-reporting": 4, "defined-benefit-plans": 4, "ira-rollovers-conversions": 4, "data-security-safeguards": 4};
+const PRICE_CENTS_BY_HOURS = { 1: 900, 2: 1500, 4: 2500, 6: 3500 };
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -201,6 +207,13 @@ export default async function handler(req, res) {
         await setPlanForEmail(email, plan);
         await sendPlanConfirmationEmail(email, plan);
       } else if (session.client_reference_id) {
+        const slug = session.client_reference_id;
+        const needed = PRICE_CENTS_BY_HOURS[COURSE_HOURS[slug]];
+        const paid = session.amount_subtotal != null ? session.amount_subtotal : session.amount_total;
+        if (!needed || paid < needed) {
+          console.error('Course purchase rejected: amount does not cover course', { slug, paid, needed, email });
+          return res.status(200).json({ received: true, skipped: 'amount_mismatch' });
+        }
         await recordCoursePurchase(email, session.client_reference_id);
         await sendCoursePurchaseEmail(email, session.client_reference_id, session.amount_total);
       }
