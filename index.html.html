@@ -671,7 +671,7 @@
                 <h2>CycleCPE Membership Plans & Pricing</h2>
             </div>
             <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 1.05rem;">
-                Free members can purchase self-study courses individually at checkout ($9 / $15 / $25 / $35 depending on course length). EA Plus and EA Complete include unlimited course access.
+                Free members can purchase self-study courses individually at checkout ($9 / $15 / $25 depending on course length). EA Plus and EA Complete include unlimited course access.
             </p>
 
             <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
@@ -725,7 +725,7 @@
             <div style="background:#fff; border:2px solid var(--primary); border-radius:8px; padding:20px 24px; margin-bottom:20px;">
                 <div style="font-weight:700; color:var(--primary); font-size:1.05rem; margin-bottom:4px;">💳 Individual Course Pricing</div>
                 <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">CPE courses can be purchased individually with the Free plan at the following rates:</p>
-                <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px;">
                     <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
                         <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$9</div>
                         <div style="font-size:0.8rem; color:var(--text-muted);">1-hour course</div>
@@ -737,10 +737,6 @@
                     <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
                         <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$25</div>
                         <div style="font-size:0.8rem; color:var(--text-muted);">4-hour course</div>
-                    </div>
-                    <div style="text-align:center; background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 8px;">
-                        <div style="font-size:1.4rem; font-weight:700; color:var(--primary);">$35</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted);">6-hour course</div>
                     </div>
                 </div>
             </div>
@@ -1779,7 +1775,6 @@
                         <button class="catalog-filter-btn" data-filter="Federal Tax Law">Federal Tax Law</button>
                         <button class="catalog-filter-btn" data-filter="Qualified Retirement Plan Matters">Qualified Retirement Plan Matters</button>
                         <button class="catalog-filter-btn" data-filter="Special Enrollment Examination Prep">Special Enrollment Examination Prep</button>
-                        <button class="catalog-filter-btn" data-filter="Annual Federal Tax Refresher">Annual Federal Tax Refresher</button>
                     </div>
 
                     <div class="catalog-filters" id="catalog-hours-filters" style="margin-top: -6px;">
@@ -1788,7 +1783,6 @@
                         <button class="catalog-filter-btn" data-hours-filter="1">1 hour</button>
                         <button class="catalog-filter-btn" data-hours-filter="2">2 hours</button>
                         <button class="catalog-filter-btn" data-hours-filter="4">4 hours</button>
-                        <button class="catalog-filter-btn" data-hours-filter="6">6 hours</button>
                     </div>
 
                     <div class="catalog-progress-bar">
@@ -1885,13 +1879,7 @@
                             <div class="meta-row"><span>3 EXAM PARTS COVERED · 6 review + 10 final Qs</span><span class="go">Start course →</span></div>
                         </div>
 
-                        <div class="catalog-card" data-cat="Annual Federal Tax Refresher" data-course="aftr" data-hours="6" onclick="openCourseView('aftr')">
-                            <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
-                            <div class="cat"><span class="letter">A</span> ANNUAL FEDERAL TAX REFRESHER</div>
-                            <h2>Annual Federal Tax Refresher</h2>
-                            <p>The three required AFTR domains — filing season tax law updates, a general review of individual taxation, and ethics/practices — for non-credentialed preparers seeking an Annual Filing Season Program Record of Completion.</p>
-                            <div class="meta-row"><span>6.0 CE HRS · 18 review + 100 final Qs (timed test)</span><span class="go">Start course →</span></div>
-                        </div>
+                        
 
                         <div class="catalog-card" data-cat="Federal Tax Update" data-course="individual-credits-deep-dive" data-hours="4" onclick="openCourseView('individual-credits-deep-dive')">
                             <span class="catalog-badge-done">✓ COMPLETED</span><span class="catalog-badge-purchased">✓ PURCHASED</span>
@@ -2899,22 +2887,37 @@ let activeEaKey = "Jane A. Doe";
     // updated automatically. This is a lightweight stopgap — a fully reliable, tamper-proof
     // sync (source of truth) requires a Stripe webhook hitting a real backend, which a
     // static HTML page cannot run on its own.
+    // After returning from Stripe the URL carries ?course_purchase_success=<slug> or ?plan_success=<plan>.
+    // That parameter alone grants NOTHING (anyone can type it). We wait for Stripe's webhook to record the
+    // purchase in the database, then re-read it from there.
+    async function confirmPaymentFromDatabase(kind, key, label) {
+        const email = currentUser && currentUser.username;
+        if (!email) return;
+        for (let i = 0; i < 8; i++) {
+            if (kind === 'course') await syncPurchasedCoursesFromSupabase(email); else await syncPlanFromSupabase(email);
+            const ea = practitioners[activeEaKey];
+            const ok = kind === 'course' ? !!(ea && (ea.purchasedCourses || []).includes(key)) : !!(ea && ea.membershipPlan === key);
+            if (ok) {
+                try { if (typeof refreshCatalogProgress === 'function') refreshCatalogProgress(); if (typeof renderRosterTable === 'function') renderRosterTable(); } catch (e) {}
+                alert(`Payment confirmed — ${label} is now ${kind === 'course' ? 'unlocked' : 'active'}!`);
+                return;
+            }
+            await new Promise(r => setTimeout(r, 2500));
+        }
+        alert('Your payment is still being confirmed. This can take a minute. Please refresh the page shortly; if it does not appear, email info@cyclecpe.com.');
+    }
+
     function applyCoursePurchaseSuccessFromUrl() {
         try {
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('course_purchase_success');
             if (slug && bySlug[slug] && currentUser) {
-                const ea = practitioners[activeEaKey];
-                if (ea) {
-                    ea.purchasedCourses = ea.purchasedCourses || [];
-                    if (!ea.purchasedCourses.includes(slug)) ea.purchasedCourses.push(slug);
-                    savePractitionersToStorage();
-                    try { localStorage.removeItem('cyclecpe_pending_course_purchase'); } catch (e) {}
-                    alert(`Payment confirmed — "${bySlug[slug].title}" is now unlocked!`);
-                }
+                try { localStorage.removeItem('cyclecpe_pending_course_purchase'); } catch (e) {}
+                confirmPaymentFromDatabase('course', slug, `"${bySlug[slug].title}"`);
+            }
+            if (slug) {
                 params.delete('course_purchase_success');
-                const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-                window.history.replaceState({}, '', newUrl);
+                window.history.replaceState({}, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
             }
         } catch (e) { console.warn('applyCoursePurchaseSuccessFromUrl error:', e); }
     }
@@ -2923,20 +2926,10 @@ let activeEaKey = "Jane A. Doe";
         try {
             const params = new URLSearchParams(window.location.search);
             const plan = params.get('plan_success');
-            if (plan && PLAN_INFO[plan] && currentUser) {
-                const ea = practitioners[activeEaKey];
-                if (ea) {
-                    ea.membershipPlan = plan;
-                    ea.hasForm8554Addon = (plan === 'COMPLETE');
-                    ea.autoRenew = true;
-                    savePractitionersToStorage();
-                    renderRosterTable();
-                    if (typeof renderPractitionerPlanSelector === 'function') renderPractitionerPlanSelector();
-                    alert(`Payment confirmed — ${PLAN_INFO[plan].name} plan is now active!`);
-                }
+            if (plan && PLAN_INFO[plan] && currentUser) confirmPaymentFromDatabase('plan', plan, `the ${PLAN_INFO[plan].name} plan`);
+            if (plan) {
                 params.delete('plan_success');
-                const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-                window.history.replaceState({}, '', newUrl);
+                window.history.replaceState({}, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
             }
         } catch (e) { console.warn('applyPlanSuccessFromUrl error:', e); }
     }
@@ -3947,40 +3940,63 @@ ${message}
     }
 
     async function buildCertificatePdfBytes(courseTitle, ceHours, category, programNo, eaOverride, dateOverride) {
+        // Layout follows IRS Publication 5888 / the IRS CE provider certificate requirements:
+        // participant name, program name, IRS program number, credits earned, completion date,
+        // CE provider name and business address, designated-official signature line, and the
+        // Circular 230 section 10.6 50-minute contact-hour statement. No PTIN appears on the certificate.
         const ea = eaOverride || practitioners[activeEaKey];
-        {
-            const pdfDoc = await PDFLib.PDFDocument.create();
-            const page = pdfDoc.addPage([792, 612]); 
-            const { width, height } = page.getSize();
-            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-            const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+        const pdfDoc = await PDFLib.PDFDocument.create();
+        const page = pdfDoc.addPage([792, 612]);
+        const { width, height } = page.getSize();
+        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+        const italicFont = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRomanItalic);
+        const navy = PDFLib.rgb(0.1, 0.2, 0.4), gold = PDFLib.rgb(0.7, 0.6, 0.3), grey = PDFLib.rgb(0.3, 0.3, 0.3);
 
-            page.drawRectangle({ x: 20, y: 20, width: width - 40, height: height - 40, borderWidth: 3, borderColor: PDFLib.rgb(0.1, 0.2, 0.4), color: PDFLib.rgb(0.98, 0.98, 0.96) });
-            page.drawRectangle({ x: 28, y: 28, width: width - 56, height: height - 56, borderWidth: 1, borderColor: PDFLib.rgb(0.7, 0.6, 0.3) });
+        page.drawRectangle({ x: 20, y: 20, width: width - 40, height: height - 40, borderWidth: 3, borderColor: navy, color: PDFLib.rgb(0.98, 0.98, 0.98) });
+        page.drawRectangle({ x: 28, y: 28, width: width - 56, height: height - 56, borderWidth: 1, borderColor: gold });
 
-            page.drawText('OFFICIAL CERTIFICATE OF COMPLETION', { x: 180, y: height - 80, size: 20, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
-            page.drawText('IRS CONTINUING EDUCATION CREDIT', { x: 270, y: height - 105, size: 12, font: boldFont, color: PDFLib.rgb(0.7, 0.6, 0.3) });
+        // Centered text helper; shrinks the font if the line would not fit inside the border.
+        const center = (text, y, size, f, color, maxW) => {
+            let sz = size;
+            while (f.widthOfTextAtSize(text, sz) > (maxW || width - 110) && sz > 6) sz -= 0.5;
+            page.drawText(text, { x: (width - f.widthOfTextAtSize(text, sz)) / 2, y, size: sz, font: f, color: color || PDFLib.rgb(0, 0, 0) });
+        };
 
-            page.drawText('This certificate is proudly presented to:', { x: 280, y: height - 160, size: 11, font });
-            page.drawText(`${ea.firstName || ''} ${ea.lastName || ''}`.trim(), { x: 260, y: height - 200, size: 24, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
-            page.drawText(`EA Enrollment #: ${ea.eaNum || 'N/A'}   |   PTIN: ${ea.ptin || 'N/A'}`, { x: 270, y: height - 225, size: 10, font });
+        center('CERTIFICATE OF COMPLETION', height - 80, 26, boldFont, navy);
+        center('CONTINUING EDUCATION  \u00B7  SELF-STUDY', height - 104, 11, boldFont, gold);
 
-            page.drawText('For successfully completing the IRS-Approved Continuing Education course:', { x: 200, y: height - 270, size: 11, font });
-            page.drawText(`"${courseTitle}"`, { x: 180, y: height - 310, size: 16, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
+        center('This certifies that', height - 150, 11, font);
+        center(`${ea.firstName || ''} ${ea.lastName || ''}`.trim(), height - 188, 26, boldFont, navy);
+        center(`EA Enrollment #: ${ea.eaNum || 'N/A'}`, height - 210, 10, font, grey);
 
-            page.drawText(`CE Hours Awarded: ${ceHours} Credit Hour(s)`, { x: 280, y: height - 350, size: 12, font: boldFont });
-            page.drawText(`Subject Category: ${category}`, { x: 290, y: height - 370, size: 11, font });
-            page.drawText(`IRS Program Approval #: ${programNo}`, { x: 280, y: height - 390, size: 11, font });
+        center('has successfully completed the continuing education program', height - 245, 11, font);
+        center(`"${courseTitle}"`, height - 278, 17, boldFont, navy, width - 140);
 
-            const completionDate = dateOverride ? new Date(dateOverride + (/^\d{4}-\d{2}-\d{2}$/.test(dateOverride) ? 'T12:00:00' : '')).toLocaleDateString() : new Date().toLocaleDateString();
-            page.drawText(`Completion Date: ${completionDate}`, { x: 100, y: 80, size: 10, font: boldFont });
-            
-            page.drawText('Eric T Feld, CPA', { x: 520, y: 100, size: 11, font: boldFont, color: PDFLib.rgb(0.1, 0.2, 0.4) });
-            page.drawText('CycleCPE Authorized Sponsor', { x: 500, y: 80, size: 10, font: boldFont });
-            page.drawLine({ start: { x: 480, y: 95 }, end: { x: 680, y: 95 }, thickness: 1, color: PDFLib.rgb(0.3, 0.3, 0.3) });
+        center(`CE Credit Hours Earned: ${ceHours}     |     Subject Category: ${category}`, height - 312, 11.5, boldFont);
+        center(`IRS Program Number: ${programNo}`, height - 334, 11, font);
+        const completionDate = dateOverride
+            ? new Date(dateOverride + (/^\d{4}-\d{2}-\d{2}$/.test(dateOverride) ? 'T12:00:00' : '')).toLocaleDateString()
+            : new Date().toLocaleDateString();
+        center(`Date Completed: ${completionDate}`, height - 356, 11, font);
 
-            return await pdfDoc.save();
-        }
+        // CE provider block (name + business address) — bottom left
+        page.drawText('CE Provider', { x: 70, y: 150, size: 9, font: font, color: grey });
+        page.drawText('CycleCPE LLC', { x: 70, y: 135, size: 12, font: boldFont, color: navy });
+        page.drawText('7000 Palmetto Park Rd, Ste 210', { x: 70, y: 120, size: 10, font });
+        page.drawText('Boca Raton, FL 33433', { x: 70, y: 107, size: 10, font });
+
+        // Designated official signature line — bottom right
+        page.drawText('Eric T Feld', { x: 505, y: 138, size: 20, font: italicFont, color: navy });
+        page.drawLine({ start: { x: 480, y: 132 }, end: { x: 720, y: 132 }, thickness: 1, color: grey });
+        page.drawText('Eric T Feld, CPA', { x: 480, y: 118, size: 10, font: boldFont });
+        page.drawText('Designated Official, CycleCPE LLC', { x: 480, y: 105, size: 9, font });
+
+        // Required statement
+        const stmt = 'In accordance with the standards set forth in Circular 230 section 10.6, CE Credits have been granted based on a 50-minute contact hour.';
+        center(stmt, 62, 9, italicFont, grey, width - 100);
+
+        return await pdfDoc.save();
     }
 
     function pdfBytesToBase64(pdfBytes) {
@@ -4212,7 +4228,7 @@ CycleCPE`;
     function emailCertificateRecord(ea, courseTitle, ceHours, category, programNo, pdfBase64, pdfFilename) {
         const recipients = [ea.email, CERT_ARCHIVE_EMAIL].filter(Boolean);
         const subject = `CycleCPE Certificate of Completion: ${courseTitle}`;
-        const body = `${ea.firstName || ''} ${ea.lastName || ''} completed "${courseTitle}" (${ceHours} CE hour(s), ${category}) on ${new Date().toLocaleDateString()}. Program #: ${programNo}. EA Enrollment #: ${ea.eaNum || 'N/A'}. PTIN: ${ea.ptin || 'N/A'}. Your official CE certificate is attached as a PDF.`;
+        const body = `${ea.firstName || ''} ${ea.lastName || ''} completed "${courseTitle}" (${ceHours} CE hour(s), ${category}) on ${new Date().toLocaleDateString()}. Program #: ${programNo}. EA Enrollment #: ${ea.eaNum || 'N/A'}. Your official CE certificate is attached as a PDF.`;
 
         ea.certificateEmailLog = ea.certificateEmailLog || [];
         ea.certificateEmailLog.push({ courseTitle, ceHours, category, programNo, date: new Date().toISOString(), sentTo: recipients, hadAttachment: !!pdfBase64 });
@@ -4223,44 +4239,51 @@ CycleCPE`;
     }
 
 
-    // ---- Course Evaluation Survey (IRS CE program evaluation requirement) ----
+    // ---- Course Evaluation (IRS Form 14364 elements) ----
+    // Five program-identifying elements (provider name, program name, IRS program number, program date,
+    // optional participant name) + eight measures of rating (seven rated on a scale that includes N/A,
+    // plus a comments section).
+    const EVAL_MEASURES = [
+        ['objectives',  'Stated learning objectives were met'],
+        ['materials',   'Program materials are accurate, relevant and contributed to the achievement of the learning objectives'],
+        ['time',        'Time allotted to learning was adequate'],
+        ['facilities',  'Facilities/equipment were appropriate'],
+        ['handouts',    'Handouts were satisfactory'],
+        ['audiovideo',  'Audio and video materials were effective'],
+        ['instructors', 'Individual instructors were effective']
+    ];
+    function evalProgramNumber(slug) {
+        const c = (typeof bySlug !== 'undefined' && bySlug[slug]) ? bySlug[slug] : {};
+        return c.programNo || ('CCPE-' + String(slug).toUpperCase() + '-' + new Date().getFullYear());
+    }
     function renderCourseSurveyHtml(slug, title) {
+        const today = new Date().toLocaleDateString();
+        const scale = '<option value="">Select a rating</option><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Fair</option><option value="2">2 - Poor</option><option value="1">1 - Very poor</option><option value="N/A">N/A - Not applicable</option>';
+        const rows = EVAL_MEASURES.map((m, i) => `
+                <div class="field">
+                    <label>${i + 1}. ${m[1]}</label>
+                    <select id="survey-${m[0]}-${slug}">${scale}</select>
+                </div>`).join('');
         return `
             <div class="panel" id="survey-panel-${slug}" style="margin-top:20px; text-align:left;">
-                <h3 style="margin-bottom:4px;">Course Evaluation</h3>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
-                    Required program evaluation for "${title}". Your feedback is sent to CycleCPE's compliance team and helps satisfy IRS CE program evaluation requirements.
-                </p>
-                <div class="field">
-                    <label>1. The stated learning objectives for this course were met.</label>
-                    <select id="survey-objectives-${slug}"><option value="Yes">Yes</option><option value="Somewhat">Somewhat</option><option value="No">No</option></select>
+                <h3 style="margin-bottom:4px;">Program Evaluation</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Completing this evaluation is voluntary. Please rate each item from 1 (very poor) to 5 (excellent), or select N/A if it does not apply.</p>
+                <div style="font-size:0.88rem; line-height:1.7; background:var(--bg-light, #f7fafc); border:1px solid var(--border); border-radius:6px; padding:10px 14px; margin-bottom:14px;">
+                    <div><strong>CE Provider:</strong> CycleCPE LLC</div>
+                    <div><strong>Program name:</strong> ${title}</div>
+                    <div><strong>IRS program number:</strong> ${evalProgramNumber(slug)}</div>
+                    <div><strong>Date of program:</strong> ${today}</div>
                 </div>
                 <div class="field">
-                    <label>2. Accuracy and relevance of course materials (1 = Poor, 5 = Excellent)</label>
-                    <select id="survey-accuracy-${slug}"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Adequate</option><option value="2">2 - Fair</option><option value="1">1 - Poor</option></select>
-                </div>
+                    <label>Name (optional)</label>
+                    <input type="text" id="survey-name-${slug}" placeholder="Optional">
+                </div>${rows}
                 <div class="field">
-                    <label>3. Adequacy of time allotted for the material (1 = Poor, 5 = Excellent)</label>
-                    <select id="survey-time-${slug}"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Adequate</option><option value="2">2 - Fair</option><option value="1">1 - Poor</option></select>
-                </div>
-                <div class="field">
-                    <label>4. Effectiveness of course content / presentation (1 = Poor, 5 = Excellent)</label>
-                    <select id="survey-instructor-${slug}"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Adequate</option><option value="2">2 - Fair</option><option value="1">1 - Poor</option></select>
-                </div>
-                <div class="field">
-                    <label>5. Quality of written handout/course materials (1 = Poor, 5 = Excellent, N/A)</label>
-                    <select id="survey-handouts-${slug}"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Adequate</option><option value="2">2 - Fair</option><option value="1">1 - Poor</option><option value="N/A">N/A</option></select>
-                </div>
-                <div class="field">
-                    <label>6. Quality of audio/video elements, if any (1 = Poor, 5 = Excellent, N/A)</label>
-                    <select id="survey-av-${slug}"><option value="N/A">N/A</option><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Adequate</option><option value="2">2 - Fair</option><option value="1">1 - Poor</option></select>
-                </div>
-                <div class="field">
-                    <label>7. Additional comments or feedback</label>
+                    <label>8. Comments</label>
                     <textarea id="survey-comments-${slug}" rows="3" placeholder="Optional comments..."></textarea>
                 </div>
                 <button class="btn btn-primary" onclick="submitCourseSurvey('${slug}')">Submit Evaluation</button>
-                <div id="survey-confirm-${slug}" style="margin-top:10px; font-size:0.85rem; color:var(--success); display:none;">✓ Evaluation submitted — thank you for your feedback.</div>
+                <div id="survey-confirm-${slug}" style="margin-top:10px; font-size:0.85rem; color:var(--success); display:none;">\u2713 Evaluation submitted \u2014 thank you for your feedback.</div>
             </div>`;
     }
 
@@ -4271,14 +4294,19 @@ CycleCPE`;
         const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
         const surveyResult = {
             slug, title,
+            providerName: 'CycleCPE LLC',
+            programNumber: evalProgramNumber(slug),
+            programDate: new Date().toISOString().split('T')[0],
+            optionalName: val('survey-name-' + slug).trim(),
             practitioner: `${ea.firstName || ''} ${ea.lastName || ''}`.trim(),
             ptin: ea.ptin || '',
             objectivesMet: val('survey-objectives-' + slug),
-            materialsAccuracy: val('survey-accuracy-' + slug),
+            materialsAccuracy: val('survey-materials-' + slug),
             timeAdequacy: val('survey-time-' + slug),
-            contentEffectiveness: val('survey-instructor-' + slug),
+            facilitiesEquipment: val('survey-facilities-' + slug),
             handoutsQuality: val('survey-handouts-' + slug),
-            avQuality: val('survey-av-' + slug),
+            avQuality: val('survey-audiovideo-' + slug),
+            instructorsEffective: val('survey-instructors-' + slug),
             comments: val('survey-comments-' + slug),
             submittedAt: new Date().toISOString()
         };
@@ -4288,10 +4316,9 @@ CycleCPE`;
         if (typeof savePractitionersToStorage === 'function') savePractitionersToStorage();
         if (typeof saveSurveyToSupabase === 'function') saveSurveyToSupabase(ea.email, surveyResult);
 
-        const subject = `CycleCPE Course Evaluation: ${title}`;
+        const subject = `CycleCPE Program Evaluation: ${title}`;
         const body = JSON.stringify(surveyResult, null, 2);
         sendViaSendGrid([SURVEY_RESULTS_EMAIL], subject, body);
-        console.log('Course survey submitted (simulated email to ' + SURVEY_RESULTS_EMAIL + '):', surveyResult);
 
         const confirmEl = document.getElementById('survey-confirm-' + slug);
         if (confirmEl) confirmEl.style.display = 'block';
@@ -4568,7 +4595,7 @@ CycleCPE`;
         { q: 'What does CycleCPE cost? What are the plans?', k: 'price pricing cost plan plans membership how much subscribe subscription free plus complete annual year',
           a: 'CycleCPE has three plans: <strong>Free ($0)</strong> – 72-hour cycle tracker, ethics tracking, outside CE entry, dashboard, and you can buy courses individually; <strong>EA Plus ($99/year)</strong> – everything in Free plus unlimited access to all CycleCPE courses; and <strong>EA Complete ($129/year)</strong> – everything in Plus plus Form 8554 preparation and unlimited customer support. See the Pricing page for details.' },
         { q: 'How much do individual courses cost?', k: 'individual course price buy purchase single one-time hour cost $9 $15 $25 $35 pay per course',
-          a: 'Free-plan members can buy courses one at a time at checkout: <strong>$9</strong> for a 1-hour course, <strong>$15</strong> for 2 hours, <strong>$25</strong> for 4 hours, and <strong>$35</strong> for 6 hours. EA Plus and EA Complete include unlimited course access.' },
+          a: 'Free-plan members can buy courses one at a time at checkout: <strong>$9</strong> for a 1-hour course, <strong>$15</strong> for 2 hours, <strong>$25</strong> for 4 hours. EA Plus and EA Complete include unlimited course access.' },
         { q: 'How do I take a course and get my certificate?', k: 'take course exam pass passing score certificate certificates complete completion download how',
           a: 'Open the Course Catalog, choose a course, read the material, and take the final exam (<strong>70% required to pass</strong>). When you pass, your certificate is emailed to you automatically and added to your CPE Ledger, where you can download it again any time.' },
         { q: 'What is the CPE Ledger?', k: 'ledger cpe tracker track credits hours dashboard record history progress',
@@ -5494,9 +5521,15 @@ CycleCPE`;
                     objectives_met: surveyResult.objectivesMet,
                     materials_accuracy: surveyResult.materialsAccuracy,
                     time_adequacy: surveyResult.timeAdequacy,
-                    content_effectiveness: surveyResult.contentEffectiveness,
+                    content_effectiveness: surveyResult.instructorsEffective,
                     handouts_quality: surveyResult.handoutsQuality,
                     av_quality: surveyResult.avQuality,
+                    facilities_equipment: surveyResult.facilitiesEquipment,
+                    instructors_effective: surveyResult.instructorsEffective,
+                    provider_name: surveyResult.providerName,
+                    program_number: surveyResult.programNumber,
+                    program_date: surveyResult.programDate,
+                    optional_name: surveyResult.optionalName,
                     comments: surveyResult.comments,
                     submitted_at: surveyResult.submittedAt,
                 });
