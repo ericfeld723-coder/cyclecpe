@@ -66,6 +66,11 @@
         .navbar-top-links a { color: #e2e8f0; font-size: 17px; font-weight: 700; text-decoration: none; transition: color 0.2s; cursor: pointer; }
         .navbar-top-links a:hover { color: #ffffff; text-decoration: underline; }
         .navbar-user { font-size: 13px; color: #cbd5e0; display: flex; align-items: center; gap: 15px; }
+        @media (min-width: 1000px) {
+            .navbar { display: grid; grid-template-columns: 1fr auto 1fr; }
+            .navbar-top-links { flex: none; justify-self: center; flex-wrap: nowrap; }
+            .navbar-user { justify-self: end; }
+        }
 
         .container { max-width: 1100px; margin: 24px auto; padding: 0 20px; }
 
