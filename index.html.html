@@ -4262,7 +4262,7 @@ CycleCPE`;
     }
     function renderCourseSurveyHtml(slug, title) {
         const today = new Date().toLocaleDateString();
-        const scale = '<option value="">Select a rating</option><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Fair</option><option value="2">2 - Poor</option><option value="1">1 - Very poor</option><option value="N/A">N/A - Not applicable</option>';
+        const scale = '<option value="">Select a rating</option><option value="5" selected>5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Fair</option><option value="2">2 - Poor</option><option value="1">1 - Very poor</option><option value="N/A">N/A - Not applicable</option>';
         const rows = EVAL_MEASURES.map((m, i) => `
                 <div class="field">
                     <label>${i + 1}. ${m[1]}</label>
