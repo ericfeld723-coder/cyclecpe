@@ -5077,8 +5077,11 @@ CycleCPE`;
         const purchased = (ea && ea.purchasedCourses) || [];
         let done = 0;
         cards.forEach(c => {
-            const key = 'ea_ce_complete_' + c.dataset.course;
-            if (localStorage.getItem(key) === '1') { c.classList.add('completed'); done++; }
+            // Completed = this user's own ledger holds a CycleCPE-issued credit for the course
+            // (added only when the exam is passed). Never read from shared browser storage.
+            const courseObj = bySlug[c.dataset.course];
+            const isDone = !!(ea && courseObj && (ea.credits || []).some(cr => String(cr.id).startsWith('auto_') && cr.title === courseObj.title));
+            if (isDone) { c.classList.add('completed'); done++; }
             else { c.classList.remove('completed'); }
 
             if (purchased.includes(c.dataset.course)) { c.classList.add('purchased'); }
@@ -5963,6 +5966,19 @@ CycleCPE`;
             }
 
             closeRegisterModal();
+
+            // Notify info@cyclecpe.com of the new registration (fire-and-forget; never blocks sign-up).
+            try {
+                fetch(CYCLECPE_EMAIL_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: ['info@cyclecpe.com'],
+                        subject: `[CycleCPE Contact] New registration — ${(fn + ' ' + ln).trim() || email}`,
+                        body: `A new user registered on CycleCPE.\n\nName: ${(fn + ' ' + ln).trim()}\nEmail: ${email}\nTime: ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} (Eastern)\nEmail confirmation required: ${data.session ? 'No (signed in immediately)' : 'Yes (pending confirmation)'}`
+                    })
+                }).catch(() => {});
+            } catch (e) {}
 
             if (data.session && data.user) {
                 currentUser = {
